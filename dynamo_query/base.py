@@ -2,8 +2,6 @@
 from typing import Optional, Dict, Text, Any, Set, List
 import logging
 
-from typing_extensions import Literal
-
 from dynamo_query.utils import chunkify
 from dynamo_query.data_table import DataTable
 from dynamo_query.boto3_retrier import Boto3Retrier
@@ -318,7 +316,7 @@ class BaseDynamoQuery:
         for record in data_table.get_records():
             result.add_table(
                 self._execute_paginated_query(
-                    table_resource=table_resource, query_method="query", data=record,
+                    table_resource=table_resource, data=record,
                 )
             )
         return result
@@ -336,7 +334,7 @@ class BaseDynamoQuery:
         for record in data_table.get_records():
             result.add_table(
                 self._execute_paginated_query(
-                    table_resource=table_resource, query_method="scan", data=record,
+                    table_resource=table_resource, data=record,
                 )
             )
         return result
@@ -352,10 +350,7 @@ class BaseDynamoQuery:
         for record in data_table.get_records():
             key_data = {k: v for k, v in record.items() if k in table_keys}
             result_record = self._execute_item_query(
-                table_resource=table_resource,
-                query_method="get",
-                key_data=key_data,
-                item_data={},
+                table_resource=table_resource, key_data=key_data, item_data={},
             )
             if result_record is not None:
                 record.update(result_record)
@@ -398,10 +393,7 @@ class BaseDynamoQuery:
                 )
             key_data = {k: v for k, v in record.items() if k in table_keys}
             result_record = self._execute_item_query(
-                table_resource=table_resource,
-                query_method="update",
-                key_data=key_data,
-                item_data=record,
+                table_resource=table_resource, key_data=key_data, item_data=record,
             )
             if result_record is not None:
                 result.add_record(result_record)
@@ -420,10 +412,7 @@ class BaseDynamoQuery:
         for record in data_table.get_records():
             key_data = {k: v for k, v in record.items() if k in table_keys}
             result_record = self._execute_item_query(
-                table_resource=table_resource,
-                query_method="delete",
-                key_data=key_data,
-                item_data={},
+                table_resource=table_resource, key_data=key_data, item_data={},
             )
             if result_record is not None:
                 result.add_record(result_record)
@@ -581,7 +570,6 @@ class BaseDynamoQuery:
     def _execute_item_query(
         self,
         table_resource: TableResource,
-        query_method: Literal["get", "update", "delete"],
         key_data: Dict[str, Any],
         item_data: Dict[str, Any],
     ) -> Optional[Dict[str, Any]]:
@@ -622,34 +610,31 @@ class BaseDynamoQuery:
         if expression_attribute_values:
             extra_params["ExpressionAttributeValues"] = expression_attribute_values
 
-        if query_method == "get":
+        if self._query_type == DynamoQueryType.GET_ITEM:
             get_response = self._execute_get_item(
                 table_resource, Key=key_data, **formatted_expressions, **extra_params,
             )
             self._was_executed = True
             return get_response["Item"]
 
-        if query_method == "update":
+        if self._query_type == DynamoQueryType.UPDATE_ITEM:
             update_response = self._execute_update_item(
                 table_resource, Key=key_data, **formatted_expressions, **extra_params,
             )
             self._was_executed = True
             return update_response["Attributes"]
 
-        if query_method == "delete":
+        if self._query_type == DynamoQueryType.DELETE_ITEM:
             delete_response = self._execute_delete_item(
                 table_resource, Key=key_data, **formatted_expressions, **extra_params,
             )
             self._was_executed = True
             return delete_response["Attributes"]
 
-        raise ValueError(f"Unknown item query method {query_method}")
+        raise ValueError(f"Unknown item query method {self._query_type}")
 
     def _execute_paginated_query(
-        self,
-        table_resource: TableResource,
-        query_method: Literal["query", "scan"],
-        data: Dict[Text, Any],
+        self, table_resource: TableResource, data: Dict[Text, Any],
     ) -> DataTable:
         self._logger.debug(f"query_data = {dumps(data)}")
         expression_map = self._expressions
@@ -693,7 +678,7 @@ class BaseDynamoQuery:
             if self._last_evaluated_key:
                 page_params["ExclusiveStartKey"] = self._last_evaluated_key
 
-            if query_method == "query":
+            if self._query_type == DynamoQueryType.QUERY:
                 response = self._execute_query(
                     table_resource,
                     **formatted_expressions,
@@ -706,7 +691,8 @@ class BaseDynamoQuery:
                     last_page = True
 
                 result.add_record(*response.get("Items", []))
-            if query_method == "scan":
+
+            if self._query_type == DynamoQueryType.SCAN:
                 response = self._execute_scan(
                     table_resource,
                     **formatted_expressions,

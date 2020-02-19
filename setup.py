@@ -31,7 +31,6 @@ AUTHOR_EMAIL = "engineering@altitudenetworks.com"
 # Required Packages
 REQUIRED = [
     "botocore",
-    "typing-extensions",
 ]
 
 # EXTERNAL DEPENDENCY LINKS
