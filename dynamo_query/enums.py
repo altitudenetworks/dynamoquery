@@ -8,10 +8,6 @@ import enum
 
 __all__ = (
     "DynamoQueryType",
-    "ReturnConsumedCapacity",
-    "ReturnItemCollectionMetrics",
-    "ReturnValues",
-    "ReturnItemCollectionMetrics",
     "ConditionExpressionOperator",
 )
 
@@ -39,53 +35,6 @@ class DynamoQueryType(enum.Enum):
     BATCH_GET_ITEM = "batch_get_item"
     BATCH_UPDATE_ITEM = "batch_update_item"
     BATCH_DELETE_ITEM = "batch_delete_item"
-
-
-class ReturnConsumedCapacity(enum.Enum):
-    """
-    Enum of `ReturnConsumedCapacity` argument values for Boto3
-
-    Attributes:
-        INDEXES -- Add indexes only consumed capacity.
-        TOTAL -- Add full consumed capacity.
-        NONE -- Do not add consumed capacity.
-    """
-
-    INDEXES = "INDEXES"
-    TOTAL = "TOTAL"
-    NONE = "NONE"
-
-
-class ReturnValues(enum.Enum):
-    """
-    Enum of `ReturnValues` argument values for Boto3
-
-    Attributes:
-        NONE -- Do not return object fields.
-        ALL_OLD -- Return all field values before update operation.
-        UPDATED_OLD -- Return updated field values before update operation.
-        ALL_NEW -- Return all field values as they appear after update operation.
-        UPDATED_NEW -- Return updated field values as they appear after update operation.
-    """
-
-    NONE = "NONE"
-    ALL_OLD = "ALL_OLD"
-    UPDATED_OLD = "UPDATED_OLD"
-    ALL_NEW = "ALL_NEW"
-    UPDATED_NEW = "UPDATED_NEW"
-
-
-class ReturnItemCollectionMetrics(enum.Enum):
-    """
-    Enum of `ReturnItemCollectionMetrics` argument values for Boto3
-
-    Attributes:
-        NONE -- Do not Include statistics to response.
-        SIZE -- Include size statistics to response.
-    """
-
-    NONE = "NONE"
-    SIZE = "SIZE"
 
 
 class ConditionExpressionOperator(enum.Enum):

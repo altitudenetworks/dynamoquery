@@ -22,13 +22,13 @@ Expression builders.
 
 ## ConditionExpression
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L242)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L259)
 
 ```python
 class ConditionExpression(BaseConditionExpression):
     def __init__(
         key: str,
-        operator: Union[ConditionExpressionOperatorStr, ConditionExpressionOperator] = ConditionExpressionOperator.EQ,
+        operator: ConditionExpressionOperatorStr = '=',
         value: Any = None,
     ):
 ```
@@ -53,10 +53,11 @@ ConditionExpression(key='name', operator=Operator.IN, value='test').render()
 #### See also
 
 - [BaseConditionExpression](#baseconditionexpression)
+- [ConditionExpressionOperatorStr](types.md#conditionexpressionoperatorstr)
 
 ### ConditionExpression().get_format_keys
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L294)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L310)
 
 ```python
 def get_format_keys() -> Set[str]:
@@ -70,7 +71,7 @@ A set of keys.
 
 ### ConditionExpression().get_format_values
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L303)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L319)
 
 ```python
 def get_format_values() -> Set[str]:
@@ -84,17 +85,17 @@ A set of keys.
 
 ### ConditionExpression().get_operators
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L409)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L423)
 
 ```python
-def get_operators() -> Set[ConditionExpressionOperator]:
+def get_operators() -> Set[ConditionExpressionOperatorStr]:
 ```
 
 Get a set of all operators that used in expession group.
 
 ## ExpressionError
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L22)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L29)
 
 ```python
 class ExpressionError(Exception):
@@ -102,7 +103,7 @@ class ExpressionError(Exception):
 
 ## ProjectionExpression
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L173)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L185)
 
 ```python
 class ProjectionExpression(BaseExpression):
@@ -128,7 +129,7 @@ projection_expression.render() # '{first_name}, {last_name}'
 
 ### ProjectionExpression().get_format_keys
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L191)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L203)
 
 ```python
 def get_format_keys() -> Set[str]:
@@ -142,7 +143,7 @@ A set of keys.
 
 ### ProjectionExpression().get_format_values
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L200)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L212)
 
 ```python
 def get_format_values() -> Set[str]:
@@ -156,17 +157,17 @@ A set of keys.
 
 ### ProjectionExpression().get_operators
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L227)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L244)
 
 ```python
-def get_operators() -> Set[ConditionExpressionOperator]:
+def get_operators() -> Set[ConditionExpressionOperatorStr]:
 ```
 
 Get a set of all operators that used in expession group.
 
 ## UpdateExpression
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L572)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L563)
 
 ```python
 class UpdateExpression(BaseExpression):
@@ -204,7 +205,7 @@ update_expression
 
 ### UpdateExpression().get_format_keys
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L628)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L619)
 
 ```python
 def get_format_keys() -> Set[str]:
@@ -218,7 +219,7 @@ A set of keys.
 
 ### UpdateExpression().get_format_values
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L639)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L630)
 
 ```python
 def get_format_values() -> Set[str]:
@@ -232,17 +233,17 @@ A set of keys.
 
 ### UpdateExpression().get_operators
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L694)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L690)
 
 ```python
-def get_operators() -> Set[ConditionExpressionOperator]:
+def get_operators() -> Set[ConditionExpressionOperatorStr]:
 ```
 
 Get a set of all operators that used in expession group.
 
 ### UpdateExpression().validate_input_data
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L606)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/expressions.py#L597)
 
 ```python
 def validate_input_data(data: Dict[str, Any]) -> None:

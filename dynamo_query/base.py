@@ -12,7 +12,7 @@ from dynamo_query.types import (
     FormatDict,
     TableKeys,
     ExclusiveStartKey,
-    TableResource,
+    Table,
     DynamoDBClient,
     ClientGetItemResponseTypeDef,
     ClientUpdateItemResponseTypeDef,
@@ -22,12 +22,7 @@ from dynamo_query.types import (
     ClientBatchGetItemResponseTypeDef,
     ClientBatchWriteItemResponseTypeDef,
 )
-from dynamo_query.enums import (
-    DynamoQueryType,
-    ReturnConsumedCapacity,
-    ReturnValues,
-    ReturnItemCollectionMetrics,
-)
+from dynamo_query.enums import DynamoQueryType
 from dynamo_query.expressions import (
     BaseExpression,
     ConditionExpressionOperator,
@@ -72,9 +67,7 @@ class BaseDynamoQuery:
         UPDATE_EXPRESSION -- Alias for `UpdateExpression` parameter name.
         PROJECTION_EXPRESSION -- Alias for `ProjectionExpression` parameter name.
         KEY_CONDITION_EXPRESSION -- Alias for `KeyConditionExpression` parameter name.
-        ReturnConsumedCapacity -- Alias for `tools.dynamo_query.enums.ReturnConsumedCapacity` enum,
-        ReturnValues -- Alias for `tools.dynamo_query.enums.ReturnValues` enum.
-        ReturnItemCollectionMetrics -- Alias for `tools.dynamo_query.enums.ReturnItemCollectionMetrics` enum.
+        ReturnConsumedCapacity -- Alias for `ReturnConsumedCapacity` enum,
 
     Arguments:
         query_type -- DynamoQueryType item.
@@ -87,10 +80,6 @@ class BaseDynamoQuery:
     MAX_PAGE_SIZE = 1000
     MAX_BATCH_SIZE = 25
     MAX_LIMIT = 10000000000
-
-    ReturnConsumedCapacity = ReturnConsumedCapacity
-    ReturnValues = ReturnValues
-    ReturnItemCollectionMetrics = ReturnItemCollectionMetrics
 
     FILTER_EXPRESSION = "FilterExpression"
     CONDITION_EXPRESSION = "ConditionExpression"
@@ -122,14 +111,14 @@ class BaseDynamoQuery:
         self._last_evaluated_key = exclusive_start_key
         self._was_executed = False
         self._raw_responses: List[Any] = []
-        self._table_resource: Optional[TableResource] = None
+        self._table_resource: Optional[Table] = None
         self._table_keys: Optional[TableKeys] = None
 
     def __str__(self) -> Text:
         return f"<{self.__class__.__name__} type={self._query_type.value}>"
 
     @property
-    def table_resource(self) -> TableResource:
+    def table_resource(self) -> Table:
         if self._table_resource is None:
             raise DynamoQueryError("TableResource is not specified.")
 
@@ -315,17 +304,17 @@ class BaseDynamoQuery:
             self.KEY_CONDITION_EXPRESSION
         ].get_operators():
             if operator not in (
-                ConditionExpressionOperator.EQ,
-                ConditionExpressionOperator.LT,
-                ConditionExpressionOperator.GT,
-                ConditionExpressionOperator.LTE,
-                ConditionExpressionOperator.GTE,
-                ConditionExpressionOperator.BETWEEN,
-                ConditionExpressionOperator.BEGINS_WITH,
+                ConditionExpressionOperator.EQ.value,
+                ConditionExpressionOperator.LT.value,
+                ConditionExpressionOperator.GT.value,
+                ConditionExpressionOperator.LTE.value,
+                ConditionExpressionOperator.GTE.value,
+                ConditionExpressionOperator.BETWEEN.value,
+                ConditionExpressionOperator.BEGINS_WITH.value,
             ):
                 raise DynamoQueryError(
                     f"{self.KEY_CONDITION_EXPRESSION} does not support operator"
-                    f' "{operator.value}".'
+                    f' "{operator}".'
                 )
 
         result = DataTable.create()

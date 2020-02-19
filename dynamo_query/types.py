@@ -17,40 +17,10 @@ if TYPE_CHECKING:
         ClientBatchWriteItemResponseTypeDef,
     )
 
-    BaseExpression = TypeVar("BaseExpression")
-    ExpressionMap = Dict[str, BaseExpression]
-    FormatDict = Dict[str, Any]
-    TableKeys = Iterable[str]
-    QueryMethod = Callable[[DataTable], DataTable]
-    ExclusiveStartKey = Dict[str, Any]
-    TableResource = Table
-
-    ConditionExpressionOperatorStr = Literal[
-        "=",
-        "<>",
-        "IN",
-        ">",
-        "<",
-        ">=",
-        "<=",
-        "begins_with",
-        "attribute_exists",
-        "attribute_not_exists",
-        "BETWEEN",
-        "contains",
-    ]
-    ConditionExpressionJoinOperatorStr = Literal[
-        "AND", "OR",
-    ]
-
 else:
+    Table = object
+    DynamoDBClient = object
     BaseExpression = object
-    ExpressionMap = object
-    FormatDict = object
-    TableKeys = object
-    QueryMethod = object
-    ExclusiveStartKey = object
-    TableResource = object
     ClientGetItemResponseTypeDef = object
     ClientUpdateItemResponseTypeDef = object
     ClientDeleteItemResponseTypeDef = object
@@ -58,6 +28,32 @@ else:
     ClientScanResponseTypeDef = object
     ClientBatchGetItemResponseTypeDef = object
     ClientBatchWriteItemResponseTypeDef = object
-    DynamoDBClient = object
-    ConditionExpressionOperatorStr = object
-    ConditionExpressionJoinOperatorStr = object
+
+
+BaseExpression = TypeVar("BaseExpression")
+ExpressionMap = Dict[str, BaseExpression]
+FormatDict = Dict[str, Any]
+TableKeys = Iterable[str]
+QueryMethod = Callable[[DataTable], DataTable]
+ExclusiveStartKey = Dict[str, Any]
+ConditionExpressionOperatorStr = Literal[
+    "=",
+    "<>",
+    "IN",
+    ">",
+    "<",
+    ">=",
+    "<=",
+    "begins_with",
+    "attribute_exists",
+    "attribute_not_exists",
+    "BETWEEN",
+    "contains",
+]
+ConditionExpressionJoinOperatorStr = Literal[
+    "AND", "OR",
+]
+
+ReturnValues = Literal["NONE", "ALL_OLD", "UPDATED_OLD", "ALL_NEW", "UPDATED_NEW"]
+ReturnItemCollectionMetrics = Literal["NONE", "SIZE"]
+ReturnConsumedCapacity = Literal["INDEXES", "TOTAL", "NONE"]

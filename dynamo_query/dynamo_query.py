@@ -9,18 +9,16 @@ from dynamo_query.expressions import (
     ProjectionExpression,
     BaseConditionExpression,
 )
-from dynamo_query.enums import (
-    DynamoQueryType,
-    ReturnConsumedCapacity,
-    ReturnValues,
-    ReturnItemCollectionMetrics,
-)
+from dynamo_query.enums import DynamoQueryType
 from dynamo_query.types import (
     ExclusiveStartKey,
-    TableResource,
+    Table,
     TableKeys,
     QueryMethod,
     ExpressionMap,
+    ReturnConsumedCapacity,
+    ReturnItemCollectionMetrics,
+    ReturnValues,
 )
 from dynamo_query.base import BaseDynamoQuery, DynamoQueryError
 
@@ -219,7 +217,7 @@ class DynamoQuery(BaseDynamoQuery):
         cls,
         projection_expression: Optional[ProjectionExpression] = None,
         consistent_read: bool = False,
-        return_consumed_capacity: ReturnConsumedCapacity = ReturnConsumedCapacity.NONE,
+        return_consumed_capacity: ReturnConsumedCapacity = "NONE",
     ) -> "DynamoQuery":
         """
         Build query for `table.get_item`.
@@ -245,7 +243,7 @@ class DynamoQuery(BaseDynamoQuery):
         Arguments:
             projection_expression -- Format-ready ProjectionExpression.
             consistent_read -- `ConsistentRead` boto3 parameter.
-            return_consumed_capacity -- `tools.dynamo_query.enums.ReturnConsumedCapacity` value.
+            return_consumed_capacity -- `ReturnConsumedCapacity` value.
 
         Returns:
             `DynamoQuery` instance to execute.
@@ -256,7 +254,7 @@ class DynamoQuery(BaseDynamoQuery):
 
         extra_params: Dict[Text, Any] = dict(
             ConsistentRead=consistent_read,
-            ReturnConsumedCapacity=return_consumed_capacity.value,
+            ReturnConsumedCapacity=return_consumed_capacity,
         )
 
         return cls(
@@ -270,11 +268,9 @@ class DynamoQuery(BaseDynamoQuery):
         cls,
         condition_expression: Optional[BaseConditionExpression] = None,
         update_expression: Optional[UpdateExpression] = None,
-        return_consumed_capacity: ReturnConsumedCapacity = ReturnConsumedCapacity.NONE,
-        return_item_collection_metrics: ReturnItemCollectionMetrics = (
-            ReturnItemCollectionMetrics.NONE
-        ),
-        return_values: ReturnValues = ReturnValues.ALL_NEW,
+        return_consumed_capacity: ReturnConsumedCapacity = "NONE",
+        return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
+        return_values: ReturnValues = "ALL_NEW",
     ) -> "DynamoQuery":
         """
         Build query for `table.update_item`.
@@ -308,9 +304,9 @@ class DynamoQuery(BaseDynamoQuery):
         Arguments:
             condition_expression -- Format-ready ConditionExpression.
             update_expression -- Format-ready UpdateExpression.
-            return_consumed_capacity -- `tools.dynamo_query.enums.ReturnConsumedCapacity` value.
-            return_item_collection_metrics -- `tools.dynamo_query.enums.ReturnItemCollectionMetrics` value.
-            return_values -- `tools.dynamo_query.enums.ReturnValues` value.
+            return_consumed_capacity -- `ReturnConsumedCapacity` value.
+            return_item_collection_metrics -- `ReturnItemCollectionMetrics` value.
+            return_values -- `ReturnValues` value.
 
         Returns:
             `DynamoQuery` instance to execute.
@@ -322,9 +318,9 @@ class DynamoQuery(BaseDynamoQuery):
             expressions[cls.UPDATE_EXPRESSION] = update_expression
 
         extra_params: Dict[Text, Any] = dict(
-            ReturnConsumedCapacity=return_consumed_capacity.value,
-            ReturnItemCollectionMetrics=return_item_collection_metrics.value,
-            ReturnValues=return_values.value,
+            ReturnConsumedCapacity=return_consumed_capacity,
+            ReturnItemCollectionMetrics=return_item_collection_metrics,
+            ReturnValues=return_values,
         )
 
         return cls(
@@ -337,11 +333,9 @@ class DynamoQuery(BaseDynamoQuery):
     def build_delete_item(
         cls,
         condition_expression: Optional[BaseConditionExpression] = None,
-        return_consumed_capacity: ReturnConsumedCapacity = ReturnConsumedCapacity.NONE,
-        return_item_collection_metrics: ReturnItemCollectionMetrics = (
-            ReturnItemCollectionMetrics.NONE
-        ),
-        return_values: ReturnValues = ReturnValues.ALL_OLD,
+        return_consumed_capacity: ReturnConsumedCapacity = "NONE",
+        return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
+        return_values: ReturnValues = "ALL_OLD",
     ) -> "DynamoQuery":
         """
         Build query for `table.delete_item`.
@@ -368,9 +362,9 @@ class DynamoQuery(BaseDynamoQuery):
 
         Arguments:
             condition_expression -- Format-ready ConditionExpression.
-            return_consumed_capacity -- `tools.dynamo_query.enums.ReturnConsumedCapacity` value.
-            return_item_collection_metrics -- `tools.dynamo_query.enums.ReturnItemCollectionMetrics` value.
-            return_values -- `tools.dynamo_query.enums.ReturnValues` value.
+            return_consumed_capacity -- `ReturnConsumedCapacity` value.
+            return_item_collection_metrics -- `ReturnItemCollectionMetrics` value.
+            return_values -- `ReturnValues` value.
 
         Returns:
             `DynamoQuery` instance to execute.
@@ -380,9 +374,9 @@ class DynamoQuery(BaseDynamoQuery):
             expressions[cls.CONDITION_EXPRESSION] = condition_expression
 
         extra_params: Dict[Text, Any] = dict(
-            ReturnConsumedCapacity=return_consumed_capacity.value,
-            ReturnItemCollectionMetrics=return_item_collection_metrics.value,
-            ReturnValues=return_values.value,
+            ReturnConsumedCapacity=return_consumed_capacity,
+            ReturnItemCollectionMetrics=return_item_collection_metrics,
+            ReturnValues=return_values,
         )
 
         return cls(
@@ -393,8 +387,7 @@ class DynamoQuery(BaseDynamoQuery):
 
     @classmethod
     def build_batch_get_item(
-        cls,
-        return_consumed_capacity: ReturnConsumedCapacity = ReturnConsumedCapacity.NONE,
+        cls, return_consumed_capacity: ReturnConsumedCapacity = "NONE",
     ) -> "DynamoQuery":
         """
         Build query for `table.meta.client.batch_get_item`.
@@ -415,12 +408,12 @@ class DynamoQuery(BaseDynamoQuery):
         ```
 
         Arguments:
-            return_consumed_capacity -- `tools.dynamo_query.enums.ReturnConsumedCapacity` value.
+            return_consumed_capacity -- `ReturnConsumedCapacity` value.
 
         Returns:
             `DynamoQuery` instance to execute.
         """
-        extra_params = dict(ReturnConsumedCapacity=return_consumed_capacity.value)
+        extra_params = dict(ReturnConsumedCapacity=return_consumed_capacity)
         return cls(
             query_type=DynamoQueryType.BATCH_GET_ITEM,
             expressions={},
@@ -430,10 +423,8 @@ class DynamoQuery(BaseDynamoQuery):
     @classmethod
     def build_batch_update_item(
         cls,
-        return_consumed_capacity: ReturnConsumedCapacity = ReturnConsumedCapacity.NONE,
-        return_item_collection_metrics: ReturnItemCollectionMetrics = (
-            ReturnItemCollectionMetrics.NONE
-        ),
+        return_consumed_capacity: ReturnConsumedCapacity = "NONE",
+        return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
     ) -> "DynamoQuery":
         """
         Build update query for `table.meta.client.batch_write_item`.
@@ -456,15 +447,15 @@ class DynamoQuery(BaseDynamoQuery):
         ```
 
         Arguments:
-            return_consumed_capacity -- `tools.dynamo_query.enums.ReturnConsumedCapacity` value.
-            return_item_collection_metrics -- `tools.dynamo_query.enums.ReturnItemCollectionMetrics` value.
+            return_consumed_capacity -- `ReturnConsumedCapacity` value.
+            return_item_collection_metrics -- `ReturnItemCollectionMetrics` value.
 
         Returns:
             `DynamoQuery` instance to execute.
         """
         extra_params = dict(
-            ReturnConsumedCapacity=return_consumed_capacity.value,
-            ReturnItemCollectionMetrics=return_item_collection_metrics.value,
+            ReturnConsumedCapacity=return_consumed_capacity,
+            ReturnItemCollectionMetrics=return_item_collection_metrics,
         )
         return cls(
             query_type=DynamoQueryType.BATCH_UPDATE_ITEM,
@@ -475,10 +466,8 @@ class DynamoQuery(BaseDynamoQuery):
     @classmethod
     def build_batch_delete_item(
         cls,
-        return_consumed_capacity: ReturnConsumedCapacity = ReturnConsumedCapacity.NONE,
-        return_item_collection_metrics: ReturnItemCollectionMetrics = (
-            ReturnItemCollectionMetrics.NONE
-        ),
+        return_consumed_capacity: ReturnConsumedCapacity = "NONE",
+        return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
     ) -> "DynamoQuery":
         """
         Build delete query for `table.meta.client.batch_write_item`.
@@ -499,15 +488,15 @@ class DynamoQuery(BaseDynamoQuery):
         ```
 
         Arguments:
-            return_consumed_capacity -- `tools.dynamo_query.enums.ReturnConsumedCapacity` value.
-            return_item_collection_metrics -- `tools.dynamo_query.enums.ReturnItemCollectionMetrics` value.
+            return_consumed_capacity -- `ReturnConsumedCapacity` value.
+            return_item_collection_metrics -- `ReturnItemCollectionMetrics` value.
 
         Returns:
             `DynamoQuery` instance to execute.
         """
         extra_params = dict(
-            ReturnConsumedCapacity=return_consumed_capacity.value,
-            ReturnItemCollectionMetrics=return_item_collection_metrics.value,
+            ReturnConsumedCapacity=return_consumed_capacity,
+            ReturnItemCollectionMetrics=return_item_collection_metrics,
         )
         return cls(
             query_type=DynamoQueryType.BATCH_DELETE_ITEM,
@@ -516,25 +505,23 @@ class DynamoQuery(BaseDynamoQuery):
         )
 
     def table(
-        self,
-        table_resource: Optional[TableResource],
-        table_keys: Optional[TableKeys] = TABLE_KEYS,
+        self, table: Optional[Table], table_keys: Optional[TableKeys] = TABLE_KEYS,
     ) -> "DynamoQuery":
         """
         Set table resource and table keys.
 
         Arguments:
-            table_resource -- `boto3_resource.Table('my_table')`.
+            table -- `boto3_resource.Table('my_table')`.
             table_keys -- Primary and sort keys for table.
         """
-        self._table_resource = table_resource
+        self._table_resource = table
         self._table_keys = table_keys
         return self
 
     def execute(
         self,
         data_table: DataTable,
-        table_resource: Optional[TableResource] = None,
+        table: Optional[Table] = None,
         table_keys: Optional[TableKeys] = TABLE_KEYS,
     ) -> DataTable:
         """
@@ -556,13 +543,13 @@ class DynamoQuery(BaseDynamoQuery):
             filter_expression=ConditionExpression('name'),
         ).execute(
             table_keys=['pk'],
-            table_resource=table_resource,
+            table=table_resource,
             data_table=input_data_table,
         )
         ```
 
         Arguments:
-            table_resource -- `boto3_resource.Table('my_table')`.
+            table -- `boto3_resource.Table('my_table')`.
             data_table -- `tools.data_table.DataTable` with input data.
             table_keys -- Primary and sort keys for table.
 
@@ -574,8 +561,8 @@ class DynamoQuery(BaseDynamoQuery):
             raise DynamoQueryError("Input DataTable is not normalized.")
 
         self.table(
-            table_resource=table_resource or self._table_resource,
-            table_keys=table_keys or self._table_keys,
+            table=table or self.table_resource,
+            table_keys=table_keys or self.table_keys,
         )
 
         self._logger.debug(
@@ -609,7 +596,7 @@ class DynamoQuery(BaseDynamoQuery):
     def execute_dict(
         self,
         data: Dict[Text, Any],
-        table_resource: Optional[TableResource] = None,
+        table: Optional[Table] = None,
         table_keys: Optional[TableKeys] = TABLE_KEYS,
     ) -> DataTable:
         """
@@ -623,13 +610,13 @@ class DynamoQuery(BaseDynamoQuery):
             filter_expression=ConditionExpression('name'),
         ).execute_dict(
             table_keys=['pk'],
-            table_resource=table_resource,
+            table=table_resource,
             data=search_data,
         )
         ```
 
         Arguments:
-            table_resource -- `boto3_resource.Table('my_table')`.
+            table -- `boto3_resource.Table('my_table')`.
             data -- Record of a `tools.data_table.DataTable` or a regular `dict`.
             table_keys -- Primary and sort keys for table.
 
@@ -638,8 +625,8 @@ class DynamoQuery(BaseDynamoQuery):
         """
         data_table = DataTable.create().add_record(data)
         self.table(
-            table_resource=table_resource or self._table_resource,
-            table_keys=table_keys or self._table_keys,
+            table=table or self.table_resource,
+            table_keys=table_keys or self.table_keys,
         )
         return self.execute(data_table=data_table)
 
@@ -691,7 +678,7 @@ class DynamoQuery(BaseDynamoQuery):
         return self._raw_responses
 
     @staticmethod
-    def get_table_keys(table_resource: TableResource) -> List[Text]:
+    def get_table_keys(table: Table) -> List[Text]:
         """
         Get table keys from schema.
 
@@ -702,12 +689,12 @@ class DynamoQuery(BaseDynamoQuery):
         ```
 
         Arguments:
-            table_resource -- `boto3_resource.Table('my_table')`.
+            table -- `boto3_resource.Table('my_table')`.
 
         Returns:
             A list of table keys.
         """
-        key_schema = table_resource.key_schema
+        key_schema = table.key_schema
         result = []
         for key_data in key_schema:
             if "AttributeName" in key_data:

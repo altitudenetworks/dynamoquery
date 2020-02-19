@@ -19,7 +19,7 @@ class TestDynamoQuery:
                 projection_expression=projection_expression_mock,
                 limit=100,
             )
-            .table(table_resource=table_resource_mock, table_keys=("pk", "sk"))
+            .table(table=table_resource_mock, table_keys=("pk", "sk"))
             .projection("test")
         )
         result = query.execute_dict({"key": "value"})
@@ -60,7 +60,7 @@ class TestDynamoQuery:
                 projection_expression=projection_expression_mock,
                 limit=100,
             )
-            .table(table_resource=table_resource_mock, table_keys=("pk", "sk"))
+            .table(table=table_resource_mock, table_keys=("pk", "sk"))
             .projection("test")
         )
         result = query.execute_dict({"key": "value"})
@@ -78,7 +78,7 @@ class TestDynamoQuery:
         table_resource_mock = MagicMock()
         query = (
             DynamoQuery.build_get_item(projection_expression=projection_expression_mock)
-            .table(table_resource=table_resource_mock, table_keys=("pk", "sk"))
+            .table(table=table_resource_mock, table_keys=("pk", "sk"))
             .projection("test")
         )
         result = query.execute_dict({"pk": "value", "sk": "value"})
@@ -101,7 +101,7 @@ class TestDynamoQuery:
                 condition_expression=condition_expression_mock,
                 update_expression=update_expression_mock,
             )
-            .table(table_resource=table_resource_mock, table_keys=("pk", "sk"))
+            .table(table=table_resource_mock, table_keys=("pk", "sk"))
             .update("test")
         )
         result = query.execute_dict({"pk": "value", "sk": "value", "test": "data"})
@@ -123,7 +123,7 @@ class TestDynamoQuery:
         table_resource_mock = MagicMock()
         query = DynamoQuery.build_delete_item(
             condition_expression=condition_expression_mock,
-        ).table(table_resource=table_resource_mock, table_keys=("pk", "sk"))
+        ).table(table=table_resource_mock, table_keys=("pk", "sk"))
         result = query.execute_dict({"pk": "value", "sk": "value", "test": "data"})
         table_resource_mock.delete_item.assert_called_with(
             ConditionExpression=condition_expression_mock.render().format(),
@@ -138,7 +138,7 @@ class TestDynamoQuery:
     def test_batch_get_item() -> None:
         table_resource_mock = MagicMock()
         query = DynamoQuery.build_batch_get_item().table(
-            table_resource=table_resource_mock, table_keys=("pk", "sk")
+            table=table_resource_mock, table_keys=("pk", "sk")
         )
         result = query.execute_dict({"pk": "value", "sk": "value"})
         table_resource_mock.meta.client.batch_get_item.assert_called_with(
@@ -153,7 +153,7 @@ class TestDynamoQuery:
     def test_batch_update_item() -> None:
         table_resource_mock = MagicMock()
         query = DynamoQuery.build_batch_update_item().table(
-            table_resource=table_resource_mock, table_keys=("pk", "sk")
+            table=table_resource_mock, table_keys=("pk", "sk")
         )
         result = query.execute_dict({"pk": "value", "sk": "value"})
         table_resource_mock.meta.client.batch_write_item.assert_called_with(
@@ -171,7 +171,7 @@ class TestDynamoQuery:
     def test_batch_delete_item() -> None:
         table_resource_mock = MagicMock()
         query = DynamoQuery.build_batch_delete_item().table(
-            table_resource=table_resource_mock, table_keys=("pk", "sk")
+            table=table_resource_mock, table_keys=("pk", "sk")
         )
         result = query.execute_dict({"pk": "value", "sk": "value"})
         table_resource_mock.meta.client.batch_write_item.assert_called_with(
