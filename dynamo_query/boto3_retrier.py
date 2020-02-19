@@ -18,12 +18,17 @@ from typing import (
     Type,
     Tuple,
     List,
+    TypeVar,
+    cast,
 )
 
 from botocore.exceptions import ClientError
 
 from dynamo_query.utils import pluralize, get_nested_item
 from dynamo_query.sentinel import SentinelValue
+
+
+FunctionType = TypeVar("FunctionType", bound=Callable[..., Any])
 
 
 class BatchUnprocessedItemsError(Exception):
@@ -131,6 +136,7 @@ class Boto3Retrier:
         self.method_parent = None
         self.method_args: Optional[Tuple] = None
         self.method_kwargs: Optional[Dict[Text, Any]] = None
+        self._previous_responses: List[Any] = []
 
     @property
     def _logger(self) -> logging.Logger:
@@ -231,14 +237,9 @@ class Boto3Retrier:
             )
             self._logger.log(msg=message, level=self._log_level)
 
-            previous_responses: List[Any] = []
-            if self.method_kwargs and self.method_kwargs.get("previous_responses"):
-                previous_responses.extend(self.method_kwargs["previous_responses"])
-            previous_responses.append(exc.response)
+            self._previous_responses.append(exc.response)
             if self.method_args is not None:
                 self.method_args = (exc.unprocessed_items,) + self.method_args[1:]
-            if self.method_kwargs is not None:
-                self.method_kwargs = dict(previous_responses=previous_responses)
 
     def _handle_exception(self, exc: BaseException) -> None:
         """
@@ -283,7 +284,7 @@ class Boto3Retrier:
         if self._exception is not None:
             self._logger.exception(self._exception, level=log_level)
 
-    def __call__(self, f: Callable) -> Any:
+    def __call__(self, f: FunctionType) -> FunctionType:
         @functools.wraps(f)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             self.method = f
@@ -296,10 +297,16 @@ class Boto3Retrier:
 
             self._tries_remaining = self.max_tries
             self._exception = None
+            self._previous_responses.clear()
 
             while self._tries_remaining > 0:
                 try:
-                    return self.method(*self.method_args, **self.method_kwargs)
+                    response = self.method(*self.method_args, **self.method_kwargs)
+                    if isinstance(response, dict) and self._previous_responses:
+                        response["PreviousResponses"] = self._previous_responses
+
+                    return response
+
                 except self._exceptions_to_suppress as e:
                     # don't retry the exception
                     self._tries_remaining = 0
@@ -321,4 +328,4 @@ class Boto3Retrier:
 
             return self._fallback()
 
-        return wrapper
+        return cast(FunctionType, wrapper)

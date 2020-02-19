@@ -1,6 +1,5 @@
 from collections import defaultdict
 from copy import copy, deepcopy
-import json
 
 from typing import (
     Any,
@@ -18,6 +17,7 @@ from typing import (
 
 from dynamo_query.sentinel import SentinelValue
 from dynamo_query.utils import chunkify
+from dynamo_query.json_tools import loads
 
 DictRecord = Dict[str, Any]
 RecordType = TypeVar("RecordType", bound=Mapping[str, Any])
@@ -678,7 +678,7 @@ class DataTable(defaultdict, Generic[RecordType]):
             if not line:
                 continue
 
-            self.add_record(json.loads(line))
+            self.add_record(loads(line))
 
     def get_partitions(self, partition_size: int) -> "Iterator[DataTable[RecordType]]":
         if not self.is_normalized():

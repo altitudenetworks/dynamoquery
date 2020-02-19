@@ -1,5 +1,5 @@
 "Helper for building Boto3 DynamoDB queries."
-from typing import Optional, Dict, Text, Any, Set, List
+from typing import Optional, Dict, Text, Any, Set, List, cast
 import logging
 
 from dynamo_query.utils import chunkify
@@ -25,6 +25,8 @@ from dynamo_query.expressions import (
     ExpressionError,
 )
 from dynamo_query.utils import ascii_string_generator
+from dynamo_query.json_tools import dumps
+from dynamo_query.types import ExecuteBoto3QueryReturnType
 
 
 class DynamoQueryError(Exception):
@@ -499,16 +501,11 @@ class BaseDynamoQuery:
 
     @Boto3Retrier()
     def _execute_boto3_query(
-        self,
-        query_method: Boto3QueryMethod,
-        previous_responses: Optional[List] = None,
-        **kwargs: Any,
-    ) -> Dict[Text, Any]:
+        self, query_method: Boto3QueryMethod, **kwargs: Any,
+    ) -> ExecuteBoto3QueryReturnType:
         response = query_method(**kwargs)
-        if previous_responses is not None:
-            response["PreviousResponses"] = previous_responses
         self._raw_responses.append(response)
-        return response
+        return cast(ExecuteBoto3QueryReturnType, response)
 
     def _log_expressions(
         self,
@@ -527,14 +524,14 @@ class BaseDynamoQuery:
     def _execute_item_query(
         self,
         query_method: Boto3QueryMethod,
-        key_data: Dict[Text, Any],
-        item_data: Dict[Text, Any],
-    ) -> Optional[Dict[Text, Any]]:
-        self._logger.json(key_data, name=f"{self._query_type.value}_key_data")
+        key_data: Dict[str, Any],
+        item_data: Dict[str, Any],
+    ) -> Optional[Dict[str, Any]]:
+        self._logger.debug(f"{self._query_type.value}_key_data = {dumps(key_data)}")
         expression_map = self._expressions
         if item_data:
-            self._logger.json(
-                item_data, name=f"{self._query_type.value}_item_data",
+            self._logger.debug(
+                f"{self._query_type.value}_item_data = {dumps(item_data)}"
             )
             for expression in self._expressions.values():
                 try:
@@ -583,7 +580,7 @@ class BaseDynamoQuery:
     def _execute_paginated_query(
         self, query_method: Boto3QueryMethod, data: Dict[Text, Any],
     ) -> DataTable:
-        self._logger.json(data, name="query_data")
+        self._logger.debug(f"query_data = {dumps(data)}")
         expression_map = self._expressions
         for expression in self._expressions.values():
             try:
