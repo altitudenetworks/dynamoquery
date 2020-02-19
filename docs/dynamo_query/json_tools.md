@@ -6,7 +6,6 @@
     - [SafeJSONEncoder](#safejsonencoder)
         - [SafeJSONEncoder().default](#safejsonencoderdefault)
     - [dumps](#dumps)
-    - [load](#load)
     - [loads](#loads)
 
 ## SafeJSONEncoder
@@ -88,25 +87,6 @@ A string with serialized JSON.
 #### See also
 
 - [SafeJSONEncoder](#safejsonencoder)
-
-## load
-
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/json_tools.py#L103)
-
-```python
-def load(io: BinaryIO, **kwargs: Any) -> Any:
-```
-
-Alias for `json.load`.
-
-#### Arguments
-
-- `io` - A file-like input.
-- `kwargs` - List of additional parameters to pass to `json.load`.
-
-#### Returns
-
-An object created from JSON data.
 
 ## loads
 

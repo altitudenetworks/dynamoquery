@@ -16,8 +16,6 @@ from typing import (
 )
 
 from dynamo_query.sentinel import SentinelValue
-from dynamo_query.utils import chunkify
-from dynamo_query.json_tools import loads
 
 DictRecord = Dict[str, Any]
 RecordType = TypeVar("RecordType", bound=Mapping[str, Any])
@@ -647,42 +645,3 @@ class DataTable(defaultdict, Generic[RecordType]):
             )
 
         return self
-
-    def add_records_from_stream(self, data: bytes) -> None:
-        """
-        Convert a byte-string that is formatted as individual rows of JSON-formatted text
-        into a DataTable object.
-
-        ```python
-        data = b'''
-            {"record_id": "1", "attribute_a": "value_a_1", "attribute_b": "value_b_1"}
-            {"record_id": "2", "attribute_a": "value_a_2", "attribute_b": "value_b_2"}
-        '''
-
-        data_table = DataTable().add_records_from_stream(data)
-        # {
-        #   "record_id": ["1", "2"],
-        #   "attribute_a": ["value_a_1", "value_a_2"],
-        #   "attribute_b": ["value_b_1", "value_b_2"]
-        # }
-        ```
-
-        Arguments:
-            records -- a binary obj representing a collection of JSON-formatted strings (row-format)
-
-        Returns:
-            A DataTable object in columnar format
-        """
-        for line in data.decode("utf-8").splitlines():
-            line = line.strip()
-            if not line:
-                continue
-
-            self.add_record(loads(line))
-
-    def get_partitions(self, partition_size: int) -> "Iterator[DataTable[RecordType]]":
-        if not self.is_normalized():
-            raise DataTableError("Cannot partition data_table as it's not normalized.")
-
-        for records in chunkify(self.get_records(), partition_size):
-            yield self.__class__().add_record(*records)

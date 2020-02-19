@@ -2,13 +2,14 @@
 Expression builders.
 """
 from abc import abstractmethod
-from typing import Iterable, List, Union, Any, Set, Tuple, Dict
+from typing import Iterable, List, Union, Any, Set, Tuple, Dict, TypeVar
 
 from dynamo_query.utils import get_format_keys
 from dynamo_query.enums import (
     ConditionExpressionJoinOperator,
     ConditionExpressionOperator,
 )
+from dynamo_query.dynamo_types import ConditionExpressionOperatorStr
 
 __all__ = (
     "ExpressionError",
@@ -44,7 +45,6 @@ class BaseExpression:
         Returns:
             A set of keys.
         """
-        raise NotImplementedError()
 
     @abstractmethod
     def get_format_values(self) -> Set[str]:
@@ -54,7 +54,6 @@ class BaseExpression:
         Returns:
             A set of keys.
         """
-        raise NotImplementedError()
 
     def validate_input_data(self, data: Dict[str, Any]) -> None:
         """
@@ -93,7 +92,9 @@ class BaseExpression:
 
     @abstractmethod
     def _render(self) -> str:
-        raise NotImplementedError()
+        """
+        Render expression to a string.
+        """
 
 
 class Expression(BaseExpression):
@@ -164,6 +165,11 @@ class Expression(BaseExpression):
         return set()
 
 
+ProjectionExpressionType = TypeVar(
+    "ProjectionExpressionType", bound="ProjectionExpression"
+)
+
+
 class ProjectionExpression(BaseExpression):
     """
     Renderer for a format-ready ProjectionExpression.
@@ -180,7 +186,7 @@ class ProjectionExpression(BaseExpression):
     """
 
     def __init__(self, *keys: str):
-        self.keys = keys
+        self.keys: Tuple[str, ...] = tuple(keys)
 
     def get_format_keys(self) -> Set[str]:
         """
@@ -200,13 +206,10 @@ class ProjectionExpression(BaseExpression):
         """
         return set()
 
-    def __and__(self, other: "ProjectionExpression") -> "ProjectionExpression":
-        if isinstance(other, ProjectionExpression):
-            return ProjectionExpression(
-                *self._extend_lists_dedup(self.keys, other.keys)
-            )
-
-        raise ExpressionError(f"Cannot extend projection expression with {other}")
+    def __and__(
+        self: ProjectionExpressionType, other: ProjectionExpressionType
+    ) -> ProjectionExpressionType:
+        return self.__class__(*self._extend_lists_dedup(self.keys, other.keys))
 
     def _render(self) -> str:
         """
@@ -231,7 +234,9 @@ class ProjectionExpression(BaseExpression):
 class BaseConditionExpression(BaseExpression):
     @abstractmethod
     def get_format_keys(self) -> Set[str]:
-        pass
+        """
+        Get required format keys.
+        """
 
 
 class ConditionExpression(BaseConditionExpression):
@@ -260,18 +265,12 @@ class ConditionExpression(BaseConditionExpression):
         self,
         key: str,
         operator: Union[
-            str, ConditionExpressionOperator
+            ConditionExpressionOperatorStr, ConditionExpressionOperator
         ] = ConditionExpressionOperator.EQ,
         value: Any = None,
     ):
         if isinstance(operator, str):
-            try:
-                operator = ConditionExpressionOperator(operator.lower())
-            except ValueError:
-                operators = {i.value for i in ConditionExpressionOperator}
-                raise ExpressionError(
-                    f"Unknown operator {operator}, choices are {operators}."
-                )
+            operator = ConditionExpressionOperator(operator.lower())
 
         if operator is ConditionExpressionOperator.BETWEEN:
             if not isinstance(value, (list, tuple)) or len(value) != 2:
@@ -319,19 +318,8 @@ class ConditionExpression(BaseConditionExpression):
         return {self.value}
 
     def __or__(
-        self,
-        other: Union[
-            "ConditionExpression",
-            "ConditionExpressionGroup",
-            Tuple[str, ...],
-            List[str],
-        ],
+        self, other: Union["ConditionExpression", "ConditionExpressionGroup"],
     ) -> "ConditionExpressionGroup":
-        if isinstance(other, str):
-            other = ConditionExpression(other)
-        if isinstance(other, (list, tuple)):
-            other = ConditionExpression(*other)
-
         if isinstance(other, ConditionExpressionGroup):
             join_operators = []
             join_operators.append(ConditionExpressionJoinOperator.OR)
@@ -343,29 +331,15 @@ class ConditionExpression(BaseConditionExpression):
                 expressions=expressions, join_operators=join_operators
             )
 
-        if isinstance(other, ConditionExpression):
-            join_operators = []
-            join_operators.append(ConditionExpressionJoinOperator.OR)
-            return ConditionExpressionGroup(
-                expressions=[self, other], join_operators=join_operators
-            )
-
-        raise ExpressionError(f"Cannot extend condition expression with {other}")
+        join_operators = []
+        join_operators.append(ConditionExpressionJoinOperator.OR)
+        return ConditionExpressionGroup(
+            expressions=[self, other], join_operators=join_operators
+        )
 
     def __and__(
-        self,
-        other: Union[
-            "ConditionExpression",
-            "ConditionExpressionGroup",
-            Tuple[str, ...],
-            List[str],
-        ],
+        self, other: Union["ConditionExpression", "ConditionExpressionGroup"],
     ) -> "ConditionExpressionGroup":
-        if isinstance(other, str):
-            other = ConditionExpression(other)
-        if isinstance(other, (list, tuple)):
-            other = ConditionExpression(*other)
-
         if isinstance(other, ConditionExpressionGroup):
             join_operators = []
             join_operators.append(ConditionExpressionJoinOperator.AND)
@@ -377,14 +351,11 @@ class ConditionExpression(BaseConditionExpression):
                 expressions=expressions, join_operators=join_operators
             )
 
-        if isinstance(other, ConditionExpression):
-            join_operators = []
-            join_operators.append(ConditionExpressionJoinOperator.AND)
-            return ConditionExpressionGroup(
-                expressions=[self, other], join_operators=join_operators
-            )
-
-        raise ExpressionError(f"Cannot extend condition expression with {other}")
+        join_operators = []
+        join_operators.append(ConditionExpressionJoinOperator.AND)
+        return ConditionExpressionGroup(
+            expressions=[self, other], join_operators=join_operators
+        )
 
     def _render(self) -> str:
         """
@@ -595,6 +566,9 @@ class ConditionExpressionGroup(BaseConditionExpression):
         return f" ".join(results)
 
 
+UpdateExpressionType = TypeVar("UpdateExpressionType", bound="UpdateExpression")
+
+
 class UpdateExpression(BaseExpression):
     """
     Renderer for format-ready `UpdateExpression`.
@@ -673,16 +647,15 @@ class UpdateExpression(BaseExpression):
         result.update(self.update, self.add, self.delete)
         return result
 
-    def __and__(self, other: "UpdateExpression") -> "UpdateExpression":
-        if isinstance(other, UpdateExpression):
-            return UpdateExpression(
-                update=self._extend_lists_dedup(self.update, other.update),
-                add=self._extend_lists_dedup(self.add, other.add),
-                delete=self._extend_lists_dedup(self.delete, other.delete),
-                remove=self._extend_lists_dedup(self.remove, other.remove),
-            )
-
-        raise ExpressionError(f"Cannot extend update expression with {other}")
+    def __and__(
+        self: UpdateExpressionType, other: UpdateExpressionType
+    ) -> UpdateExpressionType:
+        return self.__class__(
+            update=self._extend_lists_dedup(self.update, other.update),
+            add=self._extend_lists_dedup(self.add, other.add),
+            delete=self._extend_lists_dedup(self.delete, other.delete),
+            remove=self._extend_lists_dedup(self.remove, other.remove),
+        )
 
     def _render(self) -> str:
         """

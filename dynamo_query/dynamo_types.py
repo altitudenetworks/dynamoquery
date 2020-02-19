@@ -1,5 +1,7 @@
 from typing import Dict, Iterable, Callable, Any, TypeVar, TYPE_CHECKING
 
+from typing_extensions import Literal
+
 from dynamo_query.data_table import DataTable
 
 if TYPE_CHECKING:
@@ -23,6 +25,21 @@ if TYPE_CHECKING:
     ExclusiveStartKey = Dict[str, Any]
     TableResource = Table
 
+    ConditionExpressionOperatorStr = Literal[
+        "eq",
+        "ne",
+        "in",
+        "gt",
+        "lt",
+        "gte",
+        "lte",
+        "begins_with",
+        "exists",
+        "not_exists",
+        "between",
+        "contains",
+    ]
+
 else:
     BaseExpression = object
     ExpressionMap = object
@@ -39,3 +56,4 @@ else:
     ClientBatchGetItemResponseTypeDef = object
     ClientBatchWriteItemResponseTypeDef = object
     DynamoDBClient = object
+    ConditionExpressionOperatorStr = object

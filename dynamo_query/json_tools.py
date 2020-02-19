@@ -1,7 +1,7 @@
 import decimal
 import datetime
 import json
-from typing import Any, BinaryIO, Type
+from typing import Any, Type
 
 
 class SafeJSONEncoder(json.JSONEncoder):
@@ -98,17 +98,3 @@ def loads(data: str, **kwargs: Any) -> Any:
         An object created from JSON data.
     """
     return json.loads(data, **kwargs)
-
-
-def load(io: BinaryIO, **kwargs: Any) -> Any:
-    """
-    Alias for `json.load`.
-
-    Arguments:
-        io -- A file-like input.
-        kwargs -- List of additional parameters to pass to `json.load`.
-
-    Returns:
-        An object created from JSON data.
-    """
-    return json.load(io, **kwargs)
