@@ -519,7 +519,7 @@ class DynamoQuery(BaseDynamoQuery):
         self,
         table_resource: Optional[TableResource],
         table_keys: Optional[TableKeys] = TABLE_KEYS,
-    ) -> None:
+    ) -> "DynamoQuery":
         """
         Set table resource and table keys.
 
@@ -529,6 +529,7 @@ class DynamoQuery(BaseDynamoQuery):
         """
         self._table_resource = table_resource
         self._table_keys = table_keys
+        return self
 
     def execute(
         self,
@@ -670,6 +671,13 @@ class DynamoQuery(BaseDynamoQuery):
             A dict that can be used in `ExclusiveStartKey` parameter.
         """
         return self._last_evaluated_key
+
+    def reset_start_key(self) -> "DynamoQuery":
+        """
+        Set paginated query to the start.
+        """
+        self._last_evaluated_key = None
+        return self
 
     def get_raw_responses(self) -> List[Dict]:
         """

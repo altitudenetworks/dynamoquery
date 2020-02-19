@@ -1,4 +1,3 @@
-# coding: utf-8
 from copy import copy, deepcopy
 
 from typing_extensions import TypedDict
