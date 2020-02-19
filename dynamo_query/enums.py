@@ -1,6 +1,8 @@
 """
 DynamoDB related enums.
 """
+from typing import Set
+
 import enum
 
 
@@ -11,7 +13,6 @@ __all__ = (
     "ReturnValues",
     "ReturnItemCollectionMetrics",
     "ConditionExpressionOperator",
-    "ConditionExpressionJoinOperator",
 )
 
 
@@ -106,28 +107,19 @@ class ConditionExpressionOperator(enum.Enum):
         CONTAINS -- Rendered as `contains(<key>, <value>)` function.
     """
 
-    EQ = "eq"
-    NE = "ne"
-    IN = "in"
-    GT = "gt"
-    LT = "lt"
-    GTE = "gte"
-    LTE = "lte"
+    EQ = "="
+    NE = "<>"
+    IN = "IN"
+    GT = ">"
+    LT = "<"
+    GTE = ">="
+    LTE = "<="
     BEGINS_WITH = "begins_with"
-    EXISTS = "exists"
-    NOT_EXISTS = "not_exists"
-    BETWEEN = "between"
+    EXISTS = "attribute_exists"
+    NOT_EXISTS = "attribute_not_exists"
+    BETWEEN = "BETWEEN"
     CONTAINS = "contains"
 
-
-class ConditionExpressionJoinOperator(enum.Enum):
-    """
-    Enum of operator types that join `ConditionExpression` in a group.
-
-    Attributes:
-        AND -- Rendered as `AND` operator.
-        OR -- Rendered as `OR` operator.
-    """
-
-    AND = "AND"
-    OR = "OR"
+    @classmethod
+    def values(cls) -> Set[str]:
+        return set(cls)

@@ -5,11 +5,11 @@ from abc import abstractmethod
 from typing import Iterable, List, Union, Any, Set, Tuple, Dict, TypeVar
 
 from dynamo_query.utils import get_format_keys
-from dynamo_query.enums import (
-    ConditionExpressionJoinOperator,
-    ConditionExpressionOperator,
+from dynamo_query.enums import ConditionExpressionOperator
+from dynamo_query.types import (
+    ConditionExpressionOperatorStr,
+    ConditionExpressionJoinOperatorStr,
 )
-from dynamo_query.types import ConditionExpressionOperatorStr
 
 __all__ = (
     "ExpressionError",
@@ -17,6 +17,13 @@ __all__ = (
     "UpdateExpression",
     "ConditionExpression",
 )
+
+
+ExpressionType = TypeVar("ExpressionType", bound="Expression")
+ProjectionExpressionType = TypeVar(
+    "ProjectionExpressionType", bound="ProjectionExpression"
+)
+UpdateExpressionType = TypeVar("UpdateExpressionType", bound="UpdateExpression")
 
 
 class ExpressionError(Exception):
@@ -68,7 +75,7 @@ class BaseExpression:
         """
 
     @abstractmethod
-    def get_operators(self) -> Set[ConditionExpressionOperator]:
+    def get_operators(self) -> Set[ConditionExpressionOperatorStr]:
         """
         Get a set of all operators that used in expession group.
         """
@@ -113,11 +120,21 @@ class Expression(BaseExpression):
     def __init__(self, expression_string: str) -> None:
         self.data = expression_string
 
-    def __or__(self, other: "Expression") -> "Expression":
-        return Expression(f"{self.render()} OR {other.render()}")
+    def __or__(self: ExpressionType, other: ExpressionType) -> ExpressionType:
+        if isinstance(other, Expression):
+            return self.__class__(f"{self.render()} OR {other.render()}")
 
-    def __and__(self, other: "Expression") -> "Expression":
-        return Expression(f"{self.render()} AND {other.render()}")
+        raise ExpressionError(
+            f"Incompatible expression operation: {self.render()} AND {other}"
+        )
+
+    def __and__(self: ExpressionType, other: ExpressionType) -> ExpressionType:
+        if isinstance(other, Expression):
+            return self.__class__(f"{self.render()} AND {other.render()}")
+
+        raise ExpressionError(
+            f"Incompatible expression operation: {self.render()} AND {other}"
+        )
 
     def get_format_keys(self) -> Set[str]:
         """
@@ -158,16 +175,11 @@ class Expression(BaseExpression):
         """
         return self.data
 
-    def get_operators(self) -> Set[ConditionExpressionOperator]:
+    def get_operators(self) -> Set[ConditionExpressionOperatorStr]:
         """
         Get a set of all operators that used in expession group.
         """
         return set()
-
-
-ProjectionExpressionType = TypeVar(
-    "ProjectionExpressionType", bound="ProjectionExpression"
-)
 
 
 class ProjectionExpression(BaseExpression):
@@ -209,7 +221,12 @@ class ProjectionExpression(BaseExpression):
     def __and__(
         self: ProjectionExpressionType, other: ProjectionExpressionType
     ) -> ProjectionExpressionType:
-        return self.__class__(*self._extend_lists_dedup(self.keys, other.keys))
+        if isinstance(other, ProjectionExpression):
+            return self.__class__(*self._extend_lists_dedup(self.keys, other.keys))
+
+        raise ExpressionError(
+            f"Incompatible expression operation: {self.render()} AND {other}"
+        )
 
     def _render(self) -> str:
         """
@@ -224,7 +241,7 @@ class ProjectionExpression(BaseExpression):
 
         return ", ".join(key_list)
 
-    def get_operators(self) -> Set[ConditionExpressionOperator]:
+    def get_operators(self) -> Set[ConditionExpressionOperatorStr]:
         """
         Get a set of all operators that used in expession group.
         """
@@ -264,25 +281,24 @@ class ConditionExpression(BaseConditionExpression):
     def __init__(
         self,
         key: str,
-        operator: Union[
-            ConditionExpressionOperatorStr, ConditionExpressionOperator
-        ] = ConditionExpressionOperator.EQ,
+        operator: ConditionExpressionOperatorStr = "=",
         value: Any = None,
     ):
-        if isinstance(operator, str):
-            operator = ConditionExpressionOperator(operator.lower())
+        try:
+            ConditionExpressionOperator(operator)
+        except ValueError:
+            raise ExpressionError(
+                f"Invalid operator {operator}, choices are {ConditionExpressionOperator.values()}"
+            )
 
-        if operator is ConditionExpressionOperator.BETWEEN:
+        if operator == "BETWEEN":
             if not isinstance(value, (list, tuple)) or len(value) != 2:
                 raise ExpressionError(
                     f"Operator BETWEEN requires a list of two values, got {value}."
                 )
 
         if value is None:
-            if operator in (
-                ConditionExpressionOperator.EXISTS,
-                ConditionExpressionOperator.NOT_EXISTS,
-            ):
+            if operator in ("attribute_exists", "attribute_not_exists"):
                 value = True
             else:
                 value = key
@@ -307,12 +323,9 @@ class ConditionExpression(BaseConditionExpression):
         Returns:
             A set of keys.
         """
-        if self.operator in (
-            ConditionExpressionOperator.EXISTS,
-            ConditionExpressionOperator.NOT_EXISTS,
-        ):
+        if self.operator in ("attribute_exists", "attribute_not_exists"):
             return set()
-        if self.operator is ConditionExpressionOperator.BETWEEN:
+        if self.operator == "BETWEEN":
             return {self.value[0], self.value[1]}
 
         return {self.value}
@@ -320,9 +333,9 @@ class ConditionExpression(BaseConditionExpression):
     def __or__(
         self, other: Union["ConditionExpression", "ConditionExpressionGroup"],
     ) -> "ConditionExpressionGroup":
+        join_operators: List[ConditionExpressionJoinOperatorStr] = []
         if isinstance(other, ConditionExpressionGroup):
-            join_operators = []
-            join_operators.append(ConditionExpressionJoinOperator.OR)
+            join_operators.append("OR")
             join_operators.extend(other.join_operators)
             expressions = []
             expressions.append(self)
@@ -331,18 +344,22 @@ class ConditionExpression(BaseConditionExpression):
                 expressions=expressions, join_operators=join_operators
             )
 
-        join_operators = []
-        join_operators.append(ConditionExpressionJoinOperator.OR)
-        return ConditionExpressionGroup(
-            expressions=[self, other], join_operators=join_operators
+        if isinstance(other, ConditionExpression):
+            join_operators.append("OR")
+            return ConditionExpressionGroup(
+                expressions=[self, other], join_operators=join_operators
+            )
+
+        raise ExpressionError(
+            f"Incompatible expression operation: {self.render()} AND {other}"
         )
 
     def __and__(
         self, other: Union["ConditionExpression", "ConditionExpressionGroup"],
     ) -> "ConditionExpressionGroup":
+        join_operators: List[ConditionExpressionJoinOperatorStr] = []
         if isinstance(other, ConditionExpressionGroup):
-            join_operators = []
-            join_operators.append(ConditionExpressionJoinOperator.AND)
+            join_operators.append("AND")
             join_operators.extend(other.join_operators)
             expressions = []
             expressions.append(self)
@@ -351,10 +368,14 @@ class ConditionExpression(BaseConditionExpression):
                 expressions=expressions, join_operators=join_operators
             )
 
-        join_operators = []
-        join_operators.append(ConditionExpressionJoinOperator.AND)
-        return ConditionExpressionGroup(
-            expressions=[self, other], join_operators=join_operators
+        if isinstance(other, ConditionExpression):
+            join_operators.append("AND")
+            return ConditionExpressionGroup(
+                expressions=[self, other], join_operators=join_operators
+            )
+
+        raise ExpressionError(
+            f"Incompatible expression operation: {self.render()} AND {other}"
         )
 
     def _render(self) -> str:
@@ -364,49 +385,42 @@ class ConditionExpression(BaseConditionExpression):
         Returns:
             A rendered expression part as a string.
         """
-        if self.operator is ConditionExpressionOperator.IN:
+        if self.operator == "IN":
             return f"{{{self.key}}} IN ({{{self.value}{self._value_key_postfix}}})"
 
-        if self.operator is ConditionExpressionOperator.BETWEEN:
+        if self.operator == "BETWEEN":
             return (
                 f"{{{self.key}}} BETWEEN {{{self.value[0]}{self._value_key_postfix}}}"
                 f" AND {{{self.value[1]}{self._value_key_postfix}}}"
             )
 
-        if self.operator is ConditionExpressionOperator.BEGINS_WITH:
+        if self.operator == "begins_with":
             return f"begins_with({{{self.key}}}, {{{self.value}{self._value_key_postfix}}})"
 
-        if self.operator is ConditionExpressionOperator.CONTAINS:
+        if self.operator == "contains":
             return (
                 f"contains({{{self.key}}}, {{{self.value}{self._value_key_postfix}}})"
             )
 
-        if self.operator is ConditionExpressionOperator.EXISTS:
+        if self.operator == "attribute_exists":
             function_name = "attribute_exists"
             if not self.value:
                 function_name = "attribute_not_exists"
 
             return f"{function_name}({{{self.key}}})"
 
-        if self.operator is ConditionExpressionOperator.NOT_EXISTS:
+        if self.operator == "attribute_not_exists":
             function_name = "attribute_not_exists"
             if not self.value:
                 function_name = "attribute_exists"
 
             return f"{function_name}({{{self.key}}})"
 
-        operator_map = {
-            ConditionExpressionOperator.EQ: "=",
-            ConditionExpressionOperator.NE: "<>",
-            ConditionExpressionOperator.GT: ">",
-            ConditionExpressionOperator.LT: "<",
-            ConditionExpressionOperator.GTE: ">=",
-            ConditionExpressionOperator.LTE: "<=",
-        }
-        operator = operator_map[self.operator]
-        return f"{{{self.key}}} {operator} {{{self.value}{self._value_key_postfix}}}"
+        return (
+            f"{{{self.key}}} {self.operator} {{{self.value}{self._value_key_postfix}}}"
+        )
 
-    def get_operators(self) -> Set[ConditionExpressionOperator]:
+    def get_operators(self) -> Set[ConditionExpressionOperatorStr]:
         """
         Get a set of all operators that used in expession group.
         """
@@ -431,10 +445,10 @@ class ConditionExpressionGroup(BaseConditionExpression):
     def __init__(
         self,
         expressions: Iterable[ConditionExpression],
-        join_operators: Iterable[ConditionExpressionJoinOperator],
+        join_operators: Iterable[ConditionExpressionJoinOperatorStr],
     ):
-        self.expressions = expressions
-        self.join_operators = list(join_operators)
+        self.expressions = tuple(expressions)
+        self.join_operators = tuple(join_operators)
 
     def get_format_keys(self) -> Set[str]:
         """
@@ -460,7 +474,7 @@ class ConditionExpressionGroup(BaseConditionExpression):
             result.update(expr.get_format_values())
         return result
 
-    def get_operators(self) -> Set[ConditionExpressionOperator]:
+    def get_operators(self) -> Set[ConditionExpressionOperatorStr]:
         """
         Get a set of all operators that used in expession group.
 
@@ -473,23 +487,12 @@ class ConditionExpressionGroup(BaseConditionExpression):
         return result
 
     def __or__(
-        self,
-        other: Union[
-            "ConditionExpression",
-            "ConditionExpressionGroup",
-            Tuple[str, ...],
-            List[str],
-        ],
+        self, other: Union["ConditionExpression", "ConditionExpressionGroup",],
     ) -> "ConditionExpressionGroup":
-        if isinstance(other, str):
-            other = ConditionExpression(other)
-        if isinstance(other, (list, tuple)):
-            other = ConditionExpression(*other)
-
+        join_operators: List[ConditionExpressionJoinOperatorStr] = []
         if isinstance(other, ConditionExpressionGroup):
-            join_operators: List[ConditionExpressionJoinOperator] = []
             join_operators.extend(self.join_operators)
-            join_operators.append(ConditionExpressionJoinOperator.OR)
+            join_operators.append("OR")
             join_operators.extend(other.join_operators)
             expressions: List[ConditionExpression] = []
             expressions.extend(self.expressions)
@@ -499,9 +502,8 @@ class ConditionExpressionGroup(BaseConditionExpression):
             )
 
         if isinstance(other, ConditionExpression):
-            join_operators = []
             join_operators.extend(self.join_operators)
-            join_operators.append(ConditionExpressionJoinOperator.OR)
+            join_operators.append("OR")
             expressions = []
             expressions.extend(self.expressions)
             expressions.append(other)
@@ -509,26 +511,17 @@ class ConditionExpressionGroup(BaseConditionExpression):
                 expressions=expressions, join_operators=join_operators
             )
 
-        raise ExpressionError(f"Cannot extend condition expression with {other}")
+        raise ExpressionError(
+            f"Incompatible expression operation: {self.render()} AND {other}"
+        )
 
     def __and__(
-        self,
-        other: Union[
-            "ConditionExpression",
-            "ConditionExpressionGroup",
-            Tuple[str, ...],
-            List[str],
-        ],
+        self, other: Union["ConditionExpression", "ConditionExpressionGroup",],
     ) -> "ConditionExpressionGroup":
-        if isinstance(other, str):
-            other = ConditionExpression(other)
-        if isinstance(other, (list, tuple)):
-            other = ConditionExpression(*other)
-
+        join_operators: List[ConditionExpressionJoinOperatorStr] = []
         if isinstance(other, ConditionExpressionGroup):
-            join_operators = []
             join_operators.extend(self.join_operators)
-            join_operators.append(ConditionExpressionJoinOperator.AND)
+            join_operators.append("AND")
             join_operators.extend(other.join_operators)
             expressions: List[ConditionExpression] = []
             expressions.extend(self.expressions)
@@ -538,9 +531,8 @@ class ConditionExpressionGroup(BaseConditionExpression):
             )
 
         if isinstance(other, ConditionExpression):
-            join_operators = []
             join_operators.extend(self.join_operators)
-            join_operators.append(ConditionExpressionJoinOperator.AND)
+            join_operators.append("AND")
             expressions = []
             expressions.extend(self.expressions)
             expressions.append(other)
@@ -548,7 +540,9 @@ class ConditionExpressionGroup(BaseConditionExpression):
                 expressions=expressions, join_operators=join_operators
             )
 
-        raise ExpressionError(f"Cannot extend condition expression with {other}")
+        raise ExpressionError(
+            f"Incompatible expression operation: {self.render()} AND {other}"
+        )
 
     def _render(self) -> str:
         """
@@ -557,16 +551,13 @@ class ConditionExpressionGroup(BaseConditionExpression):
         Returns:
             A rendered expression as a string.
         """
-        results = []
+        results: List[str] = []
         for index, expression in enumerate(self.expressions):
             if index:
-                results.append(self.join_operators[index - 1].value)
+                results.append(self.join_operators[index - 1])
             results.append(expression.render())
 
         return f" ".join(results)
-
-
-UpdateExpressionType = TypeVar("UpdateExpressionType", bound="UpdateExpression")
 
 
 class UpdateExpression(BaseExpression):
@@ -650,11 +641,16 @@ class UpdateExpression(BaseExpression):
     def __and__(
         self: UpdateExpressionType, other: UpdateExpressionType
     ) -> UpdateExpressionType:
-        return self.__class__(
-            update=self._extend_lists_dedup(self.update, other.update),
-            add=self._extend_lists_dedup(self.add, other.add),
-            delete=self._extend_lists_dedup(self.delete, other.delete),
-            remove=self._extend_lists_dedup(self.remove, other.remove),
+        if isinstance(other, UpdateExpression):
+            return self.__class__(
+                update=self._extend_lists_dedup(self.update, other.update),
+                add=self._extend_lists_dedup(self.add, other.add),
+                delete=self._extend_lists_dedup(self.delete, other.delete),
+                remove=self._extend_lists_dedup(self.remove, other.remove),
+            )
+
+        raise ExpressionError(
+            f"Incompatible expression operation: {self.render()} AND {other}"
         )
 
     def _render(self) -> str:
@@ -691,7 +687,7 @@ class UpdateExpression(BaseExpression):
             result.append(f'REMOVE {", ".join(remove_list)}')
         return " ".join(result)
 
-    def get_operators(self) -> Set[ConditionExpressionOperator]:
+    def get_operators(self) -> Set[ConditionExpressionOperatorStr]:
         """
         Get a set of all operators that used in expession group.
         """

@@ -26,18 +26,21 @@ if TYPE_CHECKING:
     TableResource = Table
 
     ConditionExpressionOperatorStr = Literal[
-        "eq",
-        "ne",
-        "in",
-        "gt",
-        "lt",
-        "gte",
-        "lte",
+        "=",
+        "<>",
+        "IN",
+        ">",
+        "<",
+        ">=",
+        "<=",
         "begins_with",
-        "exists",
-        "not_exists",
-        "between",
+        "attribute_exists",
+        "attribute_not_exists",
+        "BETWEEN",
         "contains",
+    ]
+    ConditionExpressionJoinOperatorStr = Literal[
+        "AND", "OR",
     ]
 
 else:
@@ -57,3 +60,4 @@ else:
     ClientBatchWriteItemResponseTypeDef = object
     DynamoDBClient = object
     ConditionExpressionOperatorStr = object
+    ConditionExpressionJoinOperatorStr = object
