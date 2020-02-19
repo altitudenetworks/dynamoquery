@@ -30,7 +30,7 @@ AUTHOR_EMAIL = "engineering@altitudenetworks.com"
 
 # Required Packages
 REQUIRED = [
-    "boto3",
+    "botocore",
     "typing-extensions",
 ]
 
