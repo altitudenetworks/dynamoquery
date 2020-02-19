@@ -1,6 +1,8 @@
 "Helper for building Boto3 DynamoDB queries."
-from typing import Optional, Dict, Text, Any, Set, List, cast
+from typing import Optional, Dict, Text, Any, Set, List
 import logging
+
+from typing_extensions import Literal
 
 from dynamo_query.utils import chunkify
 from dynamo_query.data_table import DataTable
@@ -10,8 +12,15 @@ from dynamo_query.dynamo_types import (
     FormatDict,
     TableKeys,
     ExclusiveStartKey,
-    Boto3QueryMethod,
     TableResource,
+    DynamoDBClient,
+    ClientGetItemResponseTypeDef,
+    ClientUpdateItemResponseTypeDef,
+    ClientDeleteItemResponseTypeDef,
+    ClientQueryResponseTypeDef,
+    ClientScanResponseTypeDef,
+    ClientBatchGetItemResponseTypeDef,
+    ClientBatchWriteItemResponseTypeDef,
 )
 from dynamo_query.enums import (
     DynamoQueryType,
@@ -26,7 +35,6 @@ from dynamo_query.expressions import (
 )
 from dynamo_query.utils import ascii_string_generator
 from dynamo_query.json_tools import dumps
-from dynamo_query.types import ExecuteBoto3QueryReturnType
 
 
 class DynamoQueryError(Exception):
@@ -113,7 +121,7 @@ class BaseDynamoQuery:
         self._limit = limit
         self._last_evaluated_key = exclusive_start_key
         self._was_executed = False
-        self._raw_responses: List[Dict] = []
+        self._raw_responses: List[Any] = []
 
     def __str__(self) -> Text:
         return f"<{self.__class__.__name__} type={self._query_type.value}>"
@@ -310,7 +318,7 @@ class BaseDynamoQuery:
         for record in data_table.get_records():
             result.add_table(
                 self._execute_paginated_query(
-                    query_method=table_resource.query, data=record,
+                    table_resource=table_resource, query_method="query", data=record,
                 )
             )
         return result
@@ -328,7 +336,7 @@ class BaseDynamoQuery:
         for record in data_table.get_records():
             result.add_table(
                 self._execute_paginated_query(
-                    query_method=table_resource.scan, data=record,
+                    table_resource=table_resource, query_method="scan", data=record,
                 )
             )
         return result
@@ -344,7 +352,10 @@ class BaseDynamoQuery:
         for record in data_table.get_records():
             key_data = {k: v for k, v in record.items() if k in table_keys}
             result_record = self._execute_item_query(
-                query_method=table_resource.get_item, key_data=key_data, item_data={},
+                table_resource=table_resource,
+                query_method="get",
+                key_data=key_data,
+                item_data={},
             )
             if result_record is not None:
                 record.update(result_record)
@@ -387,7 +398,8 @@ class BaseDynamoQuery:
                 )
             key_data = {k: v for k, v in record.items() if k in table_keys}
             result_record = self._execute_item_query(
-                query_method=table_resource.update_item,
+                table_resource=table_resource,
+                query_method="update",
                 key_data=key_data,
                 item_data=record,
             )
@@ -408,7 +420,8 @@ class BaseDynamoQuery:
         for record in data_table.get_records():
             key_data = {k: v for k, v in record.items() if k in table_keys}
             result_record = self._execute_item_query(
-                query_method=table_resource.delete_item,
+                table_resource=table_resource,
+                query_method="delete",
                 key_data=key_data,
                 item_data={},
             )
@@ -434,8 +447,8 @@ class BaseDynamoQuery:
                 key_data = {k: v for k, v in record.items() if k in table_keys}
                 key_data_list.append(key_data)
             request_items = {table_name: {"Keys": key_data_list}}
-            response = self._execute_boto3_query(
-                client.batch_get_item, RequestItems=request_items, **self._extra_params,
+            response = self._batch_get_item(
+                client, RequestItems=request_items, **self._extra_params,
             )
             if response.get("Responses", {}).get(table_name):
                 response_table.add_record(*response["Responses"][table_name])
@@ -466,10 +479,8 @@ class BaseDynamoQuery:
             for record in record_chunk:
                 request_list.append({"PutRequest": {"Item": record,}})
             request_items = {table_name: request_list}
-            self._execute_boto3_query(
-                client.batch_write_item,
-                RequestItems=request_items,
-                **self._extra_params,
+            self._batch_write_item(
+                client, RequestItems=request_items, **self._extra_params,
             )
 
         return data_table
@@ -491,21 +502,67 @@ class BaseDynamoQuery:
                 key_data = {k: v for k, v in record.items() if k in table_keys}
                 request_list.append({"DeleteRequest": {"Key": key_data,}})
             request_items = {table_name: request_list}
-            self._execute_boto3_query(
-                client.batch_write_item,
-                RequestItems=request_items,
-                **self._extra_params,
+            self._batch_write_item(
+                client, RequestItems=request_items, **self._extra_params,
             )
 
         return data_table
 
     @Boto3Retrier()
-    def _execute_boto3_query(
-        self, query_method: Boto3QueryMethod, **kwargs: Any,
-    ) -> ExecuteBoto3QueryReturnType:
-        response = query_method(**kwargs)
+    def _batch_get_item(
+        self, client: DynamoDBClient, **kwargs: Any
+    ) -> ClientBatchGetItemResponseTypeDef:
+        response = client.batch_get_item(**kwargs)
         self._raw_responses.append(response)
-        return cast(ExecuteBoto3QueryReturnType, response)
+        return response
+
+    @Boto3Retrier()
+    def _batch_write_item(
+        self, client: DynamoDBClient, **kwargs: Any
+    ) -> ClientBatchWriteItemResponseTypeDef:
+        response = client.batch_write_item(**kwargs)
+        self._raw_responses.append(response)
+        return response
+
+    @Boto3Retrier()
+    def _execute_get_item(
+        self, table_resource: TableResource, **kwargs: Any
+    ) -> ClientGetItemResponseTypeDef:
+        response = table_resource.get_item(**kwargs)
+        self._raw_responses.append(response)
+        return response
+
+    @Boto3Retrier()
+    def _execute_update_item(
+        self, table_resource: TableResource, **kwargs: Any
+    ) -> ClientUpdateItemResponseTypeDef:
+        response = table_resource.update_item(**kwargs)
+        self._raw_responses.append(response)
+        return response
+
+    @Boto3Retrier()
+    def _execute_delete_item(
+        self, table_resource: TableResource, **kwargs: Any
+    ) -> ClientDeleteItemResponseTypeDef:
+        response = table_resource.delete_item(**kwargs)
+        self._raw_responses.append(response)
+        return response
+
+    @Boto3Retrier()
+    def _execute_query(
+        self, table_resource: TableResource, **kwargs: Any
+    ) -> ClientQueryResponseTypeDef:
+        response = table_resource.query(**kwargs)
+        self._raw_responses.append(response)
+        return response
+
+    @Boto3Retrier()
+    def _execute_scan(
+        self, table_resource: TableResource, **kwargs: Any
+    ) -> ClientScanResponseTypeDef:
+        response = table_resource.scan(**kwargs)
+        self._raw_responses.append(response)
+        return response
 
     def _log_expressions(
         self,
@@ -523,7 +580,8 @@ class BaseDynamoQuery:
 
     def _execute_item_query(
         self,
-        query_method: Boto3QueryMethod,
+        table_resource: TableResource,
+        query_method: Literal["get", "update", "delete"],
         key_data: Dict[str, Any],
         item_data: Dict[str, Any],
     ) -> Optional[Dict[str, Any]]:
@@ -564,21 +622,34 @@ class BaseDynamoQuery:
         if expression_attribute_values:
             extra_params["ExpressionAttributeValues"] = expression_attribute_values
 
-        response = self._execute_boto3_query(
-            query_method, Key=key_data, **formatted_expressions, **extra_params,
-        )
-        self._was_executed = True
+        if query_method == "get":
+            get_response = self._execute_get_item(
+                table_resource, Key=key_data, **formatted_expressions, **extra_params,
+            )
+            self._was_executed = True
+            return get_response["Item"]
 
-        if "Item" in response:
-            return response["Item"]
+        if query_method == "update":
+            update_response = self._execute_update_item(
+                table_resource, Key=key_data, **formatted_expressions, **extra_params,
+            )
+            self._was_executed = True
+            return update_response["Attributes"]
 
-        if "Attributes" in response:
-            return response["Attributes"]
+        if query_method == "delete":
+            delete_response = self._execute_delete_item(
+                table_resource, Key=key_data, **formatted_expressions, **extra_params,
+            )
+            self._was_executed = True
+            return delete_response["Attributes"]
 
-        return None
+        raise ValueError(f"Unknown item query method {query_method}")
 
     def _execute_paginated_query(
-        self, query_method: Boto3QueryMethod, data: Dict[Text, Any],
+        self,
+        table_resource: TableResource,
+        query_method: Literal["query", "scan"],
+        data: Dict[Text, Any],
     ) -> DataTable:
         self._logger.debug(f"query_data = {dumps(data)}")
         expression_map = self._expressions
@@ -622,20 +693,37 @@ class BaseDynamoQuery:
             if self._last_evaluated_key:
                 page_params["ExclusiveStartKey"] = self._last_evaluated_key
 
-            response = self._execute_boto3_query(
-                query_method, **formatted_expressions, **extra_params, **page_params,
-            )
-            self._was_executed = True
+            if query_method == "query":
+                response = self._execute_query(
+                    table_resource,
+                    **formatted_expressions,
+                    **extra_params,
+                    **page_params,
+                )
 
-            self._last_evaluated_key = response.get("LastEvaluatedKey")
-            if not self._last_evaluated_key:
-                last_page = True
+                self._last_evaluated_key = response.get("LastEvaluatedKey")
+                if not self._last_evaluated_key:
+                    last_page = True
+
+                result.add_record(*response.get("Items", []))
+            if query_method == "scan":
+                response = self._execute_scan(
+                    table_resource,
+                    **formatted_expressions,
+                    **extra_params,
+                    **page_params,
+                )
+
+                self._last_evaluated_key = response.get("LastEvaluatedKey")
+                if not self._last_evaluated_key:
+                    last_page = True
+
+                result.add_record(*response.get("Items", []))
+
+            self._was_executed = True
 
             limit = limit - page_limit
             if limit <= 0:
                 last_page = True
-
-            if "Items" in response:
-                result.add_record(*response["Items"])
 
         return result
