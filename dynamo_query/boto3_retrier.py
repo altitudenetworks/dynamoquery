@@ -89,7 +89,6 @@ class Boto3Retrier:
     """
 
     NOT_SET: Any = SentinelValue("NOT_SET")
-    default_exceptions_to_suppress: Tuple[Type[BaseException], ...] = tuple()
     default_num_tries = 3
     default_delay = 1
     default_log_level = logging.ERROR
@@ -98,7 +97,10 @@ class Boto3Retrier:
         "ProvisionedThroughputExceededException",
         "ThrottlingException",
     )
-    default_exceptions: Tuple[Type[BaseException], ...] = (ClientError,)
+    default_exceptions: Tuple[Type[BaseException], ...] = (
+        ClientError,
+        BatchUnprocessedItemsError,
+    )
 
     ###################
     def __init__(
@@ -109,7 +111,6 @@ class Boto3Retrier:
         logger: Optional[logging.Logger] = None,
         log_level: Optional[int] = None,
         exceptions_to_catch: Optional[Tuple[Type[BaseException], ...]] = None,
-        exceptions_to_suppress: Optional[Tuple[Type[BaseException], ...]] = None,
         fallback_value: Any = NOT_SET,
     ) -> None:
         self.max_tries = max(
@@ -119,9 +120,6 @@ class Boto3Retrier:
         self._backoff_generator_func = backoff if backoff is not None else self.backoff
         self._log_level = log_level if log_level is not None else self.default_log_level
         self._exceptions_to_catch = exceptions_to_catch or self.default_exceptions
-        self._exceptions_to_suppress = (
-            exceptions_to_suppress or self.default_exceptions_to_suppress
-        )
         self._lazy_logger = logger
 
         self._fallback_value = fallback_value
@@ -308,11 +306,6 @@ class Boto3Retrier:
 
                     return response
 
-                except self._exceptions_to_suppress as e:
-                    # don't retry the exception
-                    self._tries_remaining = 0
-                    self._exception = e
-                    self._handle_exception(e)
                 except self._exceptions_to_catch as e:
                     self._exception = e
                     self._handle_exception(e)

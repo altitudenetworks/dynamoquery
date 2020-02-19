@@ -1,10 +1,90 @@
 from unittest.mock import MagicMock, ANY
 
-from dynamo_query.dynamo_query import DynamoQuery
+import pytest
+
+from dynamo_query.dynamo_query import DynamoQuery, DynamoQueryError
 from dynamo_query.data_table import DataTable
+from dynamo_query.expressions import ConditionExpression
 
 
 class TestDynamoQuery:
+    @staticmethod
+    def test_methods() -> None:
+        filter_expression_mock = MagicMock()
+        projection_expression_mock = MagicMock()
+        table_resource_mock = MagicMock()
+        query = DynamoQuery.build_query(
+            key_condition_expression=ConditionExpression("key"),
+            index_name="my_index",
+            filter_expression=filter_expression_mock,
+            projection_expression=projection_expression_mock,
+            limit=100,
+        )
+
+        with pytest.raises(DynamoQueryError):
+            _ = query.table_resource
+
+        with pytest.raises(DynamoQueryError):
+            _ = query.table_keys
+
+        query.table(table=table_resource_mock)
+        assert str(query) == "<DynamoQuery type=query>"
+        assert query.table_resource == table_resource_mock
+        assert not query.was_executed()
+        assert query.has_more_results()
+
+        query.execute_dict({"key": "value"})
+        assert query.was_executed()
+        assert query.has_more_results()
+        assert query.get_last_evaluated_key() == table_resource_mock.query().get()
+        assert query.get_raw_responses() == [table_resource_mock.query()]
+
+        table_resource_mock.key_schema = [
+            {"AttributeName": "key"},
+            {"NotKey": "not_key"},
+        ]
+        assert query.get_table_keys(table_resource_mock) == ["key"]
+
+    @staticmethod
+    def test_expression_methods() -> None:
+        query = DynamoQuery.build_batch_get_item()
+
+        with pytest.raises(DynamoQueryError):
+            query.update("key")
+
+        with pytest.raises(DynamoQueryError):
+            query.projection("key")
+
+    @staticmethod
+    def test_errors() -> None:
+        filter_expression_mock = MagicMock()
+        projection_expression_mock = MagicMock()
+        table_resource_mock = MagicMock()
+        query = DynamoQuery.build_query(
+            key_condition_expression=ConditionExpression("key", "contains"),
+            index_name="my_index",
+            filter_expression=filter_expression_mock,
+            projection_expression=projection_expression_mock,
+            limit=100,
+        ).table(table=table_resource_mock, table_keys=("pk", "sk"))
+
+        with pytest.raises(DynamoQueryError):
+            query.execute_dict({"key": "value"})
+
+        query = DynamoQuery.build_query(
+            key_condition_expression=ConditionExpression("key"),
+            index_name="my_index",
+            filter_expression=filter_expression_mock,
+            projection_expression=projection_expression_mock,
+            limit=100,
+        ).table(table=table_resource_mock, table_keys=("pk", "sk"))
+
+        with pytest.raises(DynamoQueryError):
+            query.execute_dict({"key1": "value"})
+
+        with pytest.raises(DynamoQueryError):
+            query.execute(DataTable.create({"a": [1, 2], "b": [3]}))
+
     @staticmethod
     def test_query() -> None:
         key_condition_expression_mock = MagicMock()

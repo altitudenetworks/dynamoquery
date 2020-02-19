@@ -562,7 +562,7 @@ class DynamoQuery(BaseDynamoQuery):
 
         self.table(
             table=table or self.table_resource,
-            table_keys=table_keys or self.table_keys,
+            table_keys=table_keys or self._table_keys,
         )
 
         self._logger.debug(
@@ -588,10 +588,7 @@ class DynamoQuery(BaseDynamoQuery):
             DynamoQueryType.BATCH_UPDATE_ITEM: self._execute_method_batch_update_item,
             DynamoQueryType.BATCH_DELETE_ITEM: self._execute_method_batch_delete_item,
         }
-        if self._query_type in method_map:
-            return method_map[self._query_type](data_table)
-
-        raise DynamoQueryError(f"Unknown query type {self._query_type}")
+        return method_map[self._query_type](data_table)
 
     def execute_dict(
         self,
@@ -623,10 +620,10 @@ class DynamoQuery(BaseDynamoQuery):
         Returns:
             A `tools.data_table.DataTable` with query results.
         """
-        data_table = DataTable.create().add_record(data)
+        data_table = DataTable.create().add_record(data or {"dummy": True})
         self.table(
             table=table or self.table_resource,
-            table_keys=table_keys or self.table_keys,
+            table_keys=table_keys or self._table_keys,
         )
         return self.execute(data_table=data_table)
 

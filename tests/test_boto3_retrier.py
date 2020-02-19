@@ -1,9 +1,12 @@
+from unittest.mock import MagicMock
+
 import pytest
+from botocore.exceptions import ClientError
 
-from dynamo_query.boto3_retrier import Boto3Retrier
+from dynamo_query.boto3_retrier import Boto3Retrier, BatchUnprocessedItemsError
 
 
-class TestRetryAndCatch:
+class TestBoto3Retrier:
     def test_no_backoff(self):
         generator = Boto3Retrier.no_backoff(5)
         assert next(generator) == 5
@@ -145,3 +148,69 @@ class TestRetryAndCatch:
 
         assert my_func() == "value"
         assert value_error_func() == "fallback"
+
+    def test_no_fallback(self) -> None:
+        decorator = Boto3Retrier(
+            exceptions_to_catch=(ValueError,), backoff=Boto3Retrier.no_backoff, delay=0,
+        )
+
+        @decorator
+        def my_func():
+            return "value"
+
+        @decorator
+        def value_error_func():
+            raise ValueError("value")
+
+        assert my_func() == "value"
+        with pytest.raises(ValueError):
+            value_error_func()
+
+    @staticmethod
+    def test_previous_responses() -> None:
+        decorator = Boto3Retrier(backoff=Boto3Retrier.no_backoff, delay=0,)
+
+        @decorator
+        def value_error_func(items):
+            if not items:
+                raise BatchUnprocessedItemsError(["test"], "response")
+
+            return {"key": "value"}
+
+        value_error_func.counter = 0
+
+        assert value_error_func(tuple()) == {
+            "PreviousResponses": ["response"],
+            "key": "value",
+        }
+
+    @staticmethod
+    def test_get_exception_scope() -> None:
+        exc = MagicMock()
+        exc.__traceback__ = None
+        assert Boto3Retrier.get_exception_scope(exc) == {}
+        exc.__traceback__ = MagicMock()
+        exc.__traceback__.tb_next = None
+        assert Boto3Retrier.get_exception_scope(exc) == {}
+        exc.__traceback__.tb_next = MagicMock()
+        exc.__traceback__.tb_next.tb_frame.f_locals = {"key": "value"}
+        assert Boto3Retrier.get_exception_scope(exc) == {"key": "value"}
+
+    @staticmethod
+    def test_handle_exception() -> None:
+        decorator = Boto3Retrier(
+            backoff=Boto3Retrier.no_backoff, delay=0, fallback_value="fallback",
+        )
+        exc = ValueError("test")
+        assert decorator.handle_exception(exc) is None
+        exc = ClientError({"Error": {"Code": "ThrottlingException"}}, "test")
+        assert decorator.handle_exception(exc) is None
+
+        exc = ClientError({"Error": {"Code": "UnknownException"}}, "test")
+        with pytest.raises(ClientError):
+            decorator.handle_exception(exc)
+
+        exc = BatchUnprocessedItemsError(["test"], "response")
+        assert str(exc) == "response"
+        decorator.handle_exception(exc)
+        assert decorator.method_args is None

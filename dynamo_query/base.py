@@ -295,10 +295,6 @@ class BaseDynamoQuery:
     def _execute_method_query(self, data_table: DataTable) -> DataTable:
         self._validate_last_evaluated_key()
         self._validate_required_value_keys(data_table)
-        if self.KEY_CONDITION_EXPRESSION not in self._expressions:
-            raise DynamoQueryError(
-                f"{self} must have {self.KEY_CONDITION_EXPRESSION} or `key_condition` method."
-            )
 
         for operator in self._expressions[
             self.KEY_CONDITION_EXPRESSION
@@ -545,13 +541,6 @@ class BaseDynamoQuery:
         if expression_attribute_values:
             extra_params["ExpressionAttributeValues"] = expression_attribute_values
 
-        if self._query_type == DynamoQueryType.GET_ITEM:
-            get_response = self._execute_get_item(
-                Key=key_data, **formatted_expressions, **extra_params,
-            )
-            self._was_executed = True
-            return get_response["Item"]
-
         if self._query_type == DynamoQueryType.UPDATE_ITEM:
             update_response = self._execute_update_item(
                 Key=key_data, **formatted_expressions, **extra_params,
@@ -566,7 +555,11 @@ class BaseDynamoQuery:
             self._was_executed = True
             return delete_response["Attributes"]
 
-        raise ValueError(f"Unknown item query method {self._query_type}")
+        get_response = self._execute_get_item(
+            Key=key_data, **formatted_expressions, **extra_params,
+        )
+        self._was_executed = True
+        return get_response["Item"]
 
     def _execute_paginated_query(self, data: Dict[str, Any]) -> DataTable:
         self._logger.debug(f"query_data = {dumps(data)}")
