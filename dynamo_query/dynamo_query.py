@@ -15,7 +15,7 @@ from dynamo_query.enums import (
     ReturnValues,
     ReturnItemCollectionMetrics,
 )
-from dynamo_query.dynamo_types import (
+from dynamo_query.types import (
     ExclusiveStartKey,
     TableResource,
     TableKeys,

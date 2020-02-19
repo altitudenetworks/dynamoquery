@@ -9,7 +9,7 @@ from dynamo_query.enums import (
     ConditionExpressionJoinOperator,
     ConditionExpressionOperator,
 )
-from dynamo_query.dynamo_types import ConditionExpressionOperatorStr
+from dynamo_query.types import ConditionExpressionOperatorStr
 
 __all__ = (
     "ExpressionError",
