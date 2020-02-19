@@ -1,5 +1,7 @@
-"Helper for building Boto3 DynamoDB queries."
-from typing import Optional, Dict, Text, Any, Set, List
+"""
+Helper for building Boto3 DynamoDB queries.
+"""
+from typing import Optional, Dict, Text, Any, Set, List, cast
 import logging
 
 from dynamo_query.utils import chunkify
@@ -120,9 +122,29 @@ class BaseDynamoQuery:
         self._last_evaluated_key = exclusive_start_key
         self._was_executed = False
         self._raw_responses: List[Any] = []
+        self._table_resource: Optional[TableResource] = None
+        self._table_keys: Optional[TableKeys] = None
 
     def __str__(self) -> Text:
         return f"<{self.__class__.__name__} type={self._query_type.value}>"
+
+    @property
+    def table_resource(self) -> TableResource:
+        if self._table_resource is None:
+            raise DynamoQueryError("TableResource is not specified.")
+
+        return self._table_resource
+
+    @property
+    def table_keys(self) -> TableKeys:
+        if self._table_keys is None:
+            raise DynamoQueryError("Table keys are not specified.")
+
+        return self._table_keys
+
+    @property
+    def client(self) -> DynamoDBClient:
+        return cast(DynamoDBClient, self.table_resource.meta.client)
 
     def was_executed(self) -> bool:
         """
@@ -252,15 +274,14 @@ class BaseDynamoQuery:
 
         return result
 
-    def _validate_last_evaluated_key(self, table_keys: TableKeys) -> None:
+    def _validate_last_evaluated_key(self) -> None:
         if self._last_evaluated_key is None:
             return
 
         keys_set = set(self._last_evaluated_key.keys())
-        table_keys_set = set(table_keys)
-        if keys_set != table_keys_set:
+        if keys_set != self.table_keys:
             raise DynamoQueryError(
-                f"Expected ExclusiveStartKey to have {table_keys_set}"
+                f"Expected ExclusiveStartKey to have {self.table_keys}"
                 f" keys, got {keys_set}"
             )
 
@@ -282,13 +303,8 @@ class BaseDynamoQuery:
                     f' but present in {name} = "{expression}"'
                 )
 
-    def _execute_method_query(
-        self,
-        table_resource: TableResource,
-        data_table: DataTable,
-        table_keys: TableKeys,
-    ) -> DataTable:
-        self._validate_last_evaluated_key(table_keys)
+    def _execute_method_query(self, data_table: DataTable) -> DataTable:
+        self._validate_last_evaluated_key()
         self._validate_required_value_keys(data_table)
         if self.KEY_CONDITION_EXPRESSION not in self._expressions:
             raise DynamoQueryError(
@@ -314,75 +330,47 @@ class BaseDynamoQuery:
 
         result = DataTable.create()
         for record in data_table.get_records():
-            result.add_table(
-                self._execute_paginated_query(
-                    table_resource=table_resource, data=record,
-                )
-            )
+            result.add_table(self._execute_paginated_query(data=record))
         return result
 
-    def _execute_method_scan(
-        self,
-        table_resource: TableResource,
-        data_table: DataTable,
-        table_keys: TableKeys,
-    ) -> DataTable:
-        self._validate_last_evaluated_key(table_keys)
+    def _execute_method_scan(self, data_table: DataTable,) -> DataTable:
+        self._validate_last_evaluated_key()
         self._validate_required_value_keys(data_table)
 
         result = DataTable.create()
         for record in data_table.get_records():
-            result.add_table(
-                self._execute_paginated_query(
-                    table_resource=table_resource, data=record,
-                )
-            )
+            result.add_table(self._execute_paginated_query(data=record))
         return result
 
-    def _execute_method_get_item(
-        self,
-        table_resource: TableResource,
-        data_table: DataTable,
-        table_keys: TableKeys,
-    ) -> DataTable:
-        self._validate_data_table_has_table_keys(data_table, table_keys)
+    def _execute_method_get_item(self, data_table: DataTable) -> DataTable:
+        self._validate_data_table_has_table_keys(data_table)
         result = DataTable.create()
         for record in data_table.get_records():
-            key_data = {k: v for k, v in record.items() if k in table_keys}
-            result_record = self._execute_item_query(
-                table_resource=table_resource, key_data=key_data, item_data={},
-            )
+            key_data = {k: v for k, v in record.items() if k in self.table_keys}
+            result_record = self._execute_item_query(key_data=key_data, item_data={})
             if result_record is not None:
                 record.update(result_record)
             result.add_record(record)
         return result
 
-    @staticmethod
-    def _validate_data_table_has_table_keys(
-        data_table: DataTable, table_keys: TableKeys,
-    ) -> None:
-        for table_key in table_keys:
+    def _validate_data_table_has_table_keys(self, data_table: DataTable) -> None:
+        for table_key in self.table_keys:
             if data_table.has_set_column(table_key):
                 continue
 
             if data_table.has_column(table_key):
                 raise DynamoQueryError(
                     f'Column "{table_key}" has missing values in input data,'
-                    f" but present in table keys {table_keys}"
+                    f" but present in table keys {self.table_keys}"
                 )
 
             raise DynamoQueryError(
                 f'Column "{table_key}" is missing in input data,'
-                f" but present in table keys {table_keys}"
+                f" but present in table keys {self.table_keys}"
             )
 
-    def _execute_method_update_item(
-        self,
-        table_resource: TableResource,
-        data_table: DataTable,
-        table_keys: TableKeys,
-    ) -> DataTable:
-        self._validate_data_table_has_table_keys(data_table, table_keys)
+    def _execute_method_update_item(self, data_table: DataTable) -> DataTable:
+        self._validate_data_table_has_table_keys(data_table)
         self._validate_required_value_keys(data_table)
 
         result = DataTable.create()
@@ -391,60 +379,47 @@ class BaseDynamoQuery:
                 raise DynamoQueryError(
                     f"{self} must have {self.UPDATE_EXPRESSION} or `update` method."
                 )
-            key_data = {k: v for k, v in record.items() if k in table_keys}
+            key_data = {k: v for k, v in record.items() if k in self.table_keys}
             result_record = self._execute_item_query(
-                table_resource=table_resource, key_data=key_data, item_data=record,
+                key_data=key_data, item_data=record,
             )
             if result_record is not None:
                 result.add_record(result_record)
         return result
 
-    def _execute_method_delete_item(
-        self,
-        table_resource: TableResource,
-        data_table: DataTable,
-        table_keys: TableKeys,
-    ) -> DataTable:
-        self._validate_data_table_has_table_keys(data_table, table_keys)
+    def _execute_method_delete_item(self, data_table: DataTable,) -> DataTable:
+        self._validate_data_table_has_table_keys(data_table)
         self._validate_required_value_keys(data_table)
 
         result = DataTable.create()
         for record in data_table.get_records():
-            key_data = {k: v for k, v in record.items() if k in table_keys}
-            result_record = self._execute_item_query(
-                table_resource=table_resource, key_data=key_data, item_data={},
-            )
+            key_data = {k: v for k, v in record.items() if k in self.table_keys}
+            result_record = self._execute_item_query(key_data=key_data, item_data={})
             if result_record is not None:
                 result.add_record(result_record)
         return result
 
-    def _execute_method_batch_get_item(
-        self,
-        table_resource: TableResource,
-        data_table: DataTable,
-        table_keys: TableKeys,
-    ) -> DataTable:
-        self._validate_data_table_has_table_keys(data_table, table_keys)
+    def _execute_method_batch_get_item(self, data_table: DataTable,) -> DataTable:
+        self._validate_data_table_has_table_keys(data_table)
 
         record_chunks = chunkify(data_table.get_records(), self.MAX_BATCH_SIZE)
-        table_name = table_resource.name
-        client = table_resource.meta.client
+        table_name = self.table_resource.name
         response_table = DataTable.create()
         for record_chunk in record_chunks:
             key_data_list = []
             for record in record_chunk:
-                key_data = {k: v for k, v in record.items() if k in table_keys}
+                key_data = {k: v for k, v in record.items() if k in self.table_keys}
                 key_data_list.append(key_data)
             request_items = {table_name: {"Keys": key_data_list}}
             response = self._batch_get_item(
-                client, RequestItems=request_items, **self._extra_params,
+                RequestItems=request_items, **self._extra_params,
             )
             if response.get("Responses", {}).get(table_name):
                 response_table.add_record(*response["Responses"][table_name])
 
         result = DataTable.create()
         for record in data_table.get_records():
-            key_data = {k: v for k, v in record.items() if k in table_keys}
+            key_data = {k: v for k, v in record.items() if k in self.table_keys}
             response_records = response_table.filter_records(key_data).get_records()
             for response_record in response_records:
                 record.update(response_record)
@@ -452,104 +427,78 @@ class BaseDynamoQuery:
 
         return result
 
-    def _execute_method_batch_update_item(
-        self,
-        table_resource: TableResource,
-        data_table: DataTable,
-        table_keys: TableKeys,
-    ) -> DataTable:
-        self._validate_data_table_has_table_keys(data_table, table_keys)
+    def _execute_method_batch_update_item(self, data_table: DataTable) -> DataTable:
+        self._validate_data_table_has_table_keys(data_table)
 
         record_chunks = chunkify(data_table.get_records(), self.MAX_BATCH_SIZE)
-        table_name = table_resource.name
-        client = table_resource.meta.client
+        table_name = self.table_resource.name
         for record_chunk in record_chunks:
             request_list = []
             for record in record_chunk:
                 request_list.append({"PutRequest": {"Item": record,}})
             request_items = {table_name: request_list}
             self._batch_write_item(
-                client, RequestItems=request_items, **self._extra_params,
+                RequestItems=request_items, **self._extra_params,
             )
 
         return data_table
 
-    def _execute_method_batch_delete_item(
-        self,
-        table_resource: TableResource,
-        data_table: DataTable,
-        table_keys: TableKeys,
-    ) -> DataTable:
-        self._validate_data_table_has_table_keys(data_table, table_keys)
+    def _execute_method_batch_delete_item(self, data_table: DataTable) -> DataTable:
+        self._validate_data_table_has_table_keys(data_table)
 
         record_chunks = chunkify(data_table.get_records(), self.MAX_BATCH_SIZE)
-        table_name = table_resource.name
-        client = table_resource.meta.client
+        table_name = self.table_resource.name
         for record_chunk in record_chunks:
             request_list = []
             for record in record_chunk:
-                key_data = {k: v for k, v in record.items() if k in table_keys}
+                key_data = {k: v for k, v in record.items() if k in self.table_keys}
                 request_list.append({"DeleteRequest": {"Key": key_data,}})
             request_items = {table_name: request_list}
             self._batch_write_item(
-                client, RequestItems=request_items, **self._extra_params,
+                RequestItems=request_items, **self._extra_params,
             )
 
         return data_table
 
     @Boto3Retrier()
-    def _batch_get_item(
-        self, client: DynamoDBClient, **kwargs: Any
-    ) -> ClientBatchGetItemResponseTypeDef:
-        response = client.batch_get_item(**kwargs)
+    def _batch_get_item(self, **kwargs: Any) -> ClientBatchGetItemResponseTypeDef:
+        response = self.client.batch_get_item(**kwargs)
         self._raw_responses.append(response)
         return response
 
     @Boto3Retrier()
-    def _batch_write_item(
-        self, client: DynamoDBClient, **kwargs: Any
-    ) -> ClientBatchWriteItemResponseTypeDef:
-        response = client.batch_write_item(**kwargs)
+    def _batch_write_item(self, **kwargs: Any) -> ClientBatchWriteItemResponseTypeDef:
+        response = self.client.batch_write_item(**kwargs)
         self._raw_responses.append(response)
         return response
 
     @Boto3Retrier()
-    def _execute_get_item(
-        self, table_resource: TableResource, **kwargs: Any
-    ) -> ClientGetItemResponseTypeDef:
-        response = table_resource.get_item(**kwargs)
+    def _execute_get_item(self, **kwargs: Any) -> ClientGetItemResponseTypeDef:
+        response = self.table_resource.get_item(**kwargs)
         self._raw_responses.append(response)
         return response
 
     @Boto3Retrier()
-    def _execute_update_item(
-        self, table_resource: TableResource, **kwargs: Any
-    ) -> ClientUpdateItemResponseTypeDef:
-        response = table_resource.update_item(**kwargs)
+    def _execute_update_item(self, **kwargs: Any) -> ClientUpdateItemResponseTypeDef:
+        response = self.table_resource.update_item(**kwargs)
         self._raw_responses.append(response)
         return response
 
     @Boto3Retrier()
-    def _execute_delete_item(
-        self, table_resource: TableResource, **kwargs: Any
-    ) -> ClientDeleteItemResponseTypeDef:
-        response = table_resource.delete_item(**kwargs)
+    def _execute_delete_item(self, **kwargs: Any) -> ClientDeleteItemResponseTypeDef:
+        response = self.table_resource.delete_item(**kwargs)
         self._raw_responses.append(response)
         return response
 
     @Boto3Retrier()
-    def _execute_query(
-        self, table_resource: TableResource, **kwargs: Any
-    ) -> ClientQueryResponseTypeDef:
-        response = table_resource.query(**kwargs)
+    def _execute_query(self, **kwargs: Any) -> ClientQueryResponseTypeDef:
+        response = self.table_resource.query(**kwargs)
         self._raw_responses.append(response)
         return response
 
     @Boto3Retrier()
-    def _execute_scan(
-        self, table_resource: TableResource, **kwargs: Any
-    ) -> ClientScanResponseTypeDef:
-        response = table_resource.scan(**kwargs)
+    def _execute_scan(self, **kwargs: Any) -> ClientScanResponseTypeDef:
+        response = self.table_resource.scan(**kwargs)
         self._raw_responses.append(response)
         return response
 
@@ -568,10 +517,7 @@ class BaseDynamoQuery:
             )
 
     def _execute_item_query(
-        self,
-        table_resource: TableResource,
-        key_data: Dict[str, Any],
-        item_data: Dict[str, Any],
+        self, key_data: Dict[str, Any], item_data: Dict[str, Any],
     ) -> Optional[Dict[str, Any]]:
         self._logger.debug(f"{self._query_type.value}_key_data = {dumps(key_data)}")
         expression_map = self._expressions
@@ -612,30 +558,28 @@ class BaseDynamoQuery:
 
         if self._query_type == DynamoQueryType.GET_ITEM:
             get_response = self._execute_get_item(
-                table_resource, Key=key_data, **formatted_expressions, **extra_params,
+                Key=key_data, **formatted_expressions, **extra_params,
             )
             self._was_executed = True
             return get_response["Item"]
 
         if self._query_type == DynamoQueryType.UPDATE_ITEM:
             update_response = self._execute_update_item(
-                table_resource, Key=key_data, **formatted_expressions, **extra_params,
+                Key=key_data, **formatted_expressions, **extra_params,
             )
             self._was_executed = True
             return update_response["Attributes"]
 
         if self._query_type == DynamoQueryType.DELETE_ITEM:
             delete_response = self._execute_delete_item(
-                table_resource, Key=key_data, **formatted_expressions, **extra_params,
+                Key=key_data, **formatted_expressions, **extra_params,
             )
             self._was_executed = True
             return delete_response["Attributes"]
 
         raise ValueError(f"Unknown item query method {self._query_type}")
 
-    def _execute_paginated_query(
-        self, table_resource: TableResource, data: Dict[Text, Any],
-    ) -> DataTable:
+    def _execute_paginated_query(self, data: Dict[str, Any]) -> DataTable:
         self._logger.debug(f"query_data = {dumps(data)}")
         expression_map = self._expressions
         for expression in self._expressions.values():
@@ -680,10 +624,7 @@ class BaseDynamoQuery:
 
             if self._query_type == DynamoQueryType.QUERY:
                 response = self._execute_query(
-                    table_resource,
-                    **formatted_expressions,
-                    **extra_params,
-                    **page_params,
+                    **formatted_expressions, **extra_params, **page_params,
                 )
 
                 self._last_evaluated_key = response.get("LastEvaluatedKey")
@@ -694,10 +635,7 @@ class BaseDynamoQuery:
 
             if self._query_type == DynamoQueryType.SCAN:
                 response = self._execute_scan(
-                    table_resource,
-                    **formatted_expressions,
-                    **extra_params,
-                    **page_params,
+                    **formatted_expressions, **extra_params, **page_params,
                 )
 
                 self._last_evaluated_key = response.get("LastEvaluatedKey")

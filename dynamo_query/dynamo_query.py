@@ -512,10 +512,25 @@ class DynamoQuery(BaseDynamoQuery):
             extra_params=extra_params,
         )
 
+    def table(
+        self,
+        table_resource: Optional[TableResource],
+        table_keys: Optional[TableKeys] = TABLE_KEYS,
+    ) -> None:
+        """
+        Set table resource and table keys.
+
+        Arguments:
+            table_resource -- `boto3_resource.Table('my_table')`.
+            table_keys -- Primary and sort keys for table.
+        """
+        self._table_resource = table_resource
+        self._table_keys = table_keys
+
     def execute(
         self,
-        table_resource: TableResource,
         data_table: DataTable,
+        table_resource: Optional[TableResource] = None,
         table_keys: Optional[TableKeys] = TABLE_KEYS,
     ) -> DataTable:
         """
@@ -550,17 +565,25 @@ class DynamoQuery(BaseDynamoQuery):
         Returns:
             A `tools.data_table.DataTable` with query results.
         """
-        self._logger.debug(f"Execute {self._query_type.value} on {table_resource.name}")
 
         if not data_table.is_normalized():
             raise DynamoQueryError("Input DataTable is not normalized.")
 
-        if table_keys is None:
+        self.table(
+            table_resource=table_resource or self._table_resource,
+            table_keys=table_keys or self._table_keys,
+        )
+
+        self._logger.debug(
+            f"Execute {self._query_type.value} on {self.table_resource.name}"
+        )
+
+        if self._table_keys is None:
             self._logger.warning(
                 "Table keys were not set, use `table_keys` argument, getting from schema."
             )
-            table_keys = self.get_table_keys(table_resource)
-            self._logger.debug(f"Got table keys {set(table_keys)}")
+            self._table_keys = self.get_table_keys(self.table_resource)
+            self._logger.debug(f"Got table keys {set(self._table_keys)}")
 
         self._raw_responses = []
 
@@ -575,14 +598,14 @@ class DynamoQuery(BaseDynamoQuery):
             DynamoQueryType.BATCH_DELETE_ITEM: self._execute_method_batch_delete_item,
         }
         if self._query_type in method_map:
-            return method_map[self._query_type](table_resource, data_table, table_keys)
+            return method_map[self._query_type](data_table)
 
         raise DynamoQueryError(f"Unknown query type {self._query_type}")
 
     def execute_dict(
         self,
-        table_resource: TableResource,
         data: Dict[Text, Any],
+        table_resource: Optional[TableResource] = None,
         table_keys: Optional[TableKeys] = TABLE_KEYS,
     ) -> DataTable:
         """
@@ -610,9 +633,11 @@ class DynamoQuery(BaseDynamoQuery):
             A `tools.data_table.DataTable` with query results.
         """
         data_table = DataTable.create().add_record(data)
-        return self.execute(
-            table_resource=table_resource, data_table=data_table, table_keys=table_keys
+        self.table(
+            table_resource=table_resource or self._table_resource,
+            table_keys=table_keys or self._table_keys,
         )
+        return self.execute(data_table=data_table)
 
     def get_last_evaluated_key(self) -> Optional[ExclusiveStartKey]:
         """

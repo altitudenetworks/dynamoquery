@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     ExpressionMap = Dict[str, BaseExpression]
     FormatDict = Dict[str, Any]
     TableKeys = Iterable[str]
-    QueryMethod = Callable[[Table, DataTable, TableKeys], DataTable]
+    QueryMethod = Callable[[DataTable], DataTable]
     ExclusiveStartKey = Dict[str, Any]
     TableResource = Table
 
