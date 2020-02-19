@@ -282,7 +282,8 @@ class Boto3Retrier:
 
         self._logger.log(msg=message, level=log_level)
         if self._exception is not None:
-            self._logger.exception(self._exception, level=log_level)
+            message = f"{self._exception.__class__.__name__}: {self._exception}"
+            self._logger.log(msg=message, level=log_level, exc_info=self._exception)
 
     def __call__(self, f: FunctionType) -> FunctionType:
         @functools.wraps(f)
