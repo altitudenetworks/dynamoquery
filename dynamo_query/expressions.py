@@ -1,3 +1,6 @@
+"""
+Expression builders.
+"""
 from abc import abstractmethod
 from typing import Iterable, List, Union, Any, Set, Tuple, Dict
 
@@ -5,6 +8,13 @@ from dynamo_query.utils import get_format_keys
 from dynamo_query.enums import (
     ConditionExpressionJoinOperator,
     ConditionExpressionOperator,
+)
+
+__all__ = (
+    "ExpressionError",
+    "ProjectionExpression",
+    "UpdateExpression",
+    "ConditionExpression",
 )
 
 

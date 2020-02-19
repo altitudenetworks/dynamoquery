@@ -1,4 +1,18 @@
+"""
+DynamoDB related enums.
+"""
 import enum
+
+
+__all__ = (
+    "DynamoQueryType",
+    "ReturnConsumedCapacity",
+    "ReturnItemCollectionMetrics",
+    "ReturnValues",
+    "ReturnItemCollectionMetrics",
+    "ConditionExpressionOperator",
+    "ConditionExpressionJoinOperator",
+)
 
 
 class DynamoQueryType(enum.Enum):

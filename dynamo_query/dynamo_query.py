@@ -25,7 +25,10 @@ from dynamo_query.dynamo_types import (
 from dynamo_query.base import BaseDynamoQuery, DynamoQueryError
 
 
-__all__ = ["DynamoQuery", "DynamoQueryError"]
+__all__ = (
+    "DynamoQuery",
+    "DynamoQueryError",
+)
 
 
 class DynamoQuery(BaseDynamoQuery):

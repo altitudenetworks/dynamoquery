@@ -2,7 +2,9 @@
 
 > Auto-generated documentation for [dynamo_query.enums](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py) module.
 
-- [dynamo-query](../README.md#dynamo-query-index) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Enums
+DynamoDB related enums.
+
+- [dynamo-query](../README.md#dynamo-query) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Enums
     - [ConditionExpressionJoinOperator](#conditionexpressionjoinoperator)
     - [ConditionExpressionOperator](#conditionexpressionoperator)
     - [DynamoQueryType](#dynamoquerytype)
@@ -12,7 +14,7 @@
 
 ## ConditionExpressionJoinOperator
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L109)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L123)
 
 ```python
 class ConditionExpressionJoinOperator(enum.Enum):
@@ -27,7 +29,7 @@ Enum of operator types that join `ConditionExpression` in a group.
 
 ## ConditionExpressionOperator
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L76)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L90)
 
 ```python
 class ConditionExpressionOperator(enum.Enum):
@@ -52,7 +54,7 @@ Enum of operator types that can be used as postfixes in `ConditionExpression` ke
 
 ## DynamoQueryType
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L4)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L18)
 
 ```python
 class DynamoQueryType(enum.Enum):
@@ -73,7 +75,7 @@ Enum of DynamoQuery query types.
 
 ## ReturnConsumedCapacity
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L29)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L43)
 
 ```python
 class ReturnConsumedCapacity(enum.Enum):
@@ -89,7 +91,7 @@ Enum of [ReturnConsumedCapacity](#returnconsumedcapacity) argument values for Bo
 
 ## ReturnItemCollectionMetrics
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L63)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L77)
 
 ```python
 class ReturnItemCollectionMetrics(enum.Enum):
@@ -104,7 +106,7 @@ Enum of [ReturnItemCollectionMetrics](#returnitemcollectionmetrics) argument val
 
 ## ReturnValues
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L44)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L58)
 
 ```python
 class ReturnValues(enum.Enum):
