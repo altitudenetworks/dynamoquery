@@ -7,10 +7,11 @@
 
 # DynamoTable changes
 
-- `required_fields` removed, it is user responsibility now
+- `required_fields` removed, it is user responsibility now (breaking!)
 - `get_sort_key` / `get_partition_key` support non-string values
-- `create_table` method no longer manages auto-scaling
-- `dynamodb_resource.Table` whould be passed on construction
+- `create_table` method no longer manages auto-scaling (breaking!)
+- `dynamodb_resource.Table` should be passed on construction (breaking!)
+- `DataTableError` no longer subclasses `ValueError`
 
 # DynamoTableIndex changes
 
