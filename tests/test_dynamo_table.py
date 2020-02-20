@@ -36,7 +36,6 @@ class TestDynamoTableIndex:
         class MyDynamoTable(DynamoTable):
             global_secondary_indexes = [DynamoTableIndex("gsi", "gsi_pk", "gsi_sk")]
             local_secondary_indexes = [DynamoTableIndex("lsi", "lsi_pk", None)]
-            required_columns = {"pk", "sk"}
 
             @property
             def table(self):
@@ -156,9 +155,6 @@ class TestDynamoTableIndex:
 
         assert list(self.result.batch_get(DataTable()).get_records()) == []
 
-        with pytest.raises(ValueError):
-            self.result.batch_get(DataTable().add_record({"pk": "my_pk"}))
-
     def test_batch_delete(self):
         self.client_mock.batch_write_item.return_value = {
             "Responses": {
@@ -180,9 +176,6 @@ class TestDynamoTableIndex:
         )
 
         assert list(self.result.batch_delete(DataTable()).get_records()) == []
-
-        with pytest.raises(ValueError):
-            self.result.batch_delete(DataTable().add_record({"pk": "my_pk"}))
 
     def test_batch_upsert(self, _patch_datetime):
         self.client_mock.batch_write_item.return_value = {
@@ -224,5 +217,74 @@ class TestDynamoTableIndex:
 
         assert list(self.result.batch_upsert(DataTable()).get_records()) == []
 
-        with pytest.raises(ValueError):
-            self.result.batch_upsert(DataTable().add_record({"pk": "my_pk"}))
+    def test_get_record(self):
+        self.table_mock.get_item.return_value = {
+            "Item": {"pk": "my_pk", "pk_column": "my_pk"}
+        }
+        assert self.result.get_record({"pk_column": "my_pk", "sk_column": "my_sk"}) == {
+            "pk": "my_pk",
+            "pk_column": "my_pk",
+            "sk": "my_sk",
+        }
+        self.table_mock.get_item.return_value = {"Item": {"pk": "my_pk"}}
+        assert (
+            self.result.get_record({"pk_column": "my_pk", "sk_column": "my_sk"}) is None
+        )
+
+    def test_upsert_record(self):
+        self.table_mock.update_item.return_value = {
+            "Attributes": {"pk": "my_pk", "pk_column": "my_pk"}
+        }
+        assert self.result.upsert_record(
+            {"pk_column": "my_pk", "sk_column": "my_sk"}
+        ) == {"pk": "my_pk", "pk_column": "my_pk"}
+
+    def test_delete_record(self):
+        self.table_mock.delete_item.return_value = {
+            "Attributes": {"pk": "my_pk", "pk_column": "my_pk"}
+        }
+        assert self.result.delete_record(
+            {"pk_column": "my_pk", "sk_column": "my_sk"}
+        ) == {"pk": "my_pk", "pk_column": "my_pk"}
+        self.table_mock.delete_item.return_value = {}
+        assert (
+            self.result.delete_record({"pk_column": "my_pk", "sk_column": "my_sk"})
+            is None
+        )
+
+    def test_scan(self):
+        self.table_mock.scan.return_value = {"Items": [{"pk": "my_pk", "sk": "sk"}]}
+        filter_expression_mock = MagicMock()
+        assert list(
+            self.result.scan(
+                filter_expression=filter_expression_mock, data={"key": "value"}
+            )
+        ) == [{"pk": "my_pk", "sk": "sk"}]
+        self.table_mock.scan.assert_called_with(
+            FilterExpression=filter_expression_mock.render().format(), Limit=1000
+        )
+
+    def test_query(self):
+        self.table_mock.query.return_value = {
+            "Items": [{"pk": "my_pk", "sk": "sk"}, {"pk": "my_pk2", "sk": "sk2"}]
+        }
+        filter_expression_mock = MagicMock()
+        assert list(
+            self.result.query(
+                partition_key="pk_value",
+                sort_key_prefix="sk_prefix",
+                filter_expression=filter_expression_mock,
+                data={"key": "value"},
+                limit=1,
+            )
+        ) == [{"pk": "my_pk", "sk": "sk"}]
+        self.table_mock.query.assert_called_with(
+            ConsistentRead=False,
+            ExpressionAttributeNames={"#aaa": "pk", "#aab": "sk"},
+            ExpressionAttributeValues={":aaa": "pk_value", ":aab": "sk_prefix"},
+            FilterExpression=filter_expression_mock.render().format(),
+            KeyConditionExpression="#aaa = :aaa AND begins_with(#aab, :aab)",
+            Limit=1000,
+            ScanIndexForward=True,
+        )
+

@@ -35,7 +35,6 @@ class DynamoTable(Generic[DynamoRecord]):
     table_keys: Set[str] = {partition_key_name, sort_key_name}
     global_secondary_indexes: Iterable[DynamoTableIndex] = []
     local_secondary_indexes: Iterable[DynamoTableIndex] = []
-    required_columns: Set[str] = set()
     sort_key_prefix: Optional[str] = None
 
     primary_index = DynamoTableIndex(
@@ -127,7 +126,6 @@ class DynamoTable(Generic[DynamoRecord]):
 
                 records_count += 1
                 yield record
-            # yield results_data_table
 
             if not query.has_more_results():
                 return
@@ -206,11 +204,6 @@ class DynamoTable(Generic[DynamoRecord]):
         """
         if not data_table:
             return DataTable()
-
-        set_keys = set(data_table.get_set_column_names())
-        if not self.required_columns.issubset(set_keys):
-            raise ValueError(f"DataTable must have {self.required_columns} set columns")
-
         get_data_table = DataTable[DynamoRecord]()
         for record in data_table.get_records():
             partition_key = self.get_partition_key(record)
@@ -247,10 +240,6 @@ class DynamoTable(Generic[DynamoRecord]):
         if not data_table:
             return DataTable()
 
-        set_keys = set(data_table.get_set_column_names())
-        if not self.required_columns.issubset(set_keys):
-            raise ValueError(f"DataTable must have {self.required_columns} set columns")
-
         delete_data_table = DataTable[DynamoRecord]()
         for record in data_table.get_records():
             partition_key = self.get_partition_key(record)
@@ -280,10 +269,6 @@ class DynamoTable(Generic[DynamoRecord]):
         """
         if not data_table:
             return DataTable[DynamoRecord]()
-
-        set_keys = set(data_table.get_set_column_names())
-        if not self.required_columns.issubset(set_keys):
-            raise ValueError(f"DataTable must have {self.required_columns} set columns")
 
         existing_records = self.batch_get(data_table)
         now = datetime.datetime.utcnow()
@@ -317,10 +302,6 @@ class DynamoTable(Generic[DynamoRecord]):
         Returns:
             A dict with record data or None.
         """
-        set_keys = set(record.keys())
-        if not self.required_columns.issubset(set_keys):
-            raise ValueError(f"Data must have {self.required_columns} set keys")
-
         partition_key = self.get_partition_key(record)
         sort_key = self.get_sort_key(record)
         result = (
@@ -352,10 +333,6 @@ class DynamoTable(Generic[DynamoRecord]):
         Returns:
             A dict with updated record data.
         """
-        set_keys = set(record.keys())
-        if not self.required_columns.issubset(set_keys):
-            raise ValueError(f"Data must have {self.required_columns} set keys")
-
         update_keys = set(record.keys()) - self.table_keys
         partition_key = self.get_partition_key(record)
         sort_key = self.get_sort_key(record)
@@ -389,15 +366,11 @@ class DynamoTable(Generic[DynamoRecord]):
         Returns:
             A dict with record data or None.
         """
-        set_keys = set(record.keys())
-        if not self.required_columns.issubset(set_keys):
-            raise ValueError(f"Data must have {self.required_columns} set keys")
-
         partition_key = self.get_partition_key(record)
         sort_key = self.get_sort_key(record)
         result: DataTable[DynamoRecord] = DynamoQuery.build_delete_item(
             condition_expression=condition_expression,
-        ).table(table=self.table, table_keys=self.table_keys,).execute_dict(
+        ).table(table=self.table, table_keys=self.table_keys).execute_dict(
             {self.partition_key_name: partition_key, self.sort_key_name: sort_key},
         )
         if not result:

@@ -553,20 +553,20 @@ class BaseDynamoQuery:
                 Key=key_data, **formatted_expressions, **extra_params,
             )
             self._was_executed = True
-            return update_response["Attributes"]
+            return update_response.get("Attributes")
 
         if self._query_type == DynamoQueryType.DELETE_ITEM:
             delete_response = self._execute_delete_item(
                 Key=key_data, **formatted_expressions, **extra_params,
             )
             self._was_executed = True
-            return delete_response["Attributes"]
+            return delete_response.get("Attributes")
 
         get_response = self._execute_get_item(
             Key=key_data, **formatted_expressions, **extra_params,
         )
         self._was_executed = True
-        return get_response["Item"]
+        return get_response.get("Item")
 
     def _execute_paginated_query(self, data: Dict[str, Any]) -> DataTable:
         self._logger.debug(f"query_data = {dumps(data)}")
