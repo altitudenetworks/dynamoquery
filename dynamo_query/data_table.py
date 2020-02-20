@@ -27,7 +27,7 @@ __all__ = (
 )
 
 
-class DataTableError(ValueError):
+class DataTableError(BaseException):
     """
     Main error for `DataTable` class.
     """
