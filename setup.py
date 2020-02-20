@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from pathlib import Path
-from typing import List, Dict, Text
+from typing import List, Dict
 
 from setuptools import setup
 from setuptools import find_packages
@@ -34,10 +34,10 @@ REQUIRED = [
 ]
 
 # EXTERNAL DEPENDENCY LINKS
-DEPENDENCY_LINKS = []  # type: List[Text]
+DEPENDENCY_LINKS = []  # type: List[str]
 
 # Optional Packages
-EXTRAS = {}  # type: Dict[Text, Text]
+EXTRAS = {}  # type: Dict[str, str]
 
 
 setup(

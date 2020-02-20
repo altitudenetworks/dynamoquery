@@ -1,7 +1,7 @@
 """
 Helper for building Boto3 DynamoDB queries.
 """
-from typing import Optional, Dict, Text, Any, Set, List, cast
+from typing import Optional, Dict, Any, Set, List, cast
 import logging
 
 from dynamo_query.utils import chunkify
@@ -97,8 +97,8 @@ class BaseDynamoQuery:
     def __init__(
         self,
         query_type: DynamoQueryType,
-        expressions: Dict[Text, BaseExpression],
-        extra_params: Dict[Text, Any],
+        expressions: Dict[str, BaseExpression],
+        extra_params: Dict[str, Any],
         limit: int = MAX_LIMIT,
         exclusive_start_key: Optional[ExclusiveStartKey] = None,
         logger: logging.Logger = None,
@@ -121,7 +121,7 @@ class BaseDynamoQuery:
 
         return self._lazy_logger
 
-    def __str__(self) -> Text:
+    def __str__(self) -> str:
         return f"<{self.__class__.__name__} type={self._query_type.value}>"
 
     @property
@@ -164,8 +164,8 @@ class BaseDynamoQuery:
         return self._last_evaluated_key is not None
 
     @classmethod
-    def _get_projection_dict(cls, expression_map: ExpressionMap) -> Dict[Text, Text]:
-        expression_format_keys: Set[Text] = set()
+    def _get_projection_dict(cls, expression_map: ExpressionMap) -> Dict[str, str]:
+        expression_format_keys: Set[str] = set()
         for expression in expression_map.values():
             keys = expression.get_format_keys()
             expression_format_keys.update(keys)
@@ -178,7 +178,7 @@ class BaseDynamoQuery:
         return result
 
     @staticmethod
-    def _split_values(values: Text) -> Set[Text]:
+    def _split_values(values: str) -> Set[str]:
         result = set()
         for value in values.split(", "):
             if value.startswith(":"):
@@ -188,7 +188,7 @@ class BaseDynamoQuery:
 
     @classmethod
     def _get_repr_format_dict(
-        cls, projection_dict: Dict[Text, Text], data_dict: Dict[Text, Any],
+        cls, projection_dict: Dict[str, str], data_dict: Dict[str, Any],
     ) -> FormatDict:
         result = {v: v for v in projection_dict.values()}
         for key, value in data_dict.items():
@@ -200,9 +200,9 @@ class BaseDynamoQuery:
     @classmethod
     def _get_format_dict(
         cls,
-        projection_dict: Dict[Text, Text],
+        projection_dict: Dict[str, str],
         expression_map: ExpressionMap,
-        data_dict: Dict[Text, Any],
+        data_dict: Dict[str, Any],
     ) -> FormatDict:
         result = {v: k for k, v in projection_dict.items()}
         expression_value_keys_map = {}
@@ -234,8 +234,8 @@ class BaseDynamoQuery:
 
     @classmethod
     def _get_expression_attribute_values(
-        cls, format_dict: FormatDict, data_dict: Dict[Text, Any],
-    ) -> Dict[Text, Any]:
+        cls, format_dict: FormatDict, data_dict: Dict[str, Any],
+    ) -> Dict[str, Any]:
         result = {}
         for key, value in data_dict.items():
             format_dict_key = f"{key}{cls._value_key_postfix}"
@@ -256,7 +256,7 @@ class BaseDynamoQuery:
     @classmethod
     def _get_formatted_expressions(
         cls, expression_map: ExpressionMap, format_dict: FormatDict,
-    ) -> Dict[Text, Text]:
+    ) -> Dict[str, str]:
         result = {}
         for name, expression in expression_map.items():
             try:
@@ -496,8 +496,8 @@ class BaseDynamoQuery:
 
     def _log_expressions(
         self,
-        projection_dict: Dict[Text, Text],
-        data_dict: Dict[Text, Any],
+        projection_dict: Dict[str, str],
+        data_dict: Dict[str, Any],
         expression_map: ExpressionMap,
     ) -> None:
         repr_format_dict = self._get_repr_format_dict(
@@ -607,7 +607,7 @@ class BaseDynamoQuery:
 
         while not last_page:
             page_limit = min(limit, self.MAX_PAGE_SIZE)
-            page_params: Dict[Text, Any] = dict(Limit=page_limit,)
+            page_params: Dict[str, Any] = dict(Limit=page_limit)
             if self._last_evaluated_key:
                 page_params["ExclusiveStartKey"] = self._last_evaluated_key
 
