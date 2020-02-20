@@ -13,7 +13,6 @@ from typing import (
     Callable,
     Optional,
     Any,
-    Text,
     Dict,
     Type,
     Tuple,
@@ -133,7 +132,7 @@ class Boto3Retrier:
         self.method: Optional[Callable] = None
         self.method_parent = None
         self.method_args: Optional[Tuple] = None
-        self.method_kwargs: Optional[Dict[Text, Any]] = None
+        self.method_kwargs: Optional[Dict[str, Any]] = None
         self._previous_responses: List[Any] = []
 
     @property
@@ -190,7 +189,7 @@ class Boto3Retrier:
         return cls.doubling_backoff(start)
 
     @staticmethod
-    def get_exception_scope(exc: BaseException) -> Dict[Text, Any]:
+    def get_exception_scope(exc: BaseException) -> Dict[str, Any]:
         """
         Get original method scope from exception object.
 
@@ -265,7 +264,7 @@ class Boto3Retrier:
         self._log(msg, use_defined_log_level=True)
         return self._fallback_value
 
-    def _log(self, message: Text, use_defined_log_level: bool = False) -> None:
+    def _log(self, message: str, use_defined_log_level: bool = False) -> None:
         """
         Logs a message with log_level = WARNING if the use_defined_log_level is set to False
         else logs it with defined log_level

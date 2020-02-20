@@ -296,4 +296,3 @@ class TestDynamoTableIndex:
             Limit=1,
             ScanIndexForward=True,
         )
-

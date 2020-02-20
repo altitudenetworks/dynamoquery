@@ -19,6 +19,7 @@ Helper for building Boto3 DynamoDB queries.
         - [DynamoQuery().get_last_evaluated_key](#dynamoqueryget_last_evaluated_key)
         - [DynamoQuery().get_raw_responses](#dynamoqueryget_raw_responses)
         - [DynamoQuery.get_table_keys](#dynamoqueryget_table_keys)
+        - [DynamoQuery().limit](#dynamoquerylimit)
         - [DynamoQuery().projection](#dynamoqueryprojection)
         - [DynamoQuery().reset_start_key](#dynamoqueryreset_start_key)
         - [DynamoQuery().table](#dynamoquerytable)
@@ -313,7 +314,7 @@ result_data_table = query.execute(
 @classmethod
 def build_query(
     key_condition_expression: BaseConditionExpression,
-    index_name: Optional[Text] = None,
+    index_name: Optional[str] = None,
     projection_expression: Optional[ProjectionExpression] = None,
     filter_expression: Optional[BaseConditionExpression] = None,
     limit: int = MAX_LIMIT,
@@ -538,7 +539,7 @@ A `DataTable` with query results.
 
 ```python
 def execute_dict(
-    data: Dict[Text, Any],
+    data: Dict[str, Any],
     table: Optional[Table] = None,
     table_keys: Optional[TableKeys] = TABLE_KEYS,
 ) -> DataTable:
@@ -629,7 +630,7 @@ A list of AWS responses.
 
 ```python
 @staticmethod
-def get_table_keys(table: Table) -> List[Text]:
+def get_table_keys(table: Table) -> TableKeys:
 ```
 
 Get table keys from schema.
@@ -650,14 +651,38 @@ A list of table keys.
 
 #### See also
 
+- [TableKeys](types.md#tablekeys)
 - [Table](types.md#table)
+
+### DynamoQuery().limit
+
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L732)
+
+```python
+def limit(limit: int) -> 'DynamoQuery':
+```
+
+Limit results for `scan` or `query` method.
+
+```python
+query = DynamoQuery.scan()
+query.limit(10)
+```
+
+#### Arguments
+
+limit - Number of max entries.
+
+#### Returns
+
+Itself, so this method can be chained.
 
 ### DynamoQuery().projection
 
 [[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L702)
 
 ```python
-def projection(*fields: Text) -> 'DynamoQuery':
+def projection(*fields: str) -> 'DynamoQuery':
 ```
 
 Django ORM-like shortcut for adding `ProjectionExpression`
@@ -711,15 +736,15 @@ Set table resource and table keys.
 
 ### DynamoQuery().update
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L732)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L750)
 
 ```python
 def update(
-    update: Iterable[Text] = tuple(),
-    add: Iterable[Text] = tuple(),
-    delete: Iterable[Text] = tuple(),
-    remove: Iterable[Text] = tuple(),
-    *args: Text,
+    update: Iterable[str] = tuple(),
+    add: Iterable[str] = tuple(),
+    delete: Iterable[str] = tuple(),
+    remove: Iterable[str] = tuple(),
+    *args: str,
 ) -> 'DynamoQuery':
 ```
 

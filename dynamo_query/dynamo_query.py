@@ -1,7 +1,7 @@
 """
 Helper for building Boto3 DynamoDB queries.
 """
-from typing import Optional, Dict, Text, Any, List, Iterable
+from typing import Optional, Dict, Any, List, Iterable
 
 from dynamo_query.data_table import DataTable
 from dynamo_query.expressions import (
@@ -79,7 +79,7 @@ class DynamoQuery(BaseDynamoQuery):
     def build_query(
         cls,
         key_condition_expression: BaseConditionExpression,
-        index_name: Optional[Text] = None,
+        index_name: Optional[str] = None,
         projection_expression: Optional[ProjectionExpression] = None,
         filter_expression: Optional[BaseConditionExpression] = None,
         limit: int = MAX_LIMIT,
@@ -136,7 +136,7 @@ class DynamoQuery(BaseDynamoQuery):
         if projection_expression:
             expressions[cls.PROJECTION_EXPRESSION] = projection_expression
 
-        extra_params: Dict[Text, Any] = dict(
+        extra_params: Dict[str, Any] = dict(
             ConsistentRead=consistent_read, ScanIndexForward=scan_index_forward,
         )
         if index_name is not None:
@@ -202,7 +202,7 @@ class DynamoQuery(BaseDynamoQuery):
         if projection_expression:
             expressions[cls.PROJECTION_EXPRESSION] = projection_expression
 
-        extra_params: Dict[Text, Any] = dict()
+        extra_params: Dict[str, Any] = dict()
 
         return cls(
             query_type=DynamoQueryType.SCAN,
@@ -252,7 +252,7 @@ class DynamoQuery(BaseDynamoQuery):
         if projection_expression:
             expressions[cls.PROJECTION_EXPRESSION] = projection_expression
 
-        extra_params: Dict[Text, Any] = dict(
+        extra_params: Dict[str, Any] = dict(
             ConsistentRead=consistent_read,
             ReturnConsumedCapacity=return_consumed_capacity,
         )
@@ -317,7 +317,7 @@ class DynamoQuery(BaseDynamoQuery):
         if update_expression:
             expressions[cls.UPDATE_EXPRESSION] = update_expression
 
-        extra_params: Dict[Text, Any] = dict(
+        extra_params: Dict[str, Any] = dict(
             ReturnConsumedCapacity=return_consumed_capacity,
             ReturnItemCollectionMetrics=return_item_collection_metrics,
             ReturnValues=return_values,
@@ -373,7 +373,7 @@ class DynamoQuery(BaseDynamoQuery):
         if condition_expression:
             expressions[cls.CONDITION_EXPRESSION] = condition_expression
 
-        extra_params: Dict[Text, Any] = dict(
+        extra_params: Dict[str, Any] = dict(
             ReturnConsumedCapacity=return_consumed_capacity,
             ReturnItemCollectionMetrics=return_item_collection_metrics,
             ReturnValues=return_values,
@@ -592,7 +592,7 @@ class DynamoQuery(BaseDynamoQuery):
 
     def execute_dict(
         self,
-        data: Dict[Text, Any],
+        data: Dict[str, Any],
         table: Optional[Table] = None,
         table_keys: Optional[TableKeys] = TABLE_KEYS,
     ) -> DataTable:
@@ -699,7 +699,7 @@ class DynamoQuery(BaseDynamoQuery):
 
         return result
 
-    def projection(self, *fields: Text) -> "DynamoQuery":
+    def projection(self, *fields: str) -> "DynamoQuery":
         """
         Django ORM-like shortcut for adding `ProjectionExpression`
 
@@ -749,11 +749,11 @@ class DynamoQuery(BaseDynamoQuery):
 
     def update(
         self,
-        *args: Text,
-        update: Iterable[Text] = tuple(),
-        add: Iterable[Text] = tuple(),
-        delete: Iterable[Text] = tuple(),
-        remove: Iterable[Text] = tuple(),
+        *args: str,
+        update: Iterable[str] = tuple(),
+        add: Iterable[str] = tuple(),
+        delete: Iterable[str] = tuple(),
+        remove: Iterable[str] = tuple(),
     ) -> "DynamoQuery":
         """
         Shortcut for adding `UpdateExpression`.

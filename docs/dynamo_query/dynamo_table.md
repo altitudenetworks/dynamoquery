@@ -187,7 +187,7 @@ def get_sort_key(record: DynamoRecord) -> Any:
 
 ### DynamoTable().query
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L408)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L410)
 
 ```python
 def query(
