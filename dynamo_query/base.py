@@ -296,7 +296,7 @@ class BaseDynamoQuery:
                     )
 
                 raise DynamoQueryError(
-                    f'Column "{required_value_key}"" is missing in input data,'
+                    f'Column "{required_value_key}" is missing in input data,'
                     f' but present in {name} = "{expression}"'
                 )
 
@@ -340,7 +340,9 @@ class BaseDynamoQuery:
         result = DataTable.create()
         for record in data_table.get_records():
             key_data = {k: v for k, v in record.items() if k in self.table_keys}
-            result_record = self._execute_item_query(key_data=key_data, item_data={})
+            result_record = self._execute_item_query(
+                key_data=key_data, item_data=record
+            )
             if result_record is not None:
                 record.update(result_record)
             result.add_record(record)
@@ -387,7 +389,9 @@ class BaseDynamoQuery:
         result = DataTable.create()
         for record in data_table.get_records():
             key_data = {k: v for k, v in record.items() if k in self.table_keys}
-            result_record = self._execute_item_query(key_data=key_data, item_data={})
+            result_record = self._execute_item_query(
+                key_data=key_data, item_data=record
+            )
             if result_record is not None:
                 result.add_record(result_record)
         return result
@@ -505,9 +509,14 @@ class BaseDynamoQuery:
             projection_dict=projection_dict, data_dict=data_dict,
         )
         for name, expression in expression_map.items():
-            self._logger.debug(
-                f'Using {name} = "{expression.render().format(**repr_format_dict)}"'
-            )
+            try:
+                self._logger.debug(
+                    f'Using {name} = "{expression.render().format(**repr_format_dict)}"'
+                )
+            except KeyError:
+                self._logger.warning(
+                    f"Cannot render {name} = {expression.render()}: {data_dict}"
+                )
 
     def _execute_item_query(
         self, key_data: Dict[str, Any], item_data: Dict[str, Any],
@@ -525,15 +534,19 @@ class BaseDynamoQuery:
                     raise DynamoQueryError(f"Invalid input data: {e}")
 
         projection_dict = self._get_projection_dict(expression_map)
+        full_data = {
+            **key_data,
+            **item_data,
+        }
         format_dict = self._get_format_dict(
             projection_dict=projection_dict,
             expression_map=expression_map,
-            data_dict=item_data,
+            data_dict=full_data,
         )
         self._log_expressions(
             projection_dict=projection_dict,
             expression_map=expression_map,
-            data_dict=item_data,
+            data_dict=full_data,
         )
 
         formatted_expressions = self._get_formatted_expressions(
