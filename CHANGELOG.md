@@ -5,6 +5,9 @@
 - `ProjectionDict` sorts keys for stable result
 - Added `DynamoQuery.limit` method to set limit for query/scan
 - Fixed query not executing on empty data in `DynamoQuery.execute_dict`
+- Paginated queries no longer validate expression values, there is no validation
+- Fixed data usage in expressions for delete and update methods
+- Fixed keys usage in expressions for delete and update methods
 
 # DynamoTable changes
 
