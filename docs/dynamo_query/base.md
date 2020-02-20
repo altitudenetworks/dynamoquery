@@ -20,7 +20,7 @@ Helper for building Boto3 DynamoDB queries.
 ```python
 class BaseDynamoQuery():
     def __init__(
-        query_type: DynamoQueryType,
+        query_type: QueryType,
         expressions: Dict[str, BaseExpression],
         extra_params: Dict[str, Any],
         limit: int = MAX_LIMIT,
@@ -34,7 +34,7 @@ Base class for building Boto3 DynamoDB queries. Use
 
 ```python
 query = BaseDynamoQuery(
-    query_type=DynamoQueryType.SCAN,
+    query_type=QueryType.SCAN,
     expressions={
         BaseDynamoQuery.FILTER_EXPRESSION: ConditionExpression(
             'first_name',
@@ -61,7 +61,7 @@ query = BaseDynamoQuery(
 
 #### Arguments
 
-- `query_type` - DynamoQueryType item.
+- `query_type` - QueryType item.
 - `expressions` - Expressions for query.
 - `extra_params` - Any exptra params to pass to boto3 method.
 - `limit` - Limit of results for scan/query requests.
@@ -69,7 +69,7 @@ query = BaseDynamoQuery(
 
 #### See also
 
-- [DynamoQueryType](enums.md#dynamoquerytype)
+- [QueryType](enums.md#querytype)
 
 ### BaseDynamoQuery().client
 

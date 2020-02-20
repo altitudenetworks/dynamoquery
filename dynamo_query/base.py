@@ -22,7 +22,7 @@ from dynamo_query.types import (
     ClientBatchGetItemResponseTypeDef,
     ClientBatchWriteItemResponseTypeDef,
 )
-from dynamo_query.enums import DynamoQueryType
+from dynamo_query.enums import QueryType
 from dynamo_query.expressions import (
     BaseExpression,
     ConditionExpressionOperator,
@@ -45,7 +45,7 @@ class BaseDynamoQuery:
 
     ```python
     query = BaseDynamoQuery(
-        query_type=DynamoQueryType.SCAN,
+        query_type=QueryType.SCAN,
         expressions={
             BaseDynamoQuery.FILTER_EXPRESSION: ConditionExpression(
                 'first_name',
@@ -70,7 +70,7 @@ class BaseDynamoQuery:
         ReturnConsumedCapacity -- Alias for `ReturnConsumedCapacity` enum,
 
     Arguments:
-        query_type -- DynamoQueryType item.
+        query_type -- QueryType item.
         expressions -- Expressions for query.
         extra_params -- Any exptra params to pass to boto3 method.
         limit -- Limit of results for scan/query requests.
@@ -96,7 +96,7 @@ class BaseDynamoQuery:
 
     def __init__(
         self,
-        query_type: DynamoQueryType,
+        query_type: QueryType,
         expressions: Dict[str, BaseExpression],
         extra_params: Dict[str, Any],
         limit: int = MAX_LIMIT,
@@ -549,14 +549,14 @@ class BaseDynamoQuery:
         if expression_attribute_values:
             extra_params["ExpressionAttributeValues"] = expression_attribute_values
 
-        if self._query_type == DynamoQueryType.UPDATE_ITEM:
+        if self._query_type == QueryType.UPDATE_ITEM:
             update_response = self._execute_update_item(
                 Key=key_data, **formatted_expressions, **extra_params,
             )
             self._was_executed = True
             return update_response.get("Attributes")
 
-        if self._query_type == DynamoQueryType.DELETE_ITEM:
+        if self._query_type == QueryType.DELETE_ITEM:
             delete_response = self._execute_delete_item(
                 Key=key_data, **formatted_expressions, **extra_params,
             )
@@ -612,7 +612,7 @@ class BaseDynamoQuery:
             if self._last_evaluated_key:
                 page_params["ExclusiveStartKey"] = self._last_evaluated_key
 
-            if self._query_type == DynamoQueryType.QUERY:
+            if self._query_type == QueryType.QUERY:
                 response = self._execute_query(
                     **formatted_expressions, **extra_params, **page_params,
                 )
@@ -623,7 +623,7 @@ class BaseDynamoQuery:
 
                 result.add_record(*response.get("Items", []))
 
-            if self._query_type == DynamoQueryType.SCAN:
+            if self._query_type == QueryType.SCAN:
                 response = self._execute_scan(
                     **formatted_expressions, **extra_params, **page_params,
                 )

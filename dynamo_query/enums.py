@@ -7,12 +7,12 @@ import enum
 
 
 __all__ = (
-    "DynamoQueryType",
+    "QueryType",
     "ConditionExpressionOperator",
 )
 
 
-class DynamoQueryType(enum.Enum):
+class QueryType(enum.Enum):
     """
     Enum of DynamoQuery query types.
 

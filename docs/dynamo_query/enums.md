@@ -7,7 +7,7 @@ DynamoDB related enums.
 - [dynamo-query](../README.md#dynamo-query) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Enums
     - [ConditionExpressionOperator](#conditionexpressionoperator)
         - [ConditionExpressionOperator.values](#conditionexpressionoperatorvalues)
-    - [DynamoQueryType](#dynamoquerytype)
+    - [QueryType](#querytype)
 
 ## ConditionExpressionOperator
 
@@ -43,12 +43,12 @@ Enum of operator types that can be used as postfixes in `ConditionExpression` ke
 def values() -> Set[str]:
 ```
 
-## DynamoQueryType
+## QueryType
 
 [[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L15)
 
 ```python
-class DynamoQueryType(enum.Enum):
+class QueryType(enum.Enum):
 ```
 
 Enum of DynamoQuery query types.
