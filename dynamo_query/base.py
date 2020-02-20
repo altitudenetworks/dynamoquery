@@ -509,14 +509,9 @@ class BaseDynamoQuery:
             projection_dict=projection_dict, data_dict=data_dict,
         )
         for name, expression in expression_map.items():
-            try:
-                self._logger.debug(
-                    f'Using {name} = "{expression.render().format(**repr_format_dict)}"'
-                )
-            except KeyError:
-                self._logger.warning(
-                    f"Cannot render {name} = {expression.render()}: {data_dict}"
-                )
+            self._logger.debug(
+                f'Using {name} = "{expression.render().format(**repr_format_dict)}"'
+            )
 
     def _execute_item_query(
         self, key_data: Dict[str, Any], item_data: Dict[str, Any],

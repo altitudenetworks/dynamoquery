@@ -4,7 +4,11 @@ import pytest
 
 from dynamo_query.dynamo_query import DynamoQuery, DynamoQueryError
 from dynamo_query.data_table import DataTable
-from dynamo_query.expressions import ConditionExpression
+from dynamo_query.expressions import (
+    ConditionExpression,
+    ProjectionExpression,
+    UpdateExpression,
+)
 
 
 class TestDynamoQuery:
@@ -94,6 +98,7 @@ class TestDynamoQuery:
                 key_condition_expression=ConditionExpression("pk"),
                 index_name="my_index",
                 filter_expression=ConditionExpression("test"),
+                projection_expression=ProjectionExpression("test2"),
                 exclusive_start_key={"pk": "my_pk", "sk": "my_sk"},
                 limit=100,
             )
@@ -150,7 +155,9 @@ class TestDynamoQuery:
         table_resource_mock = MagicMock()
         query = (
             DynamoQuery.build_scan(
-                filter_expression=ConditionExpression("test"), limit=100,
+                filter_expression=ConditionExpression("test"),
+                projection_expression=ProjectionExpression("test2"),
+                limit=100,
             )
             .table(table=table_resource_mock, table_keys=("pk", "sk"))
             .projection("test")
@@ -169,7 +176,9 @@ class TestDynamoQuery:
     def test_get_item() -> None:
         table_resource_mock = MagicMock()
         query = (
-            DynamoQuery.build_get_item()
+            DynamoQuery.build_get_item(
+                projection_expression=ProjectionExpression("test2"),
+            )
             .table(table=table_resource_mock, table_keys=("pk", "sk"))
             .projection("test")
         )
@@ -184,10 +193,11 @@ class TestDynamoQuery:
         assert list(result.get_records()) == [{"pk": "value", "sk": "value"}]
 
     @staticmethod
-    def test_update_item() -> None:
+    def test_update_item():
         table_resource_mock = MagicMock()
         query = (
             DynamoQuery.build_update_item(
+                update_expression=UpdateExpression("test2"),
                 condition_expression=ConditionExpression("pk"),
             )
             .table(table=table_resource_mock, table_keys=("pk", "sk"))
