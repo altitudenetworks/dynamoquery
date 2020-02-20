@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, Callable, Any, TypeVar, TYPE_CHECKING
+from typing import Dict, Callable, Any, Set, TypeVar, TYPE_CHECKING
 
 from typing_extensions import Literal
 
@@ -45,7 +45,7 @@ else:
 BaseExpression = TypeVar("BaseExpression")
 ExpressionMap = Dict[str, BaseExpression]
 FormatDict = Dict[str, Any]
-TableKeys = Iterable[str]
+TableKeys = Set[str]
 QueryMethod = Callable[[DataTable], DataTable]
 ExclusiveStartKey = Dict[str, Any]
 ConditionExpressionOperatorStr = Literal[

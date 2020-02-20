@@ -98,6 +98,7 @@ class TestDynamoQuery:
                 index_name="my_index",
                 filter_expression=filter_expression_mock,
                 projection_expression=projection_expression_mock,
+                exclusive_start_key={"pk": "my_pk", "sk": "my_sk"},
                 limit=100,
             )
             .table(table=table_resource_mock, table_keys=("pk", "sk"))
@@ -106,6 +107,7 @@ class TestDynamoQuery:
         result = query.execute_dict({"key": "value"})
         table_resource_mock.query.assert_called_with(
             ConsistentRead=False,
+            ExclusiveStartKey={"pk": "my_pk", "sk": "my_sk"},
             ExpressionAttributeNames={"#aaa": "test"},
             FilterExpression=filter_expression_mock.render().format(),
             IndexName="my_index",
@@ -129,6 +131,21 @@ class TestDynamoQuery:
             ProjectionExpression="#aaa",
             ScanIndexForward=True,
         )
+
+        with pytest.raises(DynamoQueryError):
+            query = (
+                DynamoQuery.build_query(
+                    key_condition_expression=key_condition_expression_mock,
+                    index_name="my_index",
+                    filter_expression=filter_expression_mock,
+                    projection_expression=projection_expression_mock,
+                    exclusive_start_key={"pk": "my_pk"},
+                    limit=100,
+                )
+                .table(table=table_resource_mock, table_keys=("pk", "sk"))
+                .projection("test")
+                .execute_dict({})
+            )
 
     @staticmethod
     def test_scan() -> None:

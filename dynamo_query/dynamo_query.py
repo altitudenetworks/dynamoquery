@@ -515,7 +515,7 @@ class DynamoQuery(BaseDynamoQuery):
             table_keys -- Primary and sort keys for table.
         """
         self._table_resource = table
-        self._table_keys = table_keys
+        self._table_keys = set(table_keys) if table_keys else None
         return self
 
     def execute(

@@ -5,6 +5,7 @@ import pytest
 
 from dynamo_query.data_table import DataTable
 from dynamo_query.dynamo_table import DynamoTable
+from dynamo_query.expressions import ConditionExpression
 from dynamo_query.dynamo_table_index import DynamoTableIndex
 
 
@@ -272,22 +273,27 @@ class TestDynamoTableIndex:
         self.table_mock.query.return_value = {
             "Items": [{"pk": "my_pk", "sk": "sk"}, {"pk": "my_pk2", "sk": "sk2"}]
         }
-        filter_expression_mock = MagicMock()
+        filter_expression_mock = ConditionExpression("key")
         assert list(
             self.result.query(
                 partition_key="pk_value",
                 sort_key_prefix="sk_prefix",
                 filter_expression=filter_expression_mock,
-                data={"key": "value"},
+                data={"key": ["value"]},
                 limit=1,
             )
         ) == [{"pk": "my_pk", "sk": "sk"}]
         self.table_mock.query.assert_called_with(
             ConsistentRead=False,
-            ExpressionAttributeNames={"#aaa": "pk", "#aab": "sk"},
-            ExpressionAttributeValues={":aaa": "pk_value", ":aab": "sk_prefix"},
-            FilterExpression=filter_expression_mock.render().format(),
-            KeyConditionExpression="#aaa = :aaa AND begins_with(#aab, :aab)",
+            ExpressionAttributeNames={"#aaa": "key", "#aab": "pk", "#aac": "sk"},
+            ExpressionAttributeValues={
+                ":aaa": "pk_value",
+                ":aab": "sk_prefix",
+                ":aac___0": "value",
+            },
+            FilterExpression="#aaa = :aac___0",
+            KeyConditionExpression="#aab = :aaa AND begins_with(#aac, :aab)",
             Limit=1,
             ScanIndexForward=True,
         )
+

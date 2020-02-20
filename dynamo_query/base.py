@@ -220,6 +220,7 @@ class BaseDynamoQuery:
                 result_key = f"{key}{cls._value_key_postfix}"
                 key_value = f":{safe_key}"
                 expand_lists = expression_name in cls._expand_lists_expression_names
+
                 if expand_lists and cls._is_set_like_value(value):
                     key_value = ", ".join(
                         [f":{safe_key}___{index}" for index in range(len(value))]
@@ -275,7 +276,7 @@ class BaseDynamoQuery:
             return
 
         keys_set = set(self._last_evaluated_key.keys())
-        if keys_set != self.table_keys:
+        if not self.table_keys.issubset(keys_set):
             raise DynamoQueryError(
                 f"Expected ExclusiveStartKey to have {self.table_keys}"
                 f" keys, got {keys_set}"
