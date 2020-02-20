@@ -10,6 +10,8 @@ Main import point for DynamoQuery.
         - [Boto3Retrier](boto3_retrier.md#boto3retrier)
         - [DataTable](data_table.md#datatable)
         - [DynamoQuery](dynamo_query.md#dynamoquery)
+        - [DynamoTable](dynamo_table.md#dynamotable)
+        - [DynamoTableIndex](dynamo_table_index.md#dynamotableindex)
         - [Enums](enums.md#enums)
         - [Expressions](expressions.md#expressions)
         - [Json Tools](json_tools.md#json-tools)

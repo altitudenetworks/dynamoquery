@@ -10,6 +10,8 @@ Full list of [dynamo-query](README.md#dynamo-query) project modules.
     - [Boto3Retrier](dynamo_query/boto3_retrier.md#boto3retrier)
     - [DataTable](dynamo_query/data_table.md#datatable)
     - [DynamoQuery](dynamo_query/dynamo_query.md#dynamoquery)
+    - [DynamoTable](dynamo_query/dynamo_table.md#dynamotable)
+    - [DynamoTableIndex](dynamo_query/dynamo_table_index.md#dynamotableindex)
     - [Enums](dynamo_query/enums.md#enums)
     - [Expressions](dynamo_query/expressions.md#expressions)
     - [Json Tools](dynamo_query/json_tools.md#json-tools)

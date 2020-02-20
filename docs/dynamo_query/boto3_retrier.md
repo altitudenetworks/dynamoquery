@@ -38,7 +38,6 @@ class Boto3Retrier():
         logger: Optional[logging.Logger] = None,
         log_level: Optional[int] = None,
         exceptions_to_catch: Optional[Tuple[Type[BaseException], ...]] = None,
-        exceptions_to_suppress: Optional[Tuple[Type[BaseException], ...]] = None,
         fallback_value: Any = NOT_SET,
     ) -> None:
 ```
@@ -84,7 +83,7 @@ def read_files():
 
 ### Boto3Retrier.backoff
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L180)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L178)
 
 ```python
 @classmethod
@@ -104,7 +103,7 @@ A generator of delay in seconds.
 
 ### Boto3Retrier.doubling_backoff
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L148)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L146)
 
 ```python
 @classmethod
@@ -124,7 +123,7 @@ A generator of delay in seconds.
 
 ### Boto3Retrier.get_exception_scope
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L194)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L192)
 
 ```python
 @staticmethod
@@ -143,7 +142,7 @@ A scope as a dict.
 
 ### Boto3Retrier().handle_exception
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L213)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L211)
 
 ```python
 def handle_exception(exc: BaseException) -> None:
@@ -163,7 +162,7 @@ You can access decorated method data from here.
 
 ### Boto3Retrier.no_backoff
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L165)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L163)
 
 ```python
 @classmethod

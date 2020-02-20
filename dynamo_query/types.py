@@ -15,6 +15,12 @@ if TYPE_CHECKING:
         ClientScanResponseTypeDef,
         ClientBatchGetItemResponseTypeDef,
         ClientBatchWriteItemResponseTypeDef,
+        ClientCreateTableGlobalSecondaryIndexesTypeDef,
+        ClientCreateTableLocalSecondaryIndexesTypeDef,
+        ClientCreateTableGlobalSecondaryIndexesKeySchemaTypeDef,
+        ClientCreateTableLocalSecondaryIndexesKeySchemaTypeDef,
+        ClientCreateTableKeySchemaTypeDef,
+        ClientCreateTableAttributeDefinitionsTypeDef,
     )
 
 else:
@@ -28,6 +34,12 @@ else:
     ClientScanResponseTypeDef = object
     ClientBatchGetItemResponseTypeDef = object
     ClientBatchWriteItemResponseTypeDef = object
+    ClientCreateTableGlobalSecondaryIndexesTypeDef = object
+    ClientCreateTableLocalSecondaryIndexesTypeDef = object
+    ClientCreateTableGlobalSecondaryIndexesKeySchemaTypeDef = object
+    ClientCreateTableLocalSecondaryIndexesKeySchemaTypeDef = object
+    ClientCreateTableKeySchemaTypeDef = object
+    ClientCreateTableAttributeDefinitionsTypeDef = object
 
 
 BaseExpression = TypeVar("BaseExpression")

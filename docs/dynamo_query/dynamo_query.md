@@ -534,7 +534,7 @@ A `tools.data_table.DataTable` with query results.
 
 ### DynamoQuery().execute_dict
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L596)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L593)
 
 ```python
 def execute_dict(
@@ -575,7 +575,7 @@ A `tools.data_table.DataTable` with query results.
 
 ### DynamoQuery().get_last_evaluated_key
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L633)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L630)
 
 ```python
 def get_last_evaluated_key() -> Optional[ExclusiveStartKey]:
@@ -609,7 +609,7 @@ A dict that can be used in `ExclusiveStartKey` parameter.
 
 ### DynamoQuery().get_raw_responses
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L669)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L666)
 
 ```python
 def get_raw_responses() -> List[Dict]:
@@ -625,7 +625,7 @@ A list of AWS responses.
 
 ### DynamoQuery.get_table_keys
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L680)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L677)
 
 ```python
 @staticmethod
@@ -654,7 +654,7 @@ A list of table keys.
 
 ### DynamoQuery().projection
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L705)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L702)
 
 ```python
 def projection(*fields: Text) -> 'DynamoQuery':
@@ -683,7 +683,7 @@ Itself, so this method can be chained.
 
 ### DynamoQuery().reset_start_key
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L662)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L659)
 
 ```python
 def reset_start_key() -> 'DynamoQuery':
@@ -711,7 +711,7 @@ Set table resource and table keys.
 
 ### DynamoQuery().update
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L735)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L732)
 
 ```python
 def update(
