@@ -10,16 +10,13 @@ from dynamo_query.expressions import ConditionExpression
 class TestDynamoQuery:
     @staticmethod
     def test_methods() -> None:
-        filter_expression_mock = MagicMock()
-        projection_expression_mock = MagicMock()
         table_resource_mock = MagicMock()
         query = DynamoQuery.build_query(
             key_condition_expression=ConditionExpression("key"),
             index_name="my_index",
-            filter_expression=filter_expression_mock,
-            projection_expression=projection_expression_mock,
+            filter_expression=ConditionExpression("test"),
             limit=100,
-        )
+        ).projection("return")
 
         with pytest.raises(DynamoQueryError):
             _ = query.table_resource
@@ -33,7 +30,7 @@ class TestDynamoQuery:
         assert not query.was_executed()
         assert query.has_more_results()
 
-        query.execute_dict({"key": "value"})
+        query.execute_dict({"key": "value", "test": "data"})
         assert query.was_executed()
         assert query.has_more_results()
         assert query.get_last_evaluated_key() == table_resource_mock.query().get()
@@ -91,57 +88,55 @@ class TestDynamoQuery:
 
     @staticmethod
     def test_query() -> None:
-        key_condition_expression_mock = MagicMock()
-        filter_expression_mock = MagicMock()
-        projection_expression_mock = MagicMock()
         table_resource_mock = MagicMock()
         query = (
             DynamoQuery.build_query(
-                key_condition_expression=key_condition_expression_mock,
+                key_condition_expression=ConditionExpression("pk"),
                 index_name="my_index",
-                filter_expression=filter_expression_mock,
-                projection_expression=projection_expression_mock,
+                filter_expression=ConditionExpression("test"),
                 exclusive_start_key={"pk": "my_pk", "sk": "my_sk"},
                 limit=100,
             )
             .table(table=table_resource_mock, table_keys=("pk", "sk"))
             .projection("test")
         )
-        result = query.execute_dict({"key": "value"})
+        result = query.execute_dict({"pk": "pk_value", "test": "data"})
         table_resource_mock.query.assert_called_with(
             ConsistentRead=False,
             ExclusiveStartKey={"pk": "my_pk", "sk": "my_sk"},
-            ExpressionAttributeNames={"#aaa": "test"},
-            FilterExpression=filter_expression_mock.render().format(),
+            ExpressionAttributeNames={"#aaa": "pk", "#aab": "test"},
+            ExpressionAttributeValues={":aaa": "pk_value", ":aab": "data"},
+            FilterExpression="#aab = :aab",
             IndexName="my_index",
-            KeyConditionExpression=key_condition_expression_mock.render().format(),
+            KeyConditionExpression="#aaa = :aaa",
             Limit=100,
-            ProjectionExpression="#aaa",
+            ProjectionExpression="#aab",
             ScanIndexForward=True,
         )
         assert list(result.get_records()) == []
         query.reset_start_key().execute(
-            DataTable.create().add_record({"key": "value"}, {"key": "value2"})
+            DataTable.create().add_record(
+                {"pk": "pk_value", "test": "data"}, {"pk": "pk_value2", "test": "data"}
+            )
         )
         table_resource_mock.query.assert_called_with(
             ConsistentRead=False,
             ExclusiveStartKey=ANY,
-            ExpressionAttributeNames={"#aaa": "test"},
-            FilterExpression=filter_expression_mock.render().format(),
+            ExpressionAttributeNames={"#aaa": "pk", "#aab": "test"},
+            ExpressionAttributeValues={":aaa": "pk_value2", ":aab": "data"},
+            FilterExpression="#aab = :aab",
             IndexName="my_index",
-            KeyConditionExpression=key_condition_expression_mock.render().format(),
+            KeyConditionExpression="#aaa = :aaa",
             Limit=100,
-            ProjectionExpression="#aaa",
+            ProjectionExpression="#aab",
             ScanIndexForward=True,
         )
 
         with pytest.raises(DynamoQueryError):
             query = (
                 DynamoQuery.build_query(
-                    key_condition_expression=key_condition_expression_mock,
+                    key_condition_expression=ConditionExpression("pk"),
                     index_name="my_index",
-                    filter_expression=filter_expression_mock,
-                    projection_expression=projection_expression_mock,
                     exclusive_start_key={"pk": "my_pk"},
                     limit=100,
                 )
@@ -152,22 +147,19 @@ class TestDynamoQuery:
 
     @staticmethod
     def test_scan() -> None:
-        filter_expression_mock = MagicMock()
-        projection_expression_mock = MagicMock()
         table_resource_mock = MagicMock()
         query = (
             DynamoQuery.build_scan(
-                filter_expression=filter_expression_mock,
-                projection_expression=projection_expression_mock,
-                limit=100,
+                filter_expression=ConditionExpression("test"), limit=100,
             )
             .table(table=table_resource_mock, table_keys=("pk", "sk"))
             .projection("test")
         )
-        result = query.execute_dict({"key": "value"})
+        result = query.execute_dict({"test": "value"})
         table_resource_mock.scan.assert_called_with(
             ExpressionAttributeNames={"#aaa": "test"},
-            FilterExpression=filter_expression_mock.render().format(),
+            ExpressionAttributeValues={":aaa": "value"},
+            FilterExpression="#aaa = :aaa",
             Limit=100,
             ProjectionExpression="#aaa",
         )
@@ -175,10 +167,9 @@ class TestDynamoQuery:
 
     @staticmethod
     def test_get_item() -> None:
-        projection_expression_mock = MagicMock()
         table_resource_mock = MagicMock()
         query = (
-            DynamoQuery.build_get_item(projection_expression=projection_expression_mock)
+            DynamoQuery.build_get_item()
             .table(table=table_resource_mock, table_keys=("pk", "sk"))
             .projection("test")
         )
@@ -194,41 +185,59 @@ class TestDynamoQuery:
 
     @staticmethod
     def test_update_item() -> None:
-        condition_expression_mock = MagicMock()
-        update_expression_mock = MagicMock()
         table_resource_mock = MagicMock()
         query = (
             DynamoQuery.build_update_item(
-                condition_expression=condition_expression_mock,
-                update_expression=update_expression_mock,
+                condition_expression=ConditionExpression("pk"),
             )
             .table(table=table_resource_mock, table_keys=("pk", "sk"))
             .update("test")
         )
-        result = query.execute_dict({"pk": "value", "sk": "value", "test": "data"})
+        result = query.execute_dict(
+            {"pk": "pk_value", "sk": "sk_value", "test": "data"}
+        )
         table_resource_mock.update_item.assert_called_with(
-            ConditionExpression=condition_expression_mock.render().format(),
-            ExpressionAttributeNames={"#aaa": "test"},
-            ExpressionAttributeValues={":aaa": "data"},
-            Key={"pk": "value", "sk": "value"},
+            ConditionExpression="#aaa = :aaa",
+            ExpressionAttributeNames={"#aaa": "pk", "#aab": "test"},
+            ExpressionAttributeValues={":aaa": "pk_value", ":aab": "data"},
+            Key={"pk": "pk_value", "sk": "sk_value"},
             ReturnConsumedCapacity="NONE",
             ReturnItemCollectionMetrics="NONE",
             ReturnValues="ALL_NEW",
-            UpdateExpression="SET #aaa = :aaa",
+            UpdateExpression="SET #aab = :aab",
         )
         assert list(result.get_records()) == []
 
+        with pytest.raises(DynamoQueryError):
+            DynamoQuery.build_update_item(
+                condition_expression=ConditionExpression("pk"),
+            ).table(table=table_resource_mock, table_keys=("pk", "sk")).execute_dict(
+                {"pk": "value", "sk": "value", "test": "data"}
+            )
+
+        with pytest.raises(DynamoQueryError):
+            DynamoQuery.build_update_item(
+                condition_expression=ConditionExpression("pk"),
+            ).table(table=table_resource_mock, table_keys=("pk", "sk")).update(
+                add=["test"],
+            ).execute_dict(
+                {"pk": "value", "sk": "value", "test": "data"}
+            )
+
     @staticmethod
     def test_delete_item() -> None:
-        condition_expression_mock = MagicMock()
         table_resource_mock = MagicMock()
         query = DynamoQuery.build_delete_item(
-            condition_expression=condition_expression_mock,
+            condition_expression=ConditionExpression("test"),
         ).table(table=table_resource_mock, table_keys=("pk", "sk"))
-        result = query.execute_dict({"pk": "value", "sk": "value", "test": "data"})
+        result = query.execute_dict(
+            {"pk": "pk_value", "sk": "sk_value", "test": "data"}
+        )
         table_resource_mock.delete_item.assert_called_with(
-            ConditionExpression=condition_expression_mock.render().format(),
-            Key={"pk": "value", "sk": "value"},
+            ConditionExpression="#aaa = :aaa",
+            ExpressionAttributeNames={"#aaa": "test"},
+            ExpressionAttributeValues={":aaa": "data"},
+            Key={"pk": "pk_value", "sk": "sk_value"},
             ReturnConsumedCapacity="NONE",
             ReturnItemCollectionMetrics="NONE",
             ReturnValues="ALL_OLD",
