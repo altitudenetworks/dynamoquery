@@ -43,7 +43,7 @@ class TestDynamoQuery:
             {"AttributeName": "key"},
             {"NotKey": "not_key"},
         ]
-        assert query.get_table_keys(table_resource_mock) == ["key"]
+        assert query.get_table_keys(table_resource_mock) == {"key"}
         assert query.limit(10)
 
     @staticmethod

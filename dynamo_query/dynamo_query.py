@@ -515,7 +515,7 @@ class DynamoQuery(BaseDynamoQuery):
             table_keys -- Primary and sort keys for table.
         """
         self._table_resource = table
-        self._table_keys = set(table_keys) if table_keys else None
+        self._table_keys = set(table_keys) if table_keys else self.TABLE_KEYS
         return self
 
     def execute(
@@ -675,7 +675,7 @@ class DynamoQuery(BaseDynamoQuery):
         return self._raw_responses
 
     @staticmethod
-    def get_table_keys(table: Table) -> List[Text]:
+    def get_table_keys(table: Table) -> TableKeys:
         """
         Get table keys from schema.
 
@@ -692,10 +692,10 @@ class DynamoQuery(BaseDynamoQuery):
             A list of table keys.
         """
         key_schema = table.key_schema
-        result = []
+        result: TableKeys = set()
         for key_data in key_schema:
             if "AttributeName" in key_data:
-                result.append(key_data["AttributeName"])
+                result.add(key_data["AttributeName"])
 
         return result
 
