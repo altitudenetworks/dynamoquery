@@ -5,7 +5,7 @@ from abc import abstractmethod
 from typing import Iterable, List, Union, Any, Set, Tuple, Dict, TypeVar
 
 from dynamo_query.utils import get_format_keys
-from dynamo_query.enums import ConditionExpressionOperator
+from dynamo_query.enums import Operator
 from dynamo_query.types import (
     ConditionExpressionOperatorStr,
     ConditionExpressionJoinOperatorStr,
@@ -280,10 +280,10 @@ class ConditionExpression(BaseConditionExpression):
         value: Any = None,
     ):
         try:
-            ConditionExpressionOperator(operator)
+            Operator(operator)
         except ValueError:
             raise ExpressionError(
-                f"Invalid operator {operator}, choices are {ConditionExpressionOperator.values()}"
+                f"Invalid operator {operator}, choices are {Operator.values()}"
             )
 
         if operator == "BETWEEN":

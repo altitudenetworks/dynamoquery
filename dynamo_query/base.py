@@ -25,7 +25,7 @@ from dynamo_query.types import (
 from dynamo_query.enums import QueryType
 from dynamo_query.expressions import (
     BaseExpression,
-    ConditionExpressionOperator,
+    Operator,
     ExpressionError,
 )
 from dynamo_query.utils import ascii_string_generator
@@ -308,13 +308,13 @@ class BaseDynamoQuery:
             self.KEY_CONDITION_EXPRESSION
         ].get_operators():
             if operator not in (
-                ConditionExpressionOperator.EQ.value,
-                ConditionExpressionOperator.LT.value,
-                ConditionExpressionOperator.GT.value,
-                ConditionExpressionOperator.LTE.value,
-                ConditionExpressionOperator.GTE.value,
-                ConditionExpressionOperator.BETWEEN.value,
-                ConditionExpressionOperator.BEGINS_WITH.value,
+                Operator.EQ.value,
+                Operator.LT.value,
+                Operator.GT.value,
+                Operator.LTE.value,
+                Operator.GTE.value,
+                Operator.BETWEEN.value,
+                Operator.BEGINS_WITH.value,
             ):
                 raise DynamoQueryError(
                     f"{self.KEY_CONDITION_EXPRESSION} does not support operator"

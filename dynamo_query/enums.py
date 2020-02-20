@@ -8,7 +8,7 @@ import enum
 
 __all__ = (
     "QueryType",
-    "ConditionExpressionOperator",
+    "Operator",
 )
 
 
@@ -37,7 +37,7 @@ class QueryType(enum.Enum):
     BATCH_DELETE_ITEM = "batch_delete_item"
 
 
-class ConditionExpressionOperator(enum.Enum):
+class Operator(enum.Enum):
     """
     Enum of operator types that can be used as postfixes in `ConditionExpression` keys.
 

@@ -5,16 +5,16 @@
 DynamoDB related enums.
 
 - [dynamo-query](../README.md#dynamo-query) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Enums
-    - [ConditionExpressionOperator](#conditionexpressionoperator)
-        - [ConditionExpressionOperator.values](#conditionexpressionoperatorvalues)
+    - [Operator](#operator)
+        - [Operator.values](#operatorvalues)
     - [QueryType](#querytype)
 
-## ConditionExpressionOperator
+## Operator
 
 [[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L40)
 
 ```python
-class ConditionExpressionOperator(enum.Enum):
+class Operator(enum.Enum):
 ```
 
 Enum of operator types that can be used as postfixes in `ConditionExpression` keys.
@@ -34,7 +34,7 @@ Enum of operator types that can be used as postfixes in `ConditionExpression` ke
 - `BETWEEN` - Rendered as `BETWEEN <value1> AND <value2>` operator.
 - `CONTAINS` - Rendered as `contains(<key>, <value>)` function.
 
-### ConditionExpressionOperator.values
+### Operator.values
 
 [[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L72)
 
