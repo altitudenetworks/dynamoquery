@@ -198,7 +198,7 @@ class ProjectionExpression(BaseExpression):
     """
 
     def __init__(self, *keys: str):
-        self.keys: Tuple[str, ...] = tuple(keys)
+        self.keys: Tuple[str, ...] = tuple(sorted(keys))
 
     def get_format_keys(self) -> Set[str]:
         """
