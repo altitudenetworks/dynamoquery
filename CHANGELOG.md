@@ -14,6 +14,7 @@
 - `dynamodb_resource.Table` should be passed on construction (breaking!)
 - `DataTableError` no longer subclasses `ValueError`
 - Fixed quering 1000 items with set `limit`
+- Fixed incorrect table keys check in `DynamoTable.update_record`
 
 # DynamoTableIndex changes
 
