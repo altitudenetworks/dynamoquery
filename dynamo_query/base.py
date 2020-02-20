@@ -260,14 +260,7 @@ class BaseDynamoQuery:
     ) -> Dict[str, str]:
         result = {}
         for name, expression in expression_map.items():
-            try:
-                result[name] = expression.render().format(**format_dict)
-            except KeyError as e:
-                key = e.args[0]
-                raise DynamoQueryError(
-                    f'Unable to render {name} = "{expression}",'
-                    f' no {key.replace(cls._value_key_postfix, "")} column in data'
-                )
+            result[name] = expression.render().format(**format_dict)
 
         return result
 
@@ -580,11 +573,6 @@ class BaseDynamoQuery:
     def _execute_paginated_query(self, data: Dict[str, Any]) -> DataTable:
         self._logger.debug(f"query_data = {dumps(data)}")
         expression_map = self._expressions
-        for expression in self._expressions.values():
-            try:
-                expression.validate_input_data(data)
-            except ExpressionError as e:
-                raise DynamoQueryError(f"Invalid input data: {e}")
 
         projection_dict = self._get_projection_dict(expression_map)
         format_dict = self._get_format_dict(

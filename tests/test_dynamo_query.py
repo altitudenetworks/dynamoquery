@@ -88,7 +88,20 @@ class TestDynamoQuery:
             query.execute_dict({"key1": "value"})
 
         with pytest.raises(DynamoQueryError):
-            query.execute(DataTable.create({"a": [1, 2], "b": [3]}))
+            query.execute(DataTable.create({"key": [1, 2], "b": [3]}))
+
+        with pytest.raises(DynamoQueryError):
+            query.execute(DataTable.create({"key": [3, DataTable.NOT_SET]}))
+
+        with pytest.raises(DynamoQueryError):
+            DynamoQuery.build_batch_get_item().table(
+                table=table_resource_mock, table_keys=("pk", "sk")
+            ).execute_dict({"pk": "test"})
+
+        with pytest.raises(DynamoQueryError):
+            DynamoQuery.build_batch_get_item().table(
+                table=table_resource_mock, table_keys=("pk", "sk")
+            ).execute(DataTable({"pk": ["test", DataTable.NOT_SET]}))
 
     @staticmethod
     def test_query() -> None:
