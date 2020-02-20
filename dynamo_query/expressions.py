@@ -265,9 +265,6 @@ class ConditionExpression(BaseConditionExpression):
     # '{key} IN ({test__value})'
     ```
 
-    Attributes:
-        Operator -- Shortcut for `tools.dynamo_query.expressions.ConditionExpressionOperator`
-
     Arguments:
         key -- Key name.
         operator -- `ConditionExpressionOperator`
@@ -275,8 +272,6 @@ class ConditionExpression(BaseConditionExpression):
     """
 
     _value_key_postfix = "__value"
-
-    Operator = ConditionExpressionOperator
 
     def __init__(
         self,

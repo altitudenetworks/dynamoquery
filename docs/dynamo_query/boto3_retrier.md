@@ -71,7 +71,7 @@ def read_files():
 
 #### Attributes
 
-- `NOT_SET` - `tools.sentinel.SentinelValue` for not provided arguments.
+- `NOT_SET` - `SentinelValue` for not provided arguments.
 - `default_exceptions` - A list of expected exceptions. By default, accepts all.
 - `default_num_tries` - Default number of tries - 3
 - `default_delay` - Default delay - 1 second

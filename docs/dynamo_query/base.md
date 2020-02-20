@@ -21,8 +21,8 @@ Helper for building Boto3 DynamoDB queries.
 class BaseDynamoQuery():
     def __init__(
         query_type: DynamoQueryType,
-        expressions: Dict[Text, BaseExpression],
-        extra_params: Dict[Text, Any],
+        expressions: Dict[str, BaseExpression],
+        extra_params: Dict[str, Any],
         limit: int = MAX_LIMIT,
         exclusive_start_key: Optional[ExclusiveStartKey] = None,
         logger: logging.Logger = None,
@@ -30,7 +30,7 @@ class BaseDynamoQuery():
 ```
 
 Base class for building Boto3 DynamoDB queries. Use
-`tools.dynamo_query.dynamo_query.DynamoQuery` instead.
+`dynamo_query.DynamoQuery` instead.
 
 ```python
 query = BaseDynamoQuery(
@@ -146,4 +146,4 @@ True if query was executed.
 class DynamoQueryError(Exception):
 ```
 
-Main error for `tools.dynamo_query.dynamo_query.DynamoQuery` class.
+Main error for `dynamo_query.DynamoQuery` class.

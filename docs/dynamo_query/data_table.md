@@ -79,7 +79,7 @@ typed_data_table.add_record({"key": "value"})
 
 #### Attributes
 
-- `NOT_SET` - `tools.sentinel.SentinelValue` to use for missing record values.
+- `NOT_SET` - `SentinelValue` to use for missing record values.
 - `NOT_SET_RESOLVED_VALUE` - A value to replace missing values on getting records.
 
 ### DataTable().add_record
@@ -624,4 +624,4 @@ Itself, so this method can be chained to another.
 class DataTableError(ValueError):
 ```
 
-Main error for `tools.data_table.DataTable` class.
+Main error for [DataTable](#datatable) class.

@@ -32,7 +32,7 @@ Helper for building Boto3 DynamoDB queries.
 class DynamoQuery(BaseDynamoQuery):
 ```
 
-Helper for building Boto3 DynamoDB queries. See `tools.dynamo_query.base.BaseDynamoQuery`
+Helper for building Boto3 DynamoDB queries. See `BaseDynamoQuery`
 documentation as well.
 
 ```python
@@ -521,12 +521,12 @@ results = DynamoQuery.build_scan(
 #### Arguments
 
 - `table` - `boto3_resource.Table('my_table')`.
-- `data_table` - `tools.data_table.DataTable` with input data.
+- `data_table` - `DataTable` with input data.
 - `table_keys` - Primary and sort keys for table.
 
 #### Returns
 
-A `tools.data_table.DataTable` with query results.
+A `DataTable` with query results.
 
 #### See also
 
@@ -562,12 +562,12 @@ results = DynamoQuery.build_scan(
 #### Arguments
 
 - `table` - `boto3_resource.Table('my_table')`.
-- `data` - Record of a `tools.data_table.DataTable` or a regular `dict`.
+- `data` - Record of a `DataTable` or a regular `dict`.
 - `table_keys` - Primary and sort keys for table.
 
 #### Returns
 
-A `tools.data_table.DataTable` with query results.
+A `DataTable` with query results.
 
 #### See also
 

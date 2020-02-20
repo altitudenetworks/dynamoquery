@@ -34,14 +34,14 @@ from dynamo_query.json_tools import dumps
 
 class DynamoQueryError(Exception):
     """
-    Main error for `tools.dynamo_query.dynamo_query.DynamoQuery` class.
+    Main error for `dynamo_query.DynamoQuery` class.
     """
 
 
 class BaseDynamoQuery:
     """
     Base class for building Boto3 DynamoDB queries. Use
-    `tools.dynamo_query.dynamo_query.DynamoQuery` instead.
+    `dynamo_query.DynamoQuery` instead.
 
     ```python
     query = BaseDynamoQuery(

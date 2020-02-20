@@ -29,7 +29,7 @@ __all__ = (
 
 class DataTableError(ValueError):
     """
-    Main error for `tools.data_table.DataTable` class.
+    Main error for `DataTable` class.
     """
 
 
@@ -75,7 +75,7 @@ class DataTable(defaultdict, Generic[RecordType]):
         base_dict -- Initial dict, should be compatible with `DataTable` format
 
     Attributes:
-        NOT_SET -- `tools.sentinel.SentinelValue` to use for missing record values.
+        NOT_SET -- `SentinelValue` to use for missing record values.
         NOT_SET_RESOLVED_VALUE -- A value to replace missing values on getting records.
     """
 
