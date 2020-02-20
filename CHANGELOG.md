@@ -4,6 +4,7 @@
 - `TableKeys` is always a set
 - `ProjectionDict` sorts keys for stable result
 - Added `DynamoQuery.limit` method to set limit for query/scan
+- Fixed query not executing on empty data in `DynamoQuery.execute_dict`
 
 # DynamoTable changes
 
@@ -12,6 +13,7 @@
 - `create_table` method no longer manages auto-scaling (breaking!)
 - `dynamodb_resource.Table` should be passed on construction (breaking!)
 - `DataTableError` no longer subclasses `ValueError`
+- Fixed quering 1000 items with set `limit`
 
 # DynamoTableIndex changes
 

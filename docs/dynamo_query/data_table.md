@@ -621,7 +621,7 @@ Itself, so this method can be chained to another.
 [[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/data_table.py#L30)
 
 ```python
-class DataTableError(ValueError):
+class DataTableError(BaseException):
 ```
 
 Main error for [DataTable](#datatable) class.
