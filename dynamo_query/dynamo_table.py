@@ -394,6 +394,8 @@ class DynamoTable(Generic[DynamoRecord]):
             limit -- Max number of results.
         """
         query = DynamoQuery.build_scan(filter_expression=filter_expression)
+        if limit:
+            query.limit(limit)
 
         if projection:
             query.projection(*projection)
@@ -451,6 +453,8 @@ class DynamoTable(Generic[DynamoRecord]):
             filter_expression=filter_expression,
             scan_index_forward=scan_index_forward,
         )
+        if limit:
+            query.limit(limit)
 
         if projection:
             query.projection(*projection)

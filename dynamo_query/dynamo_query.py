@@ -729,6 +729,24 @@ class DynamoQuery(BaseDynamoQuery):
         self._expressions[self.PROJECTION_EXPRESSION] = ProjectionExpression(*fields)
         return self
 
+    def limit(self, limit: int) -> "DynamoQuery":
+        """
+        Limit results for `scan` or `query` method.
+
+        ```python
+        query = DynamoQuery.scan()
+        query.limit(10)
+        ```
+
+        Arguments:
+            limit - Number of max entries.
+
+        Returns:
+            Itself, so this method can be chained.
+        """
+        self._limit = limit
+        return self
+
     def update(
         self,
         *args: Text,

@@ -253,15 +253,19 @@ class TestDynamoTableIndex:
         )
 
     def test_scan(self):
-        self.table_mock.scan.return_value = {"Items": [{"pk": "my_pk", "sk": "sk"}]}
+        self.table_mock.scan.return_value = {
+            "Items": [{"pk": "my_pk", "sk": "sk"}, {"pk": "my_pk2", "sk": "sk2"}]
+        }
         filter_expression_mock = MagicMock()
         assert list(
             self.result.scan(
-                filter_expression=filter_expression_mock, data={"key": "value"}
+                filter_expression=filter_expression_mock,
+                data={"key": "value"},
+                limit=1,
             )
         ) == [{"pk": "my_pk", "sk": "sk"}]
         self.table_mock.scan.assert_called_with(
-            FilterExpression=filter_expression_mock.render().format(), Limit=1000
+            FilterExpression=filter_expression_mock.render().format(), Limit=1
         )
 
     def test_query(self):
@@ -284,7 +288,6 @@ class TestDynamoTableIndex:
             ExpressionAttributeValues={":aaa": "pk_value", ":aab": "sk_prefix"},
             FilterExpression=filter_expression_mock.render().format(),
             KeyConditionExpression="#aaa = :aaa AND begins_with(#aab, :aab)",
-            Limit=1000,
+            Limit=1,
             ScanIndexForward=True,
         )
-

@@ -44,6 +44,7 @@ class TestDynamoQuery:
             {"NotKey": "not_key"},
         ]
         assert query.get_table_keys(table_resource_mock) == ["key"]
+        assert query.limit(10)
 
     @staticmethod
     def test_expression_methods() -> None:
