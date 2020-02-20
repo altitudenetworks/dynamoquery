@@ -172,7 +172,7 @@ class BaseDynamoQuery:
 
         string_generator = ascii_string_generator(length=3)
         result = {}
-        for key in expression_format_keys:
+        for key in sorted(expression_format_keys):
             result[f"#{next(string_generator)}"] = key
 
         return result
