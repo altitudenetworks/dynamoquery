@@ -46,6 +46,9 @@ class TestDynamoQuery:
         assert query.get_table_keys(table_resource_mock) == {"key"}
         assert query.limit(10)
 
+        with pytest.raises(DynamoQueryError):
+            DynamoQuery.build_batch_get_item().limit(10)
+
     @staticmethod
     def test_expression_methods() -> None:
         query = DynamoQuery.build_batch_get_item()
