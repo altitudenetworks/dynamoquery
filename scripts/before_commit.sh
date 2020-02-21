@@ -11,4 +11,4 @@ pylint dynamo_query
 pytest
 # pytest --cov-report html --cov dynamo_query
 
-./scripts/docs.sh
+# ./scripts/docs.sh
