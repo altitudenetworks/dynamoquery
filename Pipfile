@@ -11,7 +11,7 @@ black = "==19.10b0"
 mypy = "*"
 vulture = "*"
 handsdown = "*"
-"boto3_stubs[dynamodb]" = "*"
+"boto3_stubs[dynamodb,application-autoscaling]" = "*"
 
 [packages]
 dynamo_query = {path = ".", editable = true}
