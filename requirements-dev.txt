@@ -1,0 +1,10 @@
+black==19.10b0
+boto3_stubs[dynamodb,application-autoscaling]==1.12.4.0
+handsdown
+mypy
+pylint
+pytest
+pytest-cov
+twine
+vulture
+wheel
