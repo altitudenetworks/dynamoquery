@@ -96,12 +96,12 @@ class TestDynamoQuery:
         with pytest.raises(DynamoQueryError):
             DynamoQuery.build_batch_get_item().table(
                 table=table_resource_mock, table_keys=("pk", "sk")
-            ).execute_dict({"pk": "test"})
+            ).execute(DataTable({"pk": ["test"], "sk": [DataTable.NOT_SET]}))
 
         with pytest.raises(DynamoQueryError):
             DynamoQuery.build_batch_get_item().table(
                 table=table_resource_mock, table_keys=("pk", "sk")
-            ).execute(DataTable({"pk": ["test", DataTable.NOT_SET]}))
+            ).execute(DataTable({"pk": ["test"]}))
 
     @staticmethod
     def test_query() -> None:

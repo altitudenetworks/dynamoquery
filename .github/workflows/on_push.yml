@@ -22,15 +22,15 @@ jobs:
       - name: Install
         run: |
           python setup.py install
-      - name: Lint
+      - name: Lint and test
         run: |
           ./scripts/before_commit.sh
-      # - name: Send coverage report
-      #   env:
-      #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      #   run: |
-      #     PYTHON_VER=`python -V | grep -Po '\d+\.+\d+'`
-      #     if [[ "$PYTHON_VER" == "3.8" ]]; then
-      #       pytest --cov-report term --cov mypy_boto3_builder
-      #       codecov
-      #     fi
+      - name: Send coverage report
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          PYTHON_VER=`python -V | grep -Po '\d+\.+\d+'`
+          if [[ "$PYTHON_VER" == "3.8" ]]; then
+            pytest --cov-report term --cov mypy_boto3_builder
+            codecov
+          fi
