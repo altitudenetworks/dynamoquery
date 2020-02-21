@@ -2,6 +2,10 @@
 
 > Auto-generated documentation index.
 
+[![PyPI - dynamo-query](https://img.shields.io/pypi/v/dynamo-query.svg?color=blue&label=dynamo-query)](https://pypi.org/project/dynamo-query)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dynamo-query.svg?color=blue)](https://pypi.org/project/dynamo-query)
+[![Coverage](https://img.shields.io/codecov/c/github/altitudenetworks/dynamo-query)](https://codecov.io/gh/altitudenetworks/dynamo-query)
+
 Helper for building Boto3 DynamoDB queries.
 
 Full dynamo-query project documentation can be found in [Modules](MODULES.md#dynamo-query-modules)
@@ -27,8 +31,9 @@ from dynamo_query import DynamoQuery, DataTable
 
 table_resource = boto3.resource("dynamodb").Table('people')
 query = DynamoQuery.build_scan(
-    limit=5,
     filter_expression=ConditionExpression('first_name') & ('last_name', 'in'),
+).limit(
+    5,
 ).projection(
     'first_name', 'last_name', 'age',
 ).table(
