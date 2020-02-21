@@ -4,8 +4,6 @@
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dynamo-query.svg?color=blue)](https://pypi.org/project/dynamo-query)
 [![Coverage](https://img.shields.io/codecov/c/github/altitudenetworks/dynamo-query)](https://codecov.io/gh/altitudenetworks/dynamo-query)
 
-
-
 Helper for building Boto3 DynamoDB queries.
 
 - [Dynamo Query](#dynamo-query)
