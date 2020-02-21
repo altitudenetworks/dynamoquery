@@ -13,7 +13,8 @@ jobs:
           python-version: "3.8"
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip pylint mypy pytest pytest-cov codecov vulture twine wheel
+          python -m pip install --upgrade pip pylint mypy pytest pytest-cov codecov vulture 'boto3_stubs[dynamodb,application-autoscaling]' twine wheel
+          python -m mypy_boto3
       - name: Extract variables from env
         id: vars
         run: |
