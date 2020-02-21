@@ -1,4 +1,5 @@
 from typing import Dict, Optional, List
+from typing_extensions import Literal
 
 from dynamo_query.types import (
     ClientCreateTableGlobalSecondaryIndexesTypeDef,
@@ -38,11 +39,18 @@ class DynamoTableIndex:
     PRIMARY = "primary"
 
     def __init__(
-        self, name: str, partition_key_name: str, sort_key_name: Optional[str]
+        self,
+        name: str,
+        partition_key_name: str,
+        sort_key_name: Optional[str],
+        partition_key_type: Literal["S", "N", "B"] = "S",
+        sort_key_type: Literal["S", "N", "B"] = "S",
     ):
         self._name = name
-        self.sort_key_name = sort_key_name
         self.partition_key_name = partition_key_name
+        self.partition_key_type = partition_key_type
+        self.sort_key_name = sort_key_name
+        self.sort_key_type = sort_key_type
 
     @property
     def name(self) -> Optional[str]:
@@ -117,11 +125,17 @@ class DynamoTableIndex:
         self,
     ) -> List[ClientCreateTableAttributeDefinitionsTypeDef]:
         attribute_definitions: List[ClientCreateTableAttributeDefinitionsTypeDef] = [
-            {"AttributeName": self.partition_key_name, "AttributeType": "S"},
+            {
+                "AttributeName": self.partition_key_name,
+                "AttributeType": self.partition_key_type,
+            },
         ]
         if self.sort_key_name:
             attribute_definitions.append(
-                {"AttributeName": self.sort_key_name, "AttributeType": "S"}
+                {
+                    "AttributeName": self.sort_key_name,
+                    "AttributeType": self.sort_key_type,
+                }
             )
         return attribute_definitions
 
