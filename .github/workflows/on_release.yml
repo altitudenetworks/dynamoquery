@@ -20,7 +20,12 @@ jobs:
         id: vars
         run: |
           echo "GitHub ref ${GITHUB_REF}"
-          VERSION=`echo "${GITHUB_REF}" | cut -f 3 -d "/" | cut -f 1 -d "-"`
+          VERSION_TAG=`echo "${GITHUB_REF}" | cut -f 3 -d "/"`
+          if [[ "$VERSION_TAG" != *"-release" ]]; then
+            echo "Release tag should end with '-release', e.g. '1.2.3-rc1-release'"
+            echo "Stopping now."
+          fi
+          VERSION=`echo "$VERSION_TAG" | sed "s/-release//"`
           echo "##[set-output name=version;]$(echo ${VERSION})"
       - name: Lint and test
         run: |
