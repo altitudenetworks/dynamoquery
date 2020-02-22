@@ -1,6 +1,6 @@
 # DynamoQuery
 
-> Auto-generated documentation for [dynamo_query.dynamo_query](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py) module.
+> Auto-generated documentation for [dynamo_query.dynamo_query](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py) module.
 
 Helper for building Boto3 DynamoDB queries.
 
@@ -27,7 +27,7 @@ Helper for building Boto3 DynamoDB queries.
 
 ## DynamoQuery
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L35)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L35)
 
 ```python
 class DynamoQuery(BaseDynamoQuery):
@@ -80,7 +80,7 @@ list(result_data_table.get_records())
 
 ### DynamoQuery.build_batch_delete_item
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L470)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L470)
 
 ```python
 @classmethod
@@ -124,7 +124,7 @@ result_data_table = query.execute(
 
 ### DynamoQuery.build_batch_get_item
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L391)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L391)
 
 ```python
 @classmethod
@@ -165,7 +165,7 @@ result_data_table = query.execute(
 
 ### DynamoQuery.build_batch_update_item
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L427)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L427)
 
 ```python
 @classmethod
@@ -211,7 +211,7 @@ result_data_table = query.execute(
 
 ### DynamoQuery.build_delete_item
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L335)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L335)
 
 ```python
 @classmethod
@@ -265,7 +265,7 @@ result_data_table = query.execute(
 
 ### DynamoQuery.build_get_item
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L218)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L218)
 
 ```python
 @classmethod
@@ -313,7 +313,7 @@ result_data_table = query.execute(
 
 ### DynamoQuery.build_query
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L81)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L81)
 
 ```python
 @classmethod
@@ -378,7 +378,7 @@ result_data_table = query.execute(
 
 ### DynamoQuery.build_scan
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L156)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L156)
 
 ```python
 @classmethod
@@ -435,7 +435,7 @@ result_data_table = query.execute(
 
 ### DynamoQuery.build_update_item
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L269)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L269)
 
 ```python
 @classmethod
@@ -497,7 +497,7 @@ result_data_table = query.execute(
 
 ### DynamoQuery().execute
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L527)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L527)
 
 ```python
 def execute(
@@ -546,7 +546,7 @@ A `DataTable` with query results.
 
 ### DynamoQuery().execute_dict
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L599)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L599)
 
 ```python
 def execute_dict(
@@ -587,7 +587,7 @@ A `DataTable` with query results.
 
 ### DynamoQuery().get_last_evaluated_key
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L636)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L636)
 
 ```python
 def get_last_evaluated_key() -> Optional[ExclusiveStartKey]:
@@ -621,7 +621,7 @@ A dict that can be used in `ExclusiveStartKey` parameter.
 
 ### DynamoQuery().get_raw_responses
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L672)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L672)
 
 ```python
 def get_raw_responses() -> List[Dict]:
@@ -637,7 +637,7 @@ A list of AWS responses.
 
 ### DynamoQuery.get_table_keys
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L683)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L683)
 
 ```python
 @staticmethod
@@ -667,7 +667,7 @@ A list of table keys.
 
 ### DynamoQuery().limit
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L738)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L738)
 
 ```python
 def limit(limit: int) -> DynamoQueryType:
@@ -694,7 +694,7 @@ Itself, so this method can be chained.
 
 ### DynamoQuery().projection
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L708)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L708)
 
 ```python
 def projection(*fields: str) -> DynamoQueryType:
@@ -727,7 +727,7 @@ Itself, so this method can be chained.
 
 ### DynamoQuery().reset_start_key
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L665)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L665)
 
 ```python
 def reset_start_key() -> DynamoQueryType:
@@ -741,7 +741,7 @@ Set paginated query to the start.
 
 ### DynamoQuery().table
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L511)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L511)
 
 ```python
 def table(
@@ -763,7 +763,7 @@ Set table resource and table keys.
 
 ### DynamoQuery().update
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_query.py#L759)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_query.py#L759)
 
 ```python
 def update(

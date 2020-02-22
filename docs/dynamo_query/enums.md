@@ -1,6 +1,6 @@
 # Enums
 
-> Auto-generated documentation for [dynamo_query.enums](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py) module.
+> Auto-generated documentation for [dynamo_query.enums](https://github.com/altitudenetworks/dynamo_querydynamo_query/enums.py) module.
 
 DynamoDB related enums.
 
@@ -11,7 +11,7 @@ DynamoDB related enums.
 
 ## Operator
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L40)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/enums.py#L40)
 
 ```python
 class Operator(enum.Enum):
@@ -36,7 +36,7 @@ Enum of operator types that can be used as postfixes in `ConditionExpression` ke
 
 ### Operator.values
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L72)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/enums.py#L72)
 
 ```python
 @classmethod
@@ -45,7 +45,7 @@ def values() -> Set[str]:
 
 ## QueryType
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/enums.py#L15)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/enums.py#L15)
 
 ```python
 class QueryType(enum.Enum):

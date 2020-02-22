@@ -1,6 +1,6 @@
 # Dynamo Query
 
-> Auto-generated documentation for [dynamo_query](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/__init__.py) module.
+> Auto-generated documentation for [dynamo_query](https://github.com/altitudenetworks/dynamo_querydynamo_query/__init__.py) module.
 
 Main import point for DynamoQuery.
 

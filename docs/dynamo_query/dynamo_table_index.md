@@ -1,6 +1,6 @@
 # DynamoTableIndex
 
-> Auto-generated documentation for [dynamo_query.dynamo_table_index](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table_index.py) module.
+> Auto-generated documentation for [dynamo_query.dynamo_table_index](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_table_index.py) module.
 
 - [dynamo-query](../README.md#dynamo-query) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / DynamoTableIndex
     - [DynamoTableIndex](#dynamotableindex)
@@ -13,7 +13,7 @@
 
 ## DynamoTableIndex
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table_index.py#L14)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_table_index.py#L14)
 
 ```python
 class DynamoTableIndex():
@@ -54,7 +54,7 @@ table_index.as_dynamodb_dict()
 
 ### DynamoTableIndex().as_attribute_definitions
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table_index.py#L124)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_table_index.py#L124)
 
 ```python
 def as_attribute_definitions() -> List[ClientCreateTableAttributeDefinitionsTypeDef]:
@@ -62,7 +62,7 @@ def as_attribute_definitions() -> List[ClientCreateTableAttributeDefinitionsType
 
 ### DynamoTableIndex().as_global_secondary_index
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table_index.py#L65)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_table_index.py#L65)
 
 ```python
 def as_global_secondary_index() -> ClientCreateTableGlobalSecondaryIndexesTypeDef:
@@ -80,7 +80,7 @@ A dict with index data.
 
 ### DynamoTableIndex().as_key_schema
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table_index.py#L109)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_table_index.py#L109)
 
 ```python
 def as_key_schema() -> List[ClientCreateTableKeySchemaTypeDef]:
@@ -94,7 +94,7 @@ A dict with index data.
 
 ### DynamoTableIndex().as_local_secondary_index
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table_index.py#L87)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_table_index.py#L87)
 
 ```python
 def as_local_secondary_index() -> ClientCreateTableLocalSecondaryIndexesTypeDef:
@@ -112,7 +112,7 @@ A dict with index data.
 
 ### DynamoTableIndex().get_query_data
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table_index.py#L145)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_table_index.py#L145)
 
 ```python
 def get_query_data(
@@ -134,7 +134,7 @@ Query-ready data.
 
 ### DynamoTableIndex().name
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table_index.py#L55)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/dynamo_table_index.py#L55)
 
 ```python
 @property

@@ -1,6 +1,6 @@
 # Boto3Retrier
 
-> Auto-generated documentation for [dynamo_query.boto3_retrier](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py) module.
+> Auto-generated documentation for [dynamo_query.boto3_retrier](https://github.com/altitudenetworks/dynamo_querydynamo_query/boto3_retrier.py) module.
 
 https://codereview.stackexchange.com/questions/133310/python-decorator-for-retrying-w-exponential-backoff
 https://developers.google.com/admin-sdk/directory/v1/limits#backoff
@@ -16,7 +16,7 @@ https://developers.google.com/admin-sdk/directory/v1/limits#backoff
 
 ## BatchUnprocessedItemsError
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L33)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/boto3_retrier.py#L33)
 
 ```python
 class BatchUnprocessedItemsError(Exception):
@@ -27,7 +27,7 @@ Raise if batch operation has unprocessed items
 
 ## Boto3Retrier
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L50)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/boto3_retrier.py#L50)
 
 ```python
 class Boto3Retrier():
@@ -83,7 +83,7 @@ def read_files():
 
 ### Boto3Retrier.backoff
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L177)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/boto3_retrier.py#L177)
 
 ```python
 @classmethod
@@ -103,7 +103,7 @@ A generator of delay in seconds.
 
 ### Boto3Retrier.doubling_backoff
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L145)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/boto3_retrier.py#L145)
 
 ```python
 @classmethod
@@ -123,7 +123,7 @@ A generator of delay in seconds.
 
 ### Boto3Retrier.get_exception_scope
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L191)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/boto3_retrier.py#L191)
 
 ```python
 @staticmethod
@@ -142,7 +142,7 @@ A scope as a dict.
 
 ### Boto3Retrier().handle_exception
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L210)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/boto3_retrier.py#L210)
 
 ```python
 def handle_exception(exc: BaseException) -> None:
@@ -162,7 +162,7 @@ You can access decorated method data from here.
 
 ### Boto3Retrier.no_backoff
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/boto3_retrier.py#L162)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/boto3_retrier.py#L162)
 
 ```python
 @classmethod
