@@ -27,9 +27,64 @@ class DynamoTable(Generic[DynamoRecord]):
     def __init__(logger: Optional[logging.Logger] = None):
 ```
 
+DynamoDB table manager, uses `DynamoQuery` underneath.
+
+#### Arguments
+
+- `logger` - `logging.Logger` instance.
+
+#### Examples
+
+```python
+from typing_extensions import TypedDict
+from dynamo_query import DynamoTable
+
+# first, define your record
+class UserRecord(TypedDict, total=False):
+    pk: str
+    email: str
+    name: str
+    points: int
+
+
+# Create your dynamo table manager with your record class
+class UserTable(DynamoTable[UserRecord]):
+    # provide a set of your table keys
+    table_keys = {'pk'}
+
+    # use this property to define your table name
+    @property
+    def table(self) -> str:
+        return "my_table"
+
+    # define how to get PK from a record
+    def get_partition_key(self, record: UserRecord) -> str:
+        return record["email"]
+
+    # we do not have a sort key in our table
+    def get_sort_key(self, record: UserRecord) -> None:
+        return None
+
+    # specify some GSIs
+    global_secondary_indexes = [
+        DynamoTableIndex("gsi_name", "name", None),
+        DynamoTableIndex("gsi_email_age", "email", "age"),
+    ]
+
+# and now we can create our table in DynamoDB
+user_table = UserTable()
+user_table.create_table()
+```
+
+#### Attributes
+
+- `partition_key_name` - PK column name: `'pk'`
+- `sort_key_name` - SK column name: `'sk'`
+- `primary_index` - Primary global index: `DynamoTableIndex(name=DynamoTableIndex.PRIMARY,...`
+
 ### DynamoTable().batch_delete
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L267)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L327)
 
 ```python
 def batch_delete(
@@ -45,7 +100,7 @@ Delete multuple records as a DataTable from DB.
 
 ```python
 # UserTable is a subclass of a DynamoTable
-user_table = MyTable()
+user_table = UserTable()
 
 # we should provide table keys or fields to calculate them
 # in our case, PK is calculated from `email` field.
@@ -76,7 +131,7 @@ DataTable with deleted records.
 
 ### DynamoTable().batch_get
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L209)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L269)
 
 ```python
 def batch_get(data_table: DataTable[DynamoRecord]) -> DataTable[DynamoRecord]:
@@ -90,7 +145,7 @@ Get multuple records as a DataTable from DB.
 
 ```python
 # UserTable is a subclass of a DynamoTable
-user_table = MyTable()
+user_table = UserTable()
 
 # we should provide table keys or fields to calculate them
 # in our case, PK is calculated from `email` field.
@@ -121,7 +176,7 @@ DataTable with existing records.
 
 ### DynamoTable().batch_upsert
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L324)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L384)
 
 ```python
 def batch_upsert(
@@ -137,7 +192,7 @@ Upsert multuple records as a DataTable to DB.
 
 ```python
 # UserTable is a subclass of a DynamoTable
-user_table = MyTable()
+user_table = UserTable()
 
 # we should provide table keys or fields to calculate them
 # in our case, PK is calculated from `email` field.
@@ -170,7 +225,7 @@ A DataTable with upserted results.
 
 ### DynamoTable().clear_table
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L136)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L196)
 
 ```python
 def clear_table(partition_key: Optional[str]) -> None:
@@ -199,7 +254,7 @@ user_table.clear_table(None)
 
 ### DynamoTable().create_table
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L88)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L148)
 
 ```python
 def create_table() -> None:
@@ -219,7 +274,7 @@ UserTable.create_table()
 
 ### DynamoTable().delete_record
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L495)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L555)
 
 ```python
 def delete_record(
@@ -236,7 +291,7 @@ Delete Record from DB.
 
 ```python
 # UserTable is a subclass of a DynamoTable
-user_table = MyTable()
+user_table = UserTable()
 
 # we should provide table keys or fields to calculate them
 # in our case, PK is calculated from `email` field.
@@ -266,7 +321,7 @@ A dict with record data or None.
 
 ### DynamoTable().get_partition_key
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L57)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L117)
 
 ```python
 @abstractmethod
@@ -281,7 +336,7 @@ Override this method to get PK from a record.
 
 ### DynamoTable().get_record
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L390)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L450)
 
 ```python
 def get_record(record: DynamoRecord) -> Optional[DynamoRecord]:
@@ -295,7 +350,7 @@ Get Record from DB.
 
 ```python
 # UserTable is a subclass of a DynamoTable
-user_table = MyTable()
+user_table = UserTable()
 
 # we should provide table keys or fields to calculate them
 # in our case, PK is calculated from `email` field.
@@ -325,7 +380,7 @@ A dict with record data or None.
 
 ### DynamoTable().get_sort_key
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L63)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L123)
 
 ```python
 @abstractmethod
@@ -340,7 +395,7 @@ Override this method to get SK from a record.
 
 ### DynamoTable().query
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L597)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L657)
 
 ```python
 def query(
@@ -362,7 +417,7 @@ Query table records by index.
 
 ```python
 # UserTable is a subclass of a DynamoTable
-user_table = MyTable()
+user_table = UserTable()
 
 user_records = user_table.query(
     # query by our PK
@@ -413,7 +468,7 @@ Matching record.
 
 ### DynamoTable().scan
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L542)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L602)
 
 ```python
 def scan(
@@ -430,7 +485,7 @@ List table records.
 
 ```python
 # UserTable is a subclass of a DynamoTable
-user_table = MyTable()
+user_table = UserTable()
 
 user_records = user_table.scan(
     # get only users older than ...
@@ -460,7 +515,7 @@ for user_record in user_records:
 
 ### DynamoTable().table
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L51)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L111)
 
 ```python
 @abstractproperty
@@ -475,7 +530,7 @@ Override this method to get DynamoDB Table resource.
 
 ### DynamoTable().upsert_record
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L436)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/dynamo_table.py#L496)
 
 ```python
 def upsert_record(
@@ -493,7 +548,7 @@ Upsert Record to DB.
 
 ```python
 # UserTable is a subclass of a DynamoTable
-user_table = MyTable()
+user_table = UserTable()
 
 # we should provide table keys or fields to calculate them
 # in our case, PK is calculated from `email` field.

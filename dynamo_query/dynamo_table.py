@@ -30,13 +30,73 @@ DynamoRecord = TypeVar("DynamoRecord", bound=Mapping[str, Any])
 
 
 class DynamoTable(Generic[DynamoRecord]):
+    """
+    DynamoDB table manager, uses `DynamoQuery` underneath.
+
+    Arguments:
+        logger -- `logging.Logger` instance.
+
+    Example:
+        ```python
+        from typing_extensions import TypedDict
+        from dynamo_query import DynamoTable
+
+        # first, define your record
+        class UserRecord(TypedDict, total=False):
+            pk: str
+            email: str
+            name: str
+            points: int
+
+
+        # Create your dynamo table manager with your record class
+        class UserTable(DynamoTable[UserRecord]):
+            # provide a set of your table keys
+            table_keys = {'pk'}
+
+            # use this property to define your table name
+            @property
+            def table(self) -> str:
+                return "my_table"
+
+            # define how to get PK from a record
+            def get_partition_key(self, record: UserRecord) -> str:
+                return record["email"]
+
+            # we do not have a sort key in our table
+            def get_sort_key(self, record: UserRecord) -> None:
+                return None
+
+            # specify some GSIs
+            global_secondary_indexes = [
+                DynamoTableIndex("gsi_name", "name", None),
+                DynamoTableIndex("gsi_email_age", "email", "age"),
+            ]
+
+        # and now we can create our table in DynamoDB
+        user_table = UserTable()
+        user_table.create_table()
+        ```
+    """
+    # PK column name
     partition_key_name = "pk"
+
+    # SK column name
     sort_key_name = "sk"
+
+    # Set of table keys
     table_keys: Set[str] = {partition_key_name, sort_key_name}
+
+    # GSI indexes list
     global_secondary_indexes: Iterable[DynamoTableIndex] = []
+
+    # LSI indexes list
     local_secondary_indexes: Iterable[DynamoTableIndex] = []
+
+    # Prefix to find items if you store several records in one table
     sort_key_prefix: Optional[str] = None
 
+    # Primary global index
     primary_index = DynamoTableIndex(
         name=DynamoTableIndex.PRIMARY,
         partition_key_name=partition_key_name,
@@ -216,7 +276,7 @@ class DynamoTable(Generic[DynamoRecord]):
 
             ```python
             # UserTable is a subclass of a DynamoTable
-            user_table = MyTable()
+            user_table = UserTable()
 
             # we should provide table keys or fields to calculate them
             # in our case, PK is calculated from `email` field.
@@ -276,7 +336,7 @@ class DynamoTable(Generic[DynamoRecord]):
 
             ```python
             # UserTable is a subclass of a DynamoTable
-            user_table = MyTable()
+            user_table = UserTable()
 
             # we should provide table keys or fields to calculate them
             # in our case, PK is calculated from `email` field.
@@ -333,7 +393,7 @@ class DynamoTable(Generic[DynamoRecord]):
 
             ```python
             # UserTable is a subclass of a DynamoTable
-            user_table = MyTable()
+            user_table = UserTable()
 
             # we should provide table keys or fields to calculate them
             # in our case, PK is calculated from `email` field.
@@ -397,7 +457,7 @@ class DynamoTable(Generic[DynamoRecord]):
 
             ```python
             # UserTable is a subclass of a DynamoTable
-            user_table = MyTable()
+            user_table = UserTable()
 
             # we should provide table keys or fields to calculate them
             # in our case, PK is calculated from `email` field.
@@ -448,7 +508,7 @@ class DynamoTable(Generic[DynamoRecord]):
 
             ```python
             # UserTable is a subclass of a DynamoTable
-            user_table = MyTable()
+            user_table = UserTable()
 
             # we should provide table keys or fields to calculate them
             # in our case, PK is calculated from `email` field.
@@ -506,7 +566,7 @@ class DynamoTable(Generic[DynamoRecord]):
 
             ```python
             # UserTable is a subclass of a DynamoTable
-            user_table = MyTable()
+            user_table = UserTable()
 
             # we should provide table keys or fields to calculate them
             # in our case, PK is calculated from `email` field.
@@ -553,7 +613,7 @@ class DynamoTable(Generic[DynamoRecord]):
 
             ```python
             # UserTable is a subclass of a DynamoTable
-            user_table = MyTable()
+            user_table = UserTable()
 
             user_records = user_table.scan(
                 # get only users older than ...
@@ -613,7 +673,7 @@ class DynamoTable(Generic[DynamoRecord]):
 
             ```python
             # UserTable is a subclass of a DynamoTable
-            user_table = MyTable()
+            user_table = UserTable()
 
             user_records = user_table.query(
                 # query by our PK
