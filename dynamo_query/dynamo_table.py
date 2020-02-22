@@ -55,13 +55,13 @@ class DynamoTable(Generic[DynamoRecord]):
         """
 
     @abstractmethod
-    def _get_partition_key(self, record: DynamoRecord) -> Any:
+    def get_partition_key(self, record: DynamoRecord) -> Any:
         """
         Override this method to get PK from a record.
         """
 
     @abstractmethod
-    def _get_sort_key(self, record: DynamoRecord) -> Any:
+    def get_sort_key(self, record: DynamoRecord) -> Any:
         """
         Override this method to get SK from a record.
         """
@@ -73,19 +73,32 @@ class DynamoTable(Generic[DynamoRecord]):
 
         return self._lazy_logger
 
-    def get_partition_key(self, record: DynamoRecord) -> Any:
+    def _get_partition_key(self, record: DynamoRecord) -> Any:
         if self.partition_key_name in record:
             return record[self.partition_key_name]
 
-        return self._get_partition_key(record)
+        return self.get_partition_key(record)
 
-    def get_sort_key(self, record: DynamoRecord) -> Any:
+    def _get_sort_key(self, record: DynamoRecord) -> Any:
         if self.sort_key_name in record:
             return record[self.sort_key_name]
 
-        return self._get_sort_key(record)
+        return self.get_sort_key(record)
 
     def create_table(self) -> None:
+        """
+        Create a table in DynamoDB.
+
+        Example:
+
+            ```python
+            # UserTable is a subclass of a DynamoTable
+            user_table = UserTable()
+
+            # create a table with key schema and all indexes.
+            UserTable.create_table()
+            ```
+        """
         global_secondary_indexes = [
             i.as_global_secondary_index() for i in self.global_secondary_indexes
         ]
@@ -104,16 +117,6 @@ class DynamoTable(Generic[DynamoRecord]):
     def _yield_from_query(
         self, query: DynamoQuery, data: Dict[str, Any], limit: Optional[int] = None
     ) -> Iterator[DynamoRecord]:
-        """
-        Yield records for query.
-
-        Arguments:
-            query -- DynamoQuery.build_query() instance.
-            data -- Query data.
-
-        Yields:
-            A DataTable with matching results.
-        """
         records_count = 0
         while True:
             results_data_table = query.table(
@@ -135,6 +138,19 @@ class DynamoTable(Generic[DynamoRecord]):
         Remove all records.
 
         If `partition_key` is None - deletes all records.
+
+        Example:
+
+            ```python
+            # UserTable is a subclass of a DynamoTable
+            user_table = UserTable()
+
+            # delete all records that have PK = `emails`
+            user_table.clear_table("emails")
+
+            # delete all records
+            user_table.clear_table(None)
+            ```
 
         Arguments:
             partition_key -- Partition key value.
@@ -192,9 +208,34 @@ class DynamoTable(Generic[DynamoRecord]):
 
     def batch_get(self, data_table: DataTable[DynamoRecord]) -> DataTable[DynamoRecord]:
         """
-        Get items by table keys.
+        Get multuple records as a DataTable from DB.
 
-        `data_table` must have `pk` and `sk` column with set values.
+        `data_table` must have all columns to calculate table keys.
+
+        Example:
+
+            ```python
+            # UserTable is a subclass of a DynamoTable
+            user_table = MyTable()
+
+            # we should provide table keys or fields to calculate them
+            # in our case, PK is calculated from `email` field.
+            users_table = DataTable[UserRecord]().add_record(
+                {
+                    "email": "puppy@gmail.com",
+                },
+                {
+                    "email": "elon@gmail.com",
+                },
+            )
+            user_records = user_table.batch_get(users_table)
+
+            for user_record in user_records:
+                # print found records
+                # if record was not found - it will still be returned
+                # but only with the data you provided
+                print(user_record)
+            ```
 
         Arguments:
             data_table -- Request data table.
@@ -206,8 +247,8 @@ class DynamoTable(Generic[DynamoRecord]):
             return DataTable()
         get_data_table = DataTable[DynamoRecord]()
         for record in data_table.get_records():
-            partition_key = self.get_partition_key(record)
-            sort_key = self.get_sort_key(record)
+            partition_key = self._get_partition_key(record)
+            sort_key = self._get_sort_key(record)
             new_record = cast(
                 DynamoRecord,
                 {
@@ -227,9 +268,34 @@ class DynamoTable(Generic[DynamoRecord]):
         self, data_table: DataTable[DynamoRecord]
     ) -> DataTable[DynamoRecord]:
         """
-        Delete items by table keys.
+        Delete multuple records as a DataTable from DB.
 
-        `data_table` must have `pk` and `sk` columns with set values.
+        `data_table` must have all columns to calculate table keys.
+
+        Example:
+
+            ```python
+            # UserTable is a subclass of a DynamoTable
+            user_table = MyTable()
+
+            # we should provide table keys or fields to calculate them
+            # in our case, PK is calculated from `email` field.
+            users_table = DataTable[UserRecord]().add_record(
+                {
+                    "email": "puppy@gmail.com",
+                },
+                {
+                    "email": "elon@gmail.com",
+                },
+            )
+            deleted_records = user_table.batch_delete(users_table)
+
+            for deleted_record in deleted_records:
+                # print deleted_record records
+                # if record was not found - it will still be returned
+                # but only with the data you provided
+                print(deleted_record)
+            ```
 
         Arguments:
             data_table -- Request data table.
@@ -242,8 +308,8 @@ class DynamoTable(Generic[DynamoRecord]):
 
         delete_data_table = DataTable[DynamoRecord]()
         for record in data_table.get_records():
-            partition_key = self.get_partition_key(record)
-            sort_key = record.get(self.sort_key_name) or self.get_sort_key(record)
+            partition_key = self._get_partition_key(record)
+            sort_key = self._get_sort_key(record)
             new_record = cast(
                 DynamoRecord,
                 {self.partition_key_name: partition_key, self.sort_key_name: sort_key},
@@ -259,10 +325,39 @@ class DynamoTable(Generic[DynamoRecord]):
         self, data_table: DataTable[DynamoRecord]
     ) -> DataTable[DynamoRecord]:
         """
-        Upsert DataTable to DB.
+        Upsert multuple records as a DataTable to DB.
+
+        `data_table` must have all columns to calculate table keys.
+
+        Example:
+
+            ```python
+            # UserTable is a subclass of a DynamoTable
+            user_table = MyTable()
+
+            # we should provide table keys or fields to calculate them
+            # in our case, PK is calculated from `email` field.
+            users_table = DataTable[UserRecord]().add_record(
+                {
+                    "email": "puppy@gmail.com",
+                    "name": "Doge Barky",
+                    "age": 20,
+                },
+                {
+                    "email": "elon@gmail.com",
+                    "name": "Elon Musk",
+                    "age": 5289,
+                },
+            )
+            upserted_records = user_table.batch_upsert(users_table)
+
+            for upserted_record in upserted_records:
+                # print created and updated records
+                print(upserted_record)
+            ```
 
         Arguments:
-            data_table -- DataTable with set `pk` and `sk`.
+            data_table -- Request DataTable.
 
         Returns:
             A DataTable with upserted results.
@@ -296,14 +391,36 @@ class DynamoTable(Generic[DynamoRecord]):
         """
         Get Record from DB.
 
+        `record` must have all fields to calculate table keys.
+
+        Example:
+
+            ```python
+            # UserTable is a subclass of a DynamoTable
+            user_table = MyTable()
+
+            # we should provide table keys or fields to calculate them
+            # in our case, PK is calculated from `email` field.
+            user_record = user_table.get_record({
+                "email": "suspicious@gmail.com",
+            })
+
+            if user_record is None:
+                # no record found
+                pass
+            else:
+                # print found record
+                print(user_record)
+            ```
+
         Arguments:
             record -- Record with required fields for sort and partition keys.
 
         Returns:
             A dict with record data or None.
         """
-        partition_key = self.get_partition_key(record)
-        sort_key = self.get_sort_key(record)
+        partition_key = self._get_partition_key(record)
+        sort_key = self._get_sort_key(record)
         result = (
             DynamoQuery.build_get_item()
             .table(table_keys=self.table_keys, table=self.table,)
@@ -325,6 +442,30 @@ class DynamoTable(Generic[DynamoRecord]):
         """
         Upsert Record to DB.
 
+        `record` must have all fields to calculate table keys.
+
+        Example:
+
+            ```python
+            # UserTable is a subclass of a DynamoTable
+            user_table = MyTable()
+
+            # we should provide table keys or fields to calculate them
+            # in our case, PK is calculated from `email` field.
+            deleted_record = user_table.delete_record({
+                "email": "newuser@gmail.com",
+                "name": "Somebody Oncetoldme"
+                "age": 23,
+            })
+
+            if deleted_record is None:
+                # no record found, so nothing was deleted
+                pass
+            else:
+                # print deleted record
+                print(user_record)
+            ```
+
         Arguments:
             record -- Record to insert/update.
             condition_expression -- Condition for update.
@@ -334,8 +475,8 @@ class DynamoTable(Generic[DynamoRecord]):
             A dict with updated record data.
         """
         update_keys = set(record.keys()) - self.table_keys
-        partition_key = self.get_partition_key(record)
-        sort_key = self.get_sort_key(record)
+        partition_key = self._get_partition_key(record)
+        sort_key = self._get_sort_key(record)
         result: DataTable[DynamoRecord] = (
             DynamoQuery.build_update_item(condition_expression=condition_expression)
             .update(*update_keys)
@@ -359,6 +500,27 @@ class DynamoTable(Generic[DynamoRecord]):
         """
         Delete Record from DB.
 
+        `record` must have all fields to calculate table keys.
+
+        Example:
+
+            ```python
+            # UserTable is a subclass of a DynamoTable
+            user_table = MyTable()
+
+            # we should provide table keys or fields to calculate them
+            # in our case, PK is calculated from `email` field.
+            deleted_record = user_table.delete_record({
+                "email": "cheater@gmail.com",
+            })
+
+            if deleted_record is None:
+                # no record found, so nothing was deleted
+            else:
+                # print deleted record
+                print(user_record)
+            ```
+
         Arguments:
             record -- Record with required fields for sort and partition keys.
             condition_expression -- Condition for delete.
@@ -366,8 +528,8 @@ class DynamoTable(Generic[DynamoRecord]):
         Returns:
             A dict with record data or None.
         """
-        partition_key = self.get_partition_key(record)
-        sort_key = self.get_sort_key(record)
+        partition_key = self._get_partition_key(record)
+        sort_key = self._get_sort_key(record)
         result: DataTable[DynamoRecord] = DynamoQuery.build_delete_item(
             condition_expression=condition_expression,
         ).table(table=self.table, table_keys=self.table_keys).execute_dict(
@@ -385,7 +547,32 @@ class DynamoTable(Generic[DynamoRecord]):
         limit: Optional[int] = None,
     ) -> Iterator[DynamoRecord]:
         """
-        Yield records from a table.
+        List table records.
+
+        Example:
+
+            ```python
+            # UserTable is a subclass of a DynamoTable
+            user_table = MyTable()
+
+            user_records = user_table.scan(
+                # get only users older than ...
+                # we will provide values in data
+                filter_expression=ConditionExpression("age", "<="),
+
+                # get only first 5 results
+                limit=5,
+
+                # get only name and email fields
+                projection=("name", "email"),
+
+                # ...older than 45 years
+                data= {"age": 45}
+            )
+
+            for user_record in user_records:
+                print(user_record)
+            ```
 
         Arguments:
             filter_expression -- Query filter expression.
@@ -420,7 +607,41 @@ class DynamoTable(Generic[DynamoRecord]):
         limit: Optional[int] = None,
     ) -> Iterator[DynamoRecord]:
         """
-        Yield results from a query using index.
+        Query table records by index.
+
+        Example:
+
+            ```python
+            # UserTable is a subclass of a DynamoTable
+            user_table = MyTable()
+
+            user_records = user_table.query(
+                # query by our PK
+                partition_key="new_users",
+
+                # and SK starting with `email_`
+                sort_key_prefix="email_",
+
+                # get only users older than ...
+                # we will provide values in data
+                filter_expression=ConditionExpression("age", "<="),
+
+                # get only first 5 results
+                limit=5,
+
+                # get only name and email fields
+                projection=("name", "email"),
+
+                # ...older than 45 years
+                data= {"age": 45}
+
+                # start with the newest records
+                scan_index_forward=False,
+            )
+
+            for user_record in user_records:
+                print(user_record)
+            ```
 
         Arguments:
             partition_key -- Partition key value.

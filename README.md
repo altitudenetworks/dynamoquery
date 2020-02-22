@@ -82,7 +82,7 @@ class MyTable(DynamoTable[UserRecord]):
 
     # use this property to define your table name
     @property
-    def table_name(self) -> str:
+    def table(self) -> str:
         return "my_table"
 
     # define how to get PK from a record
@@ -100,7 +100,7 @@ my_table = MyTable()
 my_table.upsert_record({
     "email": "user@gmail.com",
     "name": "John User",
-    "points": 12,
+    "age": 12,
 })
 
 # and output all the records
