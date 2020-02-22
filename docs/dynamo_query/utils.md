@@ -1,6 +1,6 @@
 # Utils
 
-> Auto-generated documentation for [dynamo_query.utils](https://github.com/altitudenetworks/dynamo_querydynamo_query/utils.py) module.
+> Auto-generated documentation for [dynamo_query.utils](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/utils.py) module.
 
 - [dynamo-query](../README.md#dynamo-query) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Utils
     - [ascii_string_generator](#ascii_string_generator)
@@ -11,7 +11,7 @@
 
 ## ascii_string_generator
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/utils.py#L37)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/utils.py#L37)
 
 ```python
 def ascii_string_generator(length: int = 3) -> Iterator[str]:
@@ -36,7 +36,7 @@ Lowercased ASCII string like "aaa"
 
 ## chunkify
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/utils.py#L5)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/utils.py#L5)
 
 ```python
 def chunkify(data: Iterable, size: int) -> Iterator[List[Any]]:
@@ -65,7 +65,7 @@ A generator of chunks.
 
 ## get_format_keys
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/utils.py#L67)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/utils.py#L67)
 
 ```python
 def get_format_keys(format_string: str) -> Set[str]:
@@ -88,7 +88,7 @@ A set of format keys.
 
 ## get_nested_item
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/utils.py#L112)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/utils.py#L112)
 
 ```python
 def get_nested_item(
@@ -112,7 +112,7 @@ Get nested `item_path` from `dict_obj`.
 
 ## pluralize
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/utils.py#L91)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/utils.py#L91)
 
 ```python
 def pluralize(count: int, singular: str, plural: Optional[str] = None) -> str:

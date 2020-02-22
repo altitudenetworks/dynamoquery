@@ -1,6 +1,6 @@
 # Base
 
-> Auto-generated documentation for [dynamo_query.base](https://github.com/altitudenetworks/dynamo_querydynamo_query/base.py) module.
+> Auto-generated documentation for [dynamo_query.base](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/base.py) module.
 
 Helper for building Boto3 DynamoDB queries.
 
@@ -15,7 +15,7 @@ Helper for building Boto3 DynamoDB queries.
 
 ## BaseDynamoQuery
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/base.py#L41)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/base.py#L41)
 
 ```python
 class BaseDynamoQuery():
@@ -73,7 +73,7 @@ query = BaseDynamoQuery(
 
 ### BaseDynamoQuery().client
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/base.py#L141)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/base.py#L141)
 
 ```python
 @property
@@ -86,7 +86,7 @@ def client() -> DynamoDBClient:
 
 ### BaseDynamoQuery().has_more_results
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/base.py#L154)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/base.py#L154)
 
 ```python
 def has_more_results() -> bool:
@@ -100,7 +100,7 @@ True if query has more results than returned or was not yet executed.
 
 ### BaseDynamoQuery().table_keys
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/base.py#L134)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/base.py#L134)
 
 ```python
 @property
@@ -113,7 +113,7 @@ def table_keys() -> TableKeys:
 
 ### BaseDynamoQuery().table_resource
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/base.py#L127)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/base.py#L127)
 
 ```python
 @property
@@ -126,7 +126,7 @@ def table_resource() -> Table:
 
 ### BaseDynamoQuery().was_executed
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/base.py#L145)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/base.py#L145)
 
 ```python
 def was_executed() -> bool:
@@ -140,7 +140,7 @@ True if query was executed.
 
 ## DynamoQueryError
 
-[[find in source code]](https://github.com/altitudenetworks/dynamo_querydynamo_query/base.py#L35)
+[[find in source code]](https://github.com/altitudenetworks/dynamo_query/blob/master/dynamo_query/base.py#L35)
 
 ```python
 class DynamoQueryError(Exception):
