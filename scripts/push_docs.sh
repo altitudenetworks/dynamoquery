@@ -19,13 +19,14 @@ if [[ "$GITHUB_EMAIL" == "" ]]; then
     exit 1
 fi
 
+git pull
 if [[ `git diff --stat | grep docs` != "" ]]; then
     echo "There are changes: `git diff`"
     git config --global user.email "${GITHUB_EMAIL}"
     git config --global user.name ${GITHUB_ACTOR}
-    git add docs
-    git commit -m "Update docs"
-    git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/altitudenetworks/dynamo_query.git HEAD:master
+    # git add docs
+    # git commit -m "Update docs"
+    # git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/altitudenetworks/dynamo_query.git HEAD:master
 else
     echo "Docs are already up to date."
 fi

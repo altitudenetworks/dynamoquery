@@ -27,6 +27,7 @@ fi
 echo "Bumping version to ${VERSION}"
 echo "__version__ = \"${VERSION}\"" > __version__.py
 
+git pull
 if [[ `git diff --stat | grep version` != "" ]]; then
     echo "There are changes: `git diff`"
     git config --global user.email "${GITHUB_EMAIL}"
