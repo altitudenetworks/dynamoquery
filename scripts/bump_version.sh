@@ -29,7 +29,7 @@ echo "__version__ = \"${VERSION}\"" > __version__.py
 
 git config --global user.email "${GITHUB_EMAIL}"
 git config --global user.name "${GITHUB_ACTOR}"
-git pull
+
 if [[ `git diff --stat | grep version` != "" ]]; then
     echo "There are changes: `git diff`"
     git add __version__.py

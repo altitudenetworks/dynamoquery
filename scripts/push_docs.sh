@@ -21,7 +21,6 @@ fi
 
 git config --global user.email "${GITHUB_EMAIL}"
 git config --global user.name "${GITHUB_ACTOR}"
-git pull
 
 if [[ `git diff --stat | grep docs` != "" ]]; then
     echo "There are changes: `git diff`"
