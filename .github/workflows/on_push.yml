@@ -29,9 +29,9 @@ jobs:
       - name: Send coverage report
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-          PYTHON_VER=`python -V | grep -Po '\d+\.+\d+'`
-          if [[ "$PYTHON_VER" == "3.8" ]]; then
+          if [[ "$PYTHON_VERSION" == "3.8" ]]; then
             pytest --cov-report term --cov dynamo_query
             codecov
           fi
@@ -39,6 +39,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_EMAIL: engineering@altitudenetworks.com
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-          bash ./scripts/docs.sh
-          bash ./scripts/push_docs.sh
+          if [[ "$PYTHON_VERSION" == "3.8" ]]; then
+            bash ./scripts/docs.sh
+            bash ./scripts/push_docs.sh
+          fi
