@@ -40,5 +40,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_EMAIL: engineering@altitudenetworks.com
         run: |
-          ./scripts/docs.sh
-          ./scripts/push_docs.sh
+          bash ./scripts/docs.sh
+          bash ./scripts/push_docs.sh
