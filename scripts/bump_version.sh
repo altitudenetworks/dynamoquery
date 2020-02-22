@@ -24,6 +24,11 @@ if [[ "$GITHUB_EMAIL" == "" ]]; then
     exit 1
 fi
 
+if [[ "$GITHUB_REPOSITORY" == "" ]]; then
+    echo "No GITHUB_EMAIL specified"
+    exit 1
+fi
+
 echo "Bumping version to ${VERSION}"
 echo "__version__ = \"${VERSION}\"" > __version__.py
 
@@ -35,8 +40,8 @@ if [[ `git diff --stat | grep version` != "" ]]; then
     git add __version__.py
     git commit -m "Bump version to ${VERSION}"
     git tag ${VERSION}
-    git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/altitudenetworks/dynamoquery.git --tags
-    git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/altitudenetworks/dynamoquery.git HEAD:master
+    git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git --tags
+    git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git HEAD:master
 else
     echo "Version is already up to date."
 fi
