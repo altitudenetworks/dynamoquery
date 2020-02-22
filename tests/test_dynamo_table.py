@@ -42,29 +42,16 @@ class TestDynamoTableIndex:
             def table(self):
                 return table_mock
 
-            def _get_partition_key(self, record):
+            def get_partition_key(self, record):
                 return record["pk_column"]
 
-            def _get_sort_key(self, record):
+            def get_sort_key(self, record):
                 return record["sk_column"]
 
         self.result = MyDynamoTable()
 
     def test_init(self):
         assert self.result.table.name == "my_table_name"
-
-    def test_get_partition_key(self):
-        assert self.result.get_partition_key({"pk_column": "my_pk"}) == "my_pk"
-        assert (
-            self.result.get_partition_key({"pk": "my_pk", "pk_column": "not_pk"})
-            == "my_pk"
-        )
-
-    def test_get_sort_key(self):
-        assert self.result.get_sort_key({"sk_column": "my_sk"}) == "my_sk"
-        assert (
-            self.result.get_sort_key({"sk": "my_sk", "sk_column": "not_sk"}) == "my_sk"
-        )
 
     def test_create_table(self):
         self.result.create_table()
