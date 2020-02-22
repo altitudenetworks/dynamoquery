@@ -24,9 +24,9 @@ git config --global user.name "${GITHUB_ACTOR}"
 
 if [[ `git diff --stat | grep docs` != "" ]]; then
     echo "There are changes: `git diff`"
-    # git add docs
-    # git commit -m "Update docs"
-    # git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/altitudenetworks/dynamoquery.git HEAD:master
+    git add docs
+    git commit -m "Update docs"
+    git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/altitudenetworks/dynamoquery.git HEAD:master
 else
     echo "Docs are already up to date."
 fi
