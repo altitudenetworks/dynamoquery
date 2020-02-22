@@ -1,28 +1,27 @@
+import datetime
+import logging
+from abc import abstractmethod, abstractproperty
 from typing import (
-    Optional,
-    Dict,
     Any,
-    Iterator,
+    Dict,
+    Generic,
     Iterable,
+    Iterator,
+    Mapping,
+    Optional,
     Set,
     TypeVar,
-    Generic,
-    Mapping,
     Union,
     cast,
 )
-import logging
-import datetime
-from abc import abstractproperty, abstractmethod
 
 from typing_extensions import Literal
 
-from dynamo_query.dynamo_query import DynamoQuery
-from dynamo_query.expressions import ConditionExpression, ConditionExpressionGroup
 from dynamo_query.data_table import DataTable
+from dynamo_query.dynamo_query import DynamoQuery
 from dynamo_query.dynamo_table_index import DynamoTableIndex
-from dynamo_query.types import Table, DynamoDBClient
-
+from dynamo_query.expressions import ConditionExpression, ConditionExpressionGroup
+from dynamo_query.types import DynamoDBClient, Table
 
 __all__ = ("DynamoTable",)
 
@@ -78,6 +77,7 @@ class DynamoTable(Generic[DynamoRecord]):
         user_table.create_table()
         ```
     """
+
     # PK column name
     partition_key_name = "pk"
 

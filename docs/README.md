@@ -138,6 +138,26 @@ Add false-positive unused entities to `vulture` whitelist
 vulture dynamo_query --make-whitelist > vulture_whitelist.txt
 ```
 
+### VSCode
+
+Recommended `.vscode/settings.json`
+
+```json
+{
+    "python.pythonPath": "<pipenv_path>/bin/python",
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.linting.mypyEnabled": true,
+    "python.formatting.provider": "black"
+}
+```
+
+### PyCharm
+
+- Install `mypy` unofficial extension
+- Install `black`extension, enable format on save
+- Run `pylint` on save
+
 ## Versioning
 
 `dynamo_query` version follows [Semantic Versioning](https://semver.org/).
