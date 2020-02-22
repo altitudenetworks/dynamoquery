@@ -28,6 +28,7 @@ jobs:
       - name: Bump version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_EMAIL: engineering@altitudenetworks.com
           VERSION: ${{ steps.vars.outputs.version }}
         run: |
           ./scripts/bump_version.sh

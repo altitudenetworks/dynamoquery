@@ -35,3 +35,10 @@ jobs:
             pytest --cov-report term --cov dynamo_query
             codecov
           fi
+      - name: Update and push docs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_EMAIL: engineering@altitudenetworks.com
+        run: |
+          ./scripts/docs.sh
+          ./scripts/push_docs.sh

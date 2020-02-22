@@ -14,28 +14,18 @@ if [[ "$GITHUB_TOKEN" == "" ]]; then
     exit 1
 fi
 
-if [[ "$VERSION" == "" ]]; then
-    echo "No VERSION specified"
-    exit 1
-fi
-
 if [[ "$GITHUB_EMAIL" == "" ]]; then
     echo "No GITHUB_EMAIL specified"
     exit 1
 fi
 
-echo "Bumping version to ${VERSION}"
-echo "__version__ = \"${VERSION}\"" > __version__.py
-
-if [[ `git diff --stat | grep version` != "" ]]; then
+if [[ `git diff --stat | grep docs` != "" ]]; then
     echo "There are changes: `git diff`"
     git config --global user.email "${GITHUB_EMAIL}"
     git config --global user.name ${GITHUB_ACTOR}
-    git add __version__.py
-    git commit -m "Bump version to ${VERSION}"
-    git tag ${VERSION}
-    git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/altitudenetworks/dynamo_query.git --tags
+    git add docs
+    git commit -m "Update docs"
     git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/altitudenetworks/dynamo_query.git HEAD:master
 else
-    echo "Version is already up to date."
+    echo "Docs are already up to date."
 fi
