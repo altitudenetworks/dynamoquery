@@ -181,11 +181,10 @@
         },
         "handsdown": {
             "hashes": [
-                "sha256:44268497d04538ca864b79486be2a427bfa113e8a6dcf75525d3066a19469352",
-                "sha256:7f64a6be1e7e3019fe761312641d0e5fc5a71056d6b89dedc33e6d2556042271"
+                "sha256:72c718bd080a8548ad523dd56bce8e89b09c5bd4e47cb6b34764b864917beadd"
             ],
             "index": "pypi",
-            "version": "==0.3.7"
+            "version": "==0.3.8"
         },
         "importlib-metadata": {
             "hashes": [

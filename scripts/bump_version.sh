@@ -27,11 +27,11 @@ fi
 echo "Bumping version to ${VERSION}"
 echo "__version__ = \"${VERSION}\"" > __version__.py
 
+git config --global user.email "${GITHUB_EMAIL}"
+git config --global user.name "${GITHUB_ACTOR}"
 git pull
 if [[ `git diff --stat | grep version` != "" ]]; then
     echo "There are changes: `git diff`"
-    git config --global user.email "${GITHUB_EMAIL}"
-    git config --global user.name ${GITHUB_ACTOR}
     git add __version__.py
     git commit -m "Bump version to ${VERSION}"
     git tag ${VERSION}
