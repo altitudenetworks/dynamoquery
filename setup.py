@@ -42,7 +42,7 @@ EXTRAS = {}  # type: Dict[str, str]
 
 
 setup(
-    name="dynamo-query",
+    name="dynamoquery",
     version=version,
     description=DESCRIPTION,
     long_description=README_PATH.read_text(),
