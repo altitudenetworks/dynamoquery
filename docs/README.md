@@ -64,6 +64,32 @@ for record in result_data_table.get_records():
     print(record)
 ```
 
+## Development
+
+Install dependencies with [pipenv](https://github.com/pypa/pipenv)
+
+```bash
+python -m pip install pipenv
+pipenv install -d
+
+# generate boto3 stubs index
+python -m mypy_boto3
+```
+
+Enable `pylint` and `mypy` checks in your IDE.
+
+Run unit tests and linting.
+
+```bash
+./scripts/before_commit.sh
+```
+
+Add false-positive unused entities to `vulture` whitelist
+
+```bash
+vulture dynamo_query --make-whitelist > vulture_whitelist.txt
+```
+
 ## Versioning
 
 `dynamo_query` version follows [Semantic Versioning](https://semver.org/).

@@ -17,7 +17,9 @@ Helper for building Boto3 DynamoDB queries.
 python -m pip install dynamo-query
 ```
 
-## Usage 
+## Usage
+
+### DynamoQuery
 
 ```python
 import boto3
@@ -57,6 +59,79 @@ data_table = DataTable.create().add_record(
 result_data_table = query.execute(data_table)
 for record in result_data_table.get_records():
     print(record)
+```
+
+### DynamoTable
+
+```python
+from typing_extensions import TypedDict
+from dynamo_query import DynamoTable
+
+# first, define your record
+class UserRecord(TypedDict, total=False):
+    pk: str
+    email: str
+    name: str
+    points: int
+
+
+# Create your dynamo table manager with your record class
+class MyTable(DynamoTable[UserRecord]):
+    # provide a set of your table keys
+    table_keys = {'pk'}
+
+    # use this property to define your table name
+    @property
+    def table_name(self) -> str:
+        return "my_table"
+
+    # define how to get PK from a record
+    def get_partition_key(self, record: UserRecord) -> str:
+        return record["email"]
+
+    # we do not have a sort key in our table
+    def get_sort_key(self, record: UserRecord) -> None:
+        return None
+
+# okay, let's start using our manager
+my_table = MyTable()
+
+# add a new record to your table
+my_table.upsert_record({
+    "email": "user@gmail.com",
+    "name": "John User",
+    "points": 12,
+})
+
+# and output all the records
+for record in my_table.scan():
+    print(record)
+```
+
+## Development
+
+Install dependencies with [pipenv](https://github.com/pypa/pipenv)
+
+```bash
+python -m pip install pipenv
+pipenv install -d
+
+# generate boto3 stubs index
+python -m mypy_boto3
+```
+
+Enable `pylint` and `mypy` checks in your IDE.
+
+Run unit tests and linting.
+
+```bash
+./scripts/before_commit.sh
+```
+
+Add false-positive unused entities to `vulture` whitelist
+
+```bash
+vulture dynamo_query --make-whitelist > vulture_whitelist.txt
 ```
 
 ## Versioning
