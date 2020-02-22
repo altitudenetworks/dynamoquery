@@ -26,7 +26,7 @@ if [[ `git diff --stat | grep docs` != "" ]]; then
     echo "There are changes: `git diff`"
     # git add docs
     # git commit -m "Update docs"
-    # git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/altitudenetworks/dynamo_query.git HEAD:master
+    # git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/altitudenetworks/dynamoquery.git HEAD:master
 else
     echo "Docs are already up to date."
 fi

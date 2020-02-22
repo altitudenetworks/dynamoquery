@@ -35,8 +35,8 @@ if [[ `git diff --stat | grep version` != "" ]]; then
     git add __version__.py
     git commit -m "Bump version to ${VERSION}"
     git tag ${VERSION}
-    git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/altitudenetworks/dynamo_query.git --tags
-    git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/altitudenetworks/dynamo_query.git HEAD:master
+    git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/altitudenetworks/dynamoquery.git --tags
+    git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/altitudenetworks/dynamoquery.git HEAD:master
 else
     echo "Version is already up to date."
 fi
