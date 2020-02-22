@@ -4,7 +4,7 @@
 
 DynamoDB related enums.
 
-- [dynamo-query](../README.md#dynamo-query) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Enums
+- [dynamo-query](../README.md#dynamoquery) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Enums
     - [Operator](#operator)
         - [Operator.values](#operatorvalues)
     - [QueryType](#querytype)

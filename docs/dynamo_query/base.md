@@ -4,7 +4,7 @@
 
 Helper for building Boto3 DynamoDB queries.
 
-- [dynamo-query](../README.md#dynamo-query) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Base
+- [dynamo-query](../README.md#dynamoquery) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Base
     - [BaseDynamoQuery](#basedynamoquery)
         - [BaseDynamoQuery().client](#basedynamoqueryclient)
         - [BaseDynamoQuery().has_more_results](#basedynamoqueryhas_more_results)

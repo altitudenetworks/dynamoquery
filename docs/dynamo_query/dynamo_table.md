@@ -2,7 +2,7 @@
 
 > Auto-generated documentation for [dynamo_query.dynamo_table](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py) module.
 
-- [dynamo-query](../README.md#dynamo-query) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / DynamoTable
+- [dynamo-query](../README.md#dynamoquery) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / DynamoTable
     - [DynamoTable](#dynamotable)
         - [DynamoTable().batch_delete](#dynamotablebatch_delete)
         - [DynamoTable().batch_get](#dynamotablebatch_get)

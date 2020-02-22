@@ -4,7 +4,7 @@
 
 Expression builders.
 
-- [dynamo-query](../README.md#dynamo-query) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Expressions
+- [dynamo-query](../README.md#dynamoquery) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Expressions
     - [ConditionExpression](#conditionexpression)
         - [ConditionExpression().get_format_keys](#conditionexpressionget_format_keys)
         - [ConditionExpression().get_format_values](#conditionexpressionget_format_values)

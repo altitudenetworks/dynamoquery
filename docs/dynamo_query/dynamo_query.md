@@ -4,7 +4,7 @@
 
 Helper for building Boto3 DynamoDB queries.
 
-- [dynamo-query](../README.md#dynamo-query) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / DynamoQuery
+- [dynamo-query](../README.md#dynamoquery) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / DynamoQuery
     - [DynamoQuery](#dynamoquery)
         - [DynamoQuery.build_batch_delete_item](#dynamoquerybuild_batch_delete_item)
         - [DynamoQuery.build_batch_get_item](#dynamoquerybuild_batch_get_item)

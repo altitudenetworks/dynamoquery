@@ -4,7 +4,7 @@
 
 Sentinel value than can be used as a placeholder.
 
-- [dynamo-query](../README.md#dynamo-query) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Sentinel
+- [dynamo-query](../README.md#dynamoquery) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Sentinel
     - [SentinelValue](#sentinelvalue)
 
 ## SentinelValue

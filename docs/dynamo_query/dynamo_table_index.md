@@ -2,7 +2,7 @@
 
 > Auto-generated documentation for [dynamo_query.dynamo_table_index](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py) module.
 
-- [dynamo-query](../README.md#dynamo-query) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / DynamoTableIndex
+- [dynamo-query](../README.md#dynamoquery) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / DynamoTableIndex
     - [DynamoTableIndex](#dynamotableindex)
         - [DynamoTableIndex().as_attribute_definitions](#dynamotableindexas_attribute_definitions)
         - [DynamoTableIndex().as_global_secondary_index](#dynamotableindexas_global_secondary_index)

@@ -2,7 +2,7 @@
 
 > Auto-generated documentation for [dynamo_query.utils](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/utils.py) module.
 
-- [dynamo-query](../README.md#dynamo-query) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Utils
+- [dynamo-query](../README.md#dynamoquery) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Utils
     - [ascii_string_generator](#ascii_string_generator)
     - [chunkify](#chunkify)
     - [get_format_keys](#get_format_keys)

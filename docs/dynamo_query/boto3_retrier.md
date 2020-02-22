@@ -5,7 +5,7 @@
 https://codereview.stackexchange.com/questions/133310/python-decorator-for-retrying-w-exponential-backoff
 https://developers.google.com/admin-sdk/directory/v1/limits#backoff
 
-- [dynamo-query](../README.md#dynamo-query) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Boto3Retrier
+- [dynamo-query](../README.md#dynamoquery) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Boto3Retrier
     - [BatchUnprocessedItemsError](#batchunprocesseditemserror)
     - [Boto3Retrier](#boto3retrier)
         - [Boto3Retrier.backoff](#boto3retrierbackoff)

@@ -1,12 +1,12 @@
-# Dynamo Query
+# DynamoQuery
 
-[![PyPI - dynamo-query](https://img.shields.io/pypi/v/dynamo-query.svg?color=blue&label=dynamo-query)](https://pypi.org/project/dynamo-query)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dynamo-query.svg?color=blue)](https://pypi.org/project/dynamo-query)
-[![Coverage](https://img.shields.io/codecov/c/github/altitudenetworks/dynamo-query)](https://codecov.io/gh/altitudenetworks/dynamo-query)
+[![PyPI - dynamoquery](https://img.shields.io/pypi/v/dynamoquery.svg?color=blue&label=dynamoquery)](https://pypi.org/project/dynamoquery)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dynamoquery.svg?color=blue)](https://pypi.org/project/dynamoquery)
+[![Coverage](https://img.shields.io/codecov/c/github/altitudenetworks/dynamoquery)](https://codecov.io/gh/altitudenetworks/dynamoquery)
 
 Helper for building Boto3 DynamoDB queries.
 
-- [Dynamo Query](#dynamo-query)
+- [DynamoQuery](#dynamoquery)
   - [Installation](#installation)
   - [Usage](#usage)
   - [Versioning](#versioning)
@@ -14,7 +14,7 @@ Helper for building Boto3 DynamoDB queries.
 ## Installation
 
 ```python
-python -m pip install dynamo-query
+python -m pip install dynamoquery
 ```
 
 ## Usage

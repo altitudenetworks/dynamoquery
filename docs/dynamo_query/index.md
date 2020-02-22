@@ -4,7 +4,7 @@
 
 Main import point for DynamoQuery.
 
-- [dynamo-query](../README.md#dynamo-query) / [Modules](../MODULES.md#dynamo-query-modules) / Dynamo Query
+- [dynamo-query](../README.md#dynamoquery) / [Modules](../MODULES.md#dynamo-query-modules) / Dynamo Query
     - Modules
         - [Base](base.md#base)
         - [Boto3Retrier](boto3_retrier.md#boto3retrier)

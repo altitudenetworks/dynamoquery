@@ -2,9 +2,9 @@
 
 > Auto-generated documentation modules index.
 
-Full list of [dynamo-query](README.md#dynamo-query) project modules.
+Full list of [dynamo-query](README.md#dynamoquery) project modules.
 
-- [Dynamo Query](README.md#dynamo-query)
+- [DynamoQuery](README.md#dynamoquery)
 - [Dynamo Query](dynamo_query/index.md#dynamo-query)
     - [Base](dynamo_query/base.md#base)
     - [Boto3Retrier](dynamo_query/boto3_retrier.md#boto3retrier)
