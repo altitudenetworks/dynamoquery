@@ -30,8 +30,6 @@ jobs:
           BRANCH_NAME="hotfix/update-docs-${GITHUB_SHA_SHORT}"
           echo "HAS_CHANGES: ${HAS_CHANGES}"
           echo "BRANCH_NAME: ${BRANCH_NAME}"
-          echo "##[set-output name=has_changes;]$(echo ${HAS_CHANGES})"
-          echo "##[set-output name=branch_name;]$(echo ${BRANCH_NAME})"
       # - name: Create Pull Request
       #   id: cpr
       #   if: steps.changes.outputs.has_changes
