@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
@@ -26,9 +26,17 @@ jobs:
           echo "##[set-output name=has_changes;]$(echo ${HAS_CHANGES})"
           echo "##[set-output name=branch_name;]$(echo actions/update-docs-${GITHUB_REF})"
       - name: Create Pull Request
+        id: cpr
         if: steps.build.outputs.has_changes
         uses: peter-evans/create-pull-request@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ steps.build.outputs.branch_name }}
           commit-message: Auto update docs
+          labels: docs, automated pr
+          title: "[Actions] Auto update docs"
+          body: Auto-generated docs were updated to reflect latest changes.
+      - name: Check outputs
+        if: steps.build.outputs.has_changes
+        run: |
+          echo "Created a PR #${{ steps.cpr.outputs.pr_number }}"
