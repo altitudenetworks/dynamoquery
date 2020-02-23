@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
@@ -25,11 +25,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git diff
-          HAS_CHANGES=`git diff --stat | grep docs`
-          echo "Changes: ${HAS_CHANGES}"
-          # echo "##[set-output name=has_changes;]$(echo ${HAS_CHANGES})"
-          # echo "##[set-output name=branch_name;]$(echo hotfix/update-docs-${GITHUB_SHA:0:6})"
+          git diff --stat
       # - name: Create Pull Request
       #   id: cpr
       #   if: steps.changes.outputs.has_changes
