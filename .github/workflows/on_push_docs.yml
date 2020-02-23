@@ -20,7 +20,7 @@ jobs:
       - name: Build docs
         id: build
         run: |
-          bash ./scripts/docs.sh
+          ./scripts/docs.sh -d
           HAS_CHANGES=`git diff --stat | grep docs`
           echo "${HAS_CHANGES}"
           echo "##[set-output name=has_changes;]$(echo ${HAS_CHANGES})"
