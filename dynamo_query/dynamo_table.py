@@ -193,36 +193,7 @@ class DynamoTable(Generic[DynamoRecord]):
             if not query.has_more_results():
                 return
 
-    def clear_table(self, partition_key: Optional[str]) -> None:
-        """
-        Remove all records.
-
-        If `partition_key` is None - deletes all records.
-
-        Example:
-
-            ```python
-            # UserTable is a subclass of a DynamoTable
-            user_table = UserTable()
-
-            # delete all records that have PK = `emails`
-            user_table.clear_table("emails")
-
-            # delete all records
-            user_table.clear_table(None)
-            ```
-
-        Arguments:
-            partition_key -- Partition key value.
-        """
-        self._logger.info(
-            f"Clearing table with PK={partition_key} and SK_prefix={self.sort_key_prefix}."
-        )
-        self._clear_table(
-            partition_key=partition_key, sort_key_prefix=self.sort_key_prefix
-        )
-
-    def _clear_table(
+    def clear_table(
         self,
         partition_key: Optional[str],
         sort_key: Optional[str] = None,
@@ -232,7 +203,7 @@ class DynamoTable(Generic[DynamoRecord]):
         limit: Optional[int] = None,
     ) -> None:
         """
-        Delete results of a query from DB.
+        Remove records from DB.
 
         If `partition_key` is None - deletes all records.
 
@@ -262,7 +233,7 @@ class DynamoTable(Generic[DynamoRecord]):
         if not existing_records:
             return
 
-        DynamoQuery.build_batch_delete_item().table(
+        DynamoQuery.build_batch_delete_item(logger=self._logger).table(
             table_keys=self.table_keys, table=self.table,
         ).execute(existing_records)
 
@@ -319,9 +290,11 @@ class DynamoTable(Generic[DynamoRecord]):
             )
             get_data_table.add_record(new_record)
 
-        results: DataTable[DynamoRecord] = DynamoQuery.build_batch_get_item().table(
-            table_keys=self.table_keys, table=self.table,
-        ).execute(data_table=get_data_table,)
+        results: DataTable[DynamoRecord] = DynamoQuery.build_batch_get_item(
+            logger=self._logger,
+        ).table(table_keys=self.table_keys, table=self.table,).execute(
+            data_table=get_data_table,
+        )
         return results
 
     def batch_delete(
@@ -376,9 +349,11 @@ class DynamoTable(Generic[DynamoRecord]):
             )
             delete_data_table.add_record(new_record)
 
-        results: DataTable[DynamoRecord] = DynamoQuery.build_batch_delete_item().table(
-            table_keys=self.table_keys, table=self.table,
-        ).execute(delete_data_table)
+        results: DataTable[DynamoRecord] = DynamoQuery.build_batch_delete_item(
+            logger=self._logger,
+        ).table(table_keys=self.table_keys, table=self.table,).execute(
+            delete_data_table
+        )
         return results
 
     def batch_upsert(
@@ -442,9 +417,11 @@ class DynamoTable(Generic[DynamoRecord]):
             )
             update_data_table.add_record(new_record)
 
-        results: DataTable[DynamoRecord] = DynamoQuery.build_batch_update_item().table(
-            table_keys=self.table_keys, table=self.table,
-        ).execute(update_data_table)
+        results: DataTable[DynamoRecord] = DynamoQuery.build_batch_update_item(
+            logger=self._logger,
+        ).table(table_keys=self.table_keys, table=self.table,).execute(
+            update_data_table
+        )
         return results
 
     def get_record(self, record: DynamoRecord) -> Optional[DynamoRecord]:
@@ -482,7 +459,7 @@ class DynamoTable(Generic[DynamoRecord]):
         partition_key = self._get_partition_key(record)
         sort_key = self._get_sort_key(record)
         result = (
-            DynamoQuery.build_get_item()
+            DynamoQuery.build_get_item(logger=self._logger)
             .table(table_keys=self.table_keys, table=self.table,)
             .execute_dict(
                 {self.partition_key_name: partition_key, self.sort_key_name: sort_key}
@@ -538,7 +515,9 @@ class DynamoTable(Generic[DynamoRecord]):
         partition_key = self._get_partition_key(record)
         sort_key = self._get_sort_key(record)
         result: DataTable[DynamoRecord] = (
-            DynamoQuery.build_update_item(condition_expression=condition_expression)
+            DynamoQuery.build_update_item(
+                condition_expression=condition_expression, logger=self._logger,
+            )
             .update(*update_keys)
             .table(table_keys=self.table_keys, table=self.table,)
             .execute_dict(
@@ -591,7 +570,7 @@ class DynamoTable(Generic[DynamoRecord]):
         partition_key = self._get_partition_key(record)
         sort_key = self._get_sort_key(record)
         result: DataTable[DynamoRecord] = DynamoQuery.build_delete_item(
-            condition_expression=condition_expression,
+            condition_expression=condition_expression, logger=self._logger,
         ).table(table=self.table, table_keys=self.table_keys).execute_dict(
             {self.partition_key_name: partition_key, self.sort_key_name: sort_key},
         )
@@ -640,7 +619,9 @@ class DynamoTable(Generic[DynamoRecord]):
             projection -- Record fields to return, by default returns all fields.
             limit -- Max number of results.
         """
-        query = DynamoQuery.build_scan(filter_expression=filter_expression)
+        query = DynamoQuery.build_scan(
+            filter_expression=filter_expression, logger=self._logger,
+        )
         if limit:
             query.limit(limit)
 
@@ -733,6 +714,7 @@ class DynamoTable(Generic[DynamoRecord]):
             key_condition_expression=key_condition_expression,
             filter_expression=filter_expression,
             scan_index_forward=scan_index_forward,
+            logger=self._logger,
         )
         if limit:
             query.limit(limit)

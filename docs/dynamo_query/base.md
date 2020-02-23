@@ -53,6 +53,7 @@ query = BaseDynamoQuery(
 - `extra_params` - Any exptra params to pass to boto3 method.
 - `limit` - Limit of results for scan/query requests.
 - `exclusive_start_key` - Start key for scan/query requests.
+- `logger` - `logging.Logger` instance.
 
 #### Attributes
 
@@ -66,7 +67,7 @@ query = BaseDynamoQuery(
 
 ### BaseDynamoQuery().client
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L134)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L135)
 
 ```python
 @property
@@ -79,7 +80,7 @@ def client() -> DynamoDBClient:
 
 ### BaseDynamoQuery().has_more_results
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L147)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L148)
 
 ```python
 def has_more_results() -> bool:
@@ -93,7 +94,7 @@ True if query has more results than returned or was not yet executed.
 
 ### BaseDynamoQuery().table_keys
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L127)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L128)
 
 ```python
 @property
@@ -106,7 +107,7 @@ def table_keys() -> TableKeys:
 
 ### BaseDynamoQuery().table_resource
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L120)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L121)
 
 ```python
 @property
@@ -119,7 +120,7 @@ def table_resource() -> Table:
 
 ### BaseDynamoQuery().was_executed
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L138)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L139)
 
 ```python
 def was_executed() -> bool:

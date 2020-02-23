@@ -1,6 +1,7 @@
 """
 Helper for building Boto3 DynamoDB queries.
 """
+import logging
 from typing import Optional, Dict, Any, List, Iterable, TypeVar, Type
 
 from dynamo_query.data_table import DataTable
@@ -89,6 +90,7 @@ class DynamoQuery(BaseDynamoQuery):
         exclusive_start_key: Optional[ExclusiveStartKey] = None,
         consistent_read: bool = False,
         scan_index_forward: bool = True,
+        logger: Optional[logging.Logger] = None,
     ) -> DynamoQueryType:
         """
         Build query for `table.query`.
@@ -127,6 +129,7 @@ class DynamoQuery(BaseDynamoQuery):
             exclusive_start_key -- Key to start scan from.
             consistent_read -- `ConsistentRead` boto3 parameter.
             scan_index_forward -- Whether to scan index from the beginning.
+            logger -- `logging.Logger` instance.
 
         Returns:
             `DynamoQuery` instance to execute.
@@ -151,6 +154,7 @@ class DynamoQuery(BaseDynamoQuery):
             extra_params=extra_params,
             limit=limit,
             exclusive_start_key=exclusive_start_key,
+            logger=logger,
         )
 
     @classmethod
@@ -160,6 +164,7 @@ class DynamoQuery(BaseDynamoQuery):
         projection_expression: Optional[ProjectionExpression] = None,
         limit: int = MAX_LIMIT,
         exclusive_start_key: Optional[ExclusiveStartKey] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> DynamoQueryType:
         """
         Build query for `table.scan`.
@@ -195,6 +200,7 @@ class DynamoQuery(BaseDynamoQuery):
             projection_expression -- Format-ready ProjectionExpression.
             limit -- Maximum number of results per input record.
             exclusive_start_key -- Key to start scan from.
+            logger -- `logging.Logger` instance.
 
         Returns:
             `DynamoQuery` instance to execute.
@@ -213,6 +219,7 @@ class DynamoQuery(BaseDynamoQuery):
             extra_params=extra_params,
             limit=limit,
             exclusive_start_key=exclusive_start_key,
+            logger=logger,
         )
 
     @classmethod
@@ -221,6 +228,7 @@ class DynamoQuery(BaseDynamoQuery):
         projection_expression: Optional[ProjectionExpression] = None,
         consistent_read: bool = False,
         return_consumed_capacity: ReturnConsumedCapacity = "NONE",
+        logger: Optional[logging.Logger] = None,
     ) -> DynamoQueryType:
         """
         Build query for `table.get_item`.
@@ -247,6 +255,7 @@ class DynamoQuery(BaseDynamoQuery):
             projection_expression -- Format-ready ProjectionExpression.
             consistent_read -- `ConsistentRead` boto3 parameter.
             return_consumed_capacity -- `ReturnConsumedCapacity` value.
+            logger -- `logging.Logger` instance.
 
         Returns:
             `DynamoQuery` instance to execute.
@@ -264,6 +273,7 @@ class DynamoQuery(BaseDynamoQuery):
             query_type=QueryType.GET_ITEM,
             expressions=expressions,
             extra_params=extra_params,
+            logger=logger,
         )
 
     @classmethod
@@ -274,6 +284,7 @@ class DynamoQuery(BaseDynamoQuery):
         return_consumed_capacity: ReturnConsumedCapacity = "NONE",
         return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
         return_values: ReturnValues = "ALL_NEW",
+        logger: Optional[logging.Logger] = None,
     ) -> DynamoQueryType:
         """
         Build query for `table.update_item`.
@@ -310,6 +321,7 @@ class DynamoQuery(BaseDynamoQuery):
             return_consumed_capacity -- `ReturnConsumedCapacity` value.
             return_item_collection_metrics -- `ReturnItemCollectionMetrics` value.
             return_values -- `ReturnValues` value.
+            logger -- `logging.Logger` instance.
 
         Returns:
             `DynamoQuery` instance to execute.
@@ -330,6 +342,7 @@ class DynamoQuery(BaseDynamoQuery):
             query_type=QueryType.UPDATE_ITEM,
             expressions=expressions,
             extra_params=extra_params,
+            logger=logger,
         )
 
     @classmethod
@@ -339,6 +352,7 @@ class DynamoQuery(BaseDynamoQuery):
         return_consumed_capacity: ReturnConsumedCapacity = "NONE",
         return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
         return_values: ReturnValues = "ALL_OLD",
+        logger: Optional[logging.Logger] = None,
     ) -> DynamoQueryType:
         """
         Build query for `table.delete_item`.
@@ -368,6 +382,7 @@ class DynamoQuery(BaseDynamoQuery):
             return_consumed_capacity -- `ReturnConsumedCapacity` value.
             return_item_collection_metrics -- `ReturnItemCollectionMetrics` value.
             return_values -- `ReturnValues` value.
+            logger -- `logging.Logger` instance.
 
         Returns:
             `DynamoQuery` instance to execute.
@@ -386,12 +401,14 @@ class DynamoQuery(BaseDynamoQuery):
             query_type=QueryType.DELETE_ITEM,
             expressions=expressions,
             extra_params=extra_params,
+            logger=logger,
         )
 
     @classmethod
     def build_batch_get_item(
         cls: Type[DynamoQueryType],
         return_consumed_capacity: ReturnConsumedCapacity = "NONE",
+        logger: Optional[logging.Logger] = None,
     ) -> DynamoQueryType:
         """
         Build query for `table.meta.client.batch_get_item`.
@@ -413,6 +430,7 @@ class DynamoQuery(BaseDynamoQuery):
 
         Arguments:
             return_consumed_capacity -- `ReturnConsumedCapacity` value.
+            logger -- `logging.Logger` instance.
 
         Returns:
             `DynamoQuery` instance to execute.
@@ -422,6 +440,7 @@ class DynamoQuery(BaseDynamoQuery):
             query_type=QueryType.BATCH_GET_ITEM,
             expressions={},
             extra_params=extra_params,
+            logger=logger,
         )
 
     @classmethod
@@ -429,6 +448,7 @@ class DynamoQuery(BaseDynamoQuery):
         cls: Type[DynamoQueryType],
         return_consumed_capacity: ReturnConsumedCapacity = "NONE",
         return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
+        logger: Optional[logging.Logger] = None,
     ) -> DynamoQueryType:
         """
         Build update query for `table.meta.client.batch_write_item`.
@@ -453,6 +473,7 @@ class DynamoQuery(BaseDynamoQuery):
         Arguments:
             return_consumed_capacity -- `ReturnConsumedCapacity` value.
             return_item_collection_metrics -- `ReturnItemCollectionMetrics` value.
+            logger -- `logging.Logger` instance.
 
         Returns:
             `DynamoQuery` instance to execute.
@@ -465,6 +486,7 @@ class DynamoQuery(BaseDynamoQuery):
             query_type=QueryType.BATCH_UPDATE_ITEM,
             expressions={},
             extra_params=extra_params,
+            logger=logger,
         )
 
     @classmethod
@@ -472,6 +494,7 @@ class DynamoQuery(BaseDynamoQuery):
         cls: Type[DynamoQueryType],
         return_consumed_capacity: ReturnConsumedCapacity = "NONE",
         return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
+        logger: Optional[logging.Logger] = None,
     ) -> DynamoQueryType:
         """
         Build delete query for `table.meta.client.batch_write_item`.
@@ -494,6 +517,7 @@ class DynamoQuery(BaseDynamoQuery):
         Arguments:
             return_consumed_capacity -- `ReturnConsumedCapacity` value.
             return_item_collection_metrics -- `ReturnItemCollectionMetrics` value.
+            logger -- `logging.Logger` instance.
 
         Returns:
             `DynamoQuery` instance to execute.
@@ -506,6 +530,7 @@ class DynamoQuery(BaseDynamoQuery):
             query_type=QueryType.BATCH_DELETE_ITEM,
             expressions={},
             extra_params=extra_params,
+            logger=logger,
         )
 
     def table(

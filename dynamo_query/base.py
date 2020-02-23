@@ -63,6 +63,7 @@ class BaseDynamoQuery:
         extra_params -- Any exptra params to pass to boto3 method.
         limit -- Limit of results for scan/query requests.
         exclusive_start_key -- Start key for scan/query requests.
+        logger -- `logging.Logger` instance.
     """
 
     # Max size of one scan/query request.
