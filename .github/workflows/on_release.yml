@@ -53,7 +53,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ steps.changes.outputs.branch_name }}
           commit-message: Release ${{ steps.vars.outputs.version }}
-          labels: release, automated pr
+          labels: release, bot
           reviewers: vemel, amirkav
           title: "[Actions] Release ${{ steps.vars.outputs.version }}"
           body: |

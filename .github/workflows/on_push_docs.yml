@@ -37,7 +37,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ steps.changes.outputs.branch_name }}
           commit-message: Auto update docs
-          labels: docs, automated pr
+          labels: documentation, bot
           reviewers: vemel, amirkav
           title: "[Actions] Auto update docs"
           body: Auto-generated docs were updated to reflect latest changes.
