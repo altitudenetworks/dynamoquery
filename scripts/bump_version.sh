@@ -25,7 +25,7 @@ if [[ "$GITHUB_EMAIL" == "" ]]; then
 fi
 
 if [[ "$GITHUB_REPOSITORY" == "" ]]; then
-    echo "No GITHUB_EMAIL specified"
+    echo "No GITHUB_REPOSITORY specified"
     exit 1
 fi
 

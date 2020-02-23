@@ -26,22 +26,3 @@ jobs:
       - name: Lint and test
         run: |
           ./scripts/before_commit.sh
-      - name: Send coverage report
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-          if [[ "$PYTHON_VERSION" == "3.8" ]]; then
-            pytest --cov-report term --cov dynamo_query
-            codecov
-          fi
-      - name: Update and push docs
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_EMAIL: engineering@altitudenetworks.com
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-          if [[ "$PYTHON_VERSION" == "3.8" ]]; then
-            bash ./scripts/docs.sh
-            bash ./scripts/push_docs.sh
-          fi

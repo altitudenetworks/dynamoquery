@@ -1,0 +1,30 @@
+name: Lint and test changes
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.8"
+      - name: Install dependencies
+        run: |
+          python -m pip install -U pip
+          python -m pip install -r requirements-dev.txt
+          python -m mypy_boto3
+      - name: Install dependencies
+        run: |
+          python -m pip install -U handsdown
+      - name: Send coverage report
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          pytest --cov-report term --cov dynamo_query
+          codecov
