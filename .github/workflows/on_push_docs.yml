@@ -22,9 +22,13 @@ jobs:
           ./scripts/docs.sh -d
       - name: Collect changes
         run: |
+          echo "test"
           HAS_CHANGES=`git diff --stat | grep docs`
+          echo "test"
           GITHUB_SHA_SHORT=`echo "${GITHUB_SHA}" | cut -c -4`
+          echo "test"
           BRANCH_NAME="hotfix/update-docs-${GITHUB_SHA_SHORT}"
+          echo "test"
           echo "HAS_CHANGES: ${HAS_CHANGES}"
           echo "BRANCH_NAME: ${BRANCH_NAME}"
       # - name: Create Pull Request
