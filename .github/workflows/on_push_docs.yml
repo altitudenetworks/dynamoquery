@@ -23,6 +23,8 @@ jobs:
       - name: Collect changes
         run: |
           echo "test"
+          git diff
+          echo "test"
           HAS_CHANGES=`git diff --stat | grep docs`
           echo "test"
           GITHUB_SHA_SHORT=`echo "${GITHUB_SHA}" | cut -c -4`
