@@ -76,7 +76,7 @@ class UserRecord(TypedDict, total=False):
 
 
 # Create your dynamo table manager with your record class
-class MyTable(DynamoTable[UserRecord]):
+class UserTable(DynamoTable[UserRecord]):
     # provide a set of your table keys
     table_keys = {'pk'}
 
@@ -94,18 +94,18 @@ class MyTable(DynamoTable[UserRecord]):
         return None
 
 # okay, let's start using our manager
-my_table = MyTable()
+user_table = UserTable()
 
 # add a new record to your table
-my_table.upsert_record({
+user_table.upsert_record({
     "email": "user@gmail.com",
     "name": "John User",
     "age": 12,
 })
 
 # and output all the records
-for record in my_table.scan():
-    print(record)
+for user_record in user_table.scan():
+    print(user_record)
 ```
 
 ## Development
