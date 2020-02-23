@@ -28,24 +28,28 @@ jobs:
           echo "##[set-output name=version;]$(echo ${VERSION})"
           echo "##[set-output name=branch_name;]$(echo release/${VERSION})"
       - name: Bump version
-        id: version
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_EMAIL: bot@altitudenetworks.com
           VERSION: ${{ steps.vars.outputs.version }}
         run: |
           echo "Bumping version to ${VERSION}"
           echo "__version__ = \"${VERSION}\"" > __version__.py
+      - name: Collect changes
+        id: changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.vars.outputs.version }}
+        run: |
           HAS_CHANGES=`git diff --stat | grep version`
           echo "Changes: ${HAS_CHANGES}"
           echo "##[set-output name=has_changes;]$(echo ${HAS_CHANGES})"
+          echo "##[set-output name=branch_name;]$(echo release/${VERSION})"
       - name: Create Pull Request
         id: cpr
-        if: steps.version.outputs.has_changes
+        if: steps.changes.outputs.has_changes
         uses: peter-evans/create-pull-request@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ steps.vars.outputs.branch_name }}
+          branch: ${{ steps.changes.outputs.branch_name }}
           commit-message: Release ${{ steps.vars.outputs.version }}
           labels: release, automated pr
           reviewers: vemel, amirkav
@@ -57,6 +61,6 @@ jobs:
 
             Merge this PR to update version number in master.
       - name: Check outputs
-        if: steps.build.outputs.has_changes
+        if: steps.changes.outputs.has_changes
         run: |
           echo "Created a PR #${{ steps.cpr.outputs.pr_number }}"

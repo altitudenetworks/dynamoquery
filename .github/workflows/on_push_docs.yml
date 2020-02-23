@@ -21,7 +21,9 @@ jobs:
         run: |
           ./scripts/docs.sh -d
       - name: Collect changes
-        id: vars
+        id: changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           HAS_CHANGES=`git diff --stat | grep docs`
           echo "Changes: ${HAS_CHANGES}"
@@ -29,17 +31,17 @@ jobs:
           echo "##[set-output name=branch_name;]$(echo hotfix/update-docs-${GITHUB_SHA:0:6})"
       - name: Create Pull Request
         id: cpr
-        if: steps.vars.outputs.has_changes
+        if: steps.changes.outputs.has_changes
         uses: peter-evans/create-pull-request@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ steps.vars.outputs.branch_name }}
+          branch: ${{ steps.changes.outputs.branch_name }}
           commit-message: Auto update docs
           labels: docs, automated pr
           reviewers: vemel, amirkav
           title: "[Actions] Auto update docs"
           body: Auto-generated docs were updated to reflect latest changes.
       - name: Check outputs
-        if: steps.vars.outputs.has_changes
+        if: steps.changes.outputs.has_changes
         run: |
           echo "Created a PR #${{ steps.cpr.outputs.pr_number }}"
