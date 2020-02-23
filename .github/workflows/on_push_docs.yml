@@ -22,14 +22,8 @@ jobs:
           ./scripts/docs.sh -d
       - name: Collect changes
         id: changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           HAS_CHANGES=`git diff --stat | grep docs`
-          GITHUB_SHA_SHORT=`echo "${GITHUB_SHA}" | cut -c -4`
-          BRANCH_NAME="hotfix/update-docs-${GITHUB_SHA_SHORT}"
-          echo "HAS_CHANGES: ${HAS_CHANGES}"
-          echo "BRANCH_NAME: ${BRANCH_NAME}"
       # - name: Create Pull Request
       #   id: cpr
       #   if: steps.changes.outputs.has_changes
