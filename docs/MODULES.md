@@ -14,7 +14,7 @@ Full list of [dynamo-query](README.md#dynamoquery) project modules.
     - [DynamoTableIndex](dynamo_query/dynamo_table_index.md#dynamotableindex)
     - [Enums](dynamo_query/enums.md#enums)
     - [Expressions](dynamo_query/expressions.md#expressions)
-    - [Json Tools](dynamo_query/json_tools.md#json-tools)
+    - [JSON Tools](dynamo_query/json_tools.md#json-tools)
     - [Sentinel](dynamo_query/sentinel.md#sentinel)
     - [Types](dynamo_query/types.md#types)
     - [Utils](dynamo_query/utils.md#utils)

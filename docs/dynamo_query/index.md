@@ -14,7 +14,7 @@ Main import point for DynamoQuery.
         - [DynamoTableIndex](dynamo_table_index.md#dynamotableindex)
         - [Enums](enums.md#enums)
         - [Expressions](expressions.md#expressions)
-        - [Json Tools](json_tools.md#json-tools)
+        - [JSON Tools](json_tools.md#json-tools)
         - [Sentinel](sentinel.md#sentinel)
         - [Types](types.md#types)
         - [Utils](utils.md#utils)
