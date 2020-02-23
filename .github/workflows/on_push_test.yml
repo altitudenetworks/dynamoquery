@@ -10,7 +10,7 @@ jobs:
       matrix:
         python-version: [3.6, 3.7, 3.8]
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
@@ -23,6 +23,11 @@ jobs:
       - name: Install
         run: |
           python setup.py install
-      - name: Lint and test
+      - name: Lint
         run: |
-          ./scripts/before_commit.sh
+          vulture dynamo_query vulture_whitelist.txt
+          mypy dynamo_query
+          pylint dynamo_query
+      - name: Unit tests
+        run: |
+          pytest

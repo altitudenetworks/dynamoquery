@@ -9,16 +9,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
           python-version: "3.8"
-      - name: Install dependencies
-        run: |
-          python -m pip install -U pip
-          python -m pip install -r requirements-dev.txt
-          python -m mypy_boto3
       - name: Extract variables from env
         id: vars
         run: |
@@ -27,22 +22,41 @@ jobs:
           if [[ "$VERSION_TAG" != *"-release" ]]; then
             echo "Release tag should end with '-release', e.g. '1.2.3-rc1-release'"
             echo "Stopping now."
+            exit 1
           fi
           VERSION=`echo "$VERSION_TAG" | sed "s/-release//"`
           echo "##[set-output name=version;]$(echo ${VERSION})"
-      - name: Lint and test
-        run: |
-          ./scripts/before_commit.sh
+          echo "##[set-output name=branch_name;]$(echo release/${VERSION})"
       - name: Bump version
+        id: version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_EMAIL: bot@altitudenetworks.com
           VERSION: ${{ steps.vars.outputs.version }}
         run: |
-          ./scripts/bump_version.sh
-      - name: Publish to PyPI
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          echo "Bumping version to ${VERSION}"
+          echo "__version__ = \"${VERSION}\"" > __version__.py
+          HAS_CHANGES=`git diff --stat | grep version`
+          echo "${HAS_CHANGES}"
+          echo "##[set-output name=has_changes;]$(echo ${HAS_CHANGES})"
+      - name: Create Pull Request
+        id: cpr
+        if: steps.version.outputs.has_changes
+        uses: peter-evans/create-pull-request@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ steps.vars.outputs.branch_name }}
+          commit-message: Release ${{ steps.vars.outputs.version }}
+          labels: release, automated pr
+          reviewers: vemel, amirkav
+          title: "[Actions] Release ${{ steps.vars.outputs.version }}"
+          body: |
+            # Release ${{ steps.vars.outputs.version }}
+
+            New version ${{ steps.vars.outputs.version }} was pushed automatically to PyPI.
+
+            Merge this PR to update version number in master.
+      - name: Check outputs
+        if: steps.build.outputs.has_changes
         run: |
-          ./scripts/release.sh
+          echo "Created a PR #${{ steps.cpr.outputs.pr_number }}"

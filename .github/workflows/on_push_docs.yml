@@ -24,7 +24,7 @@ jobs:
           HAS_CHANGES=`git diff --stat | grep docs`
           echo "${HAS_CHANGES}"
           echo "##[set-output name=has_changes;]$(echo ${HAS_CHANGES})"
-          echo "##[set-output name=branch_name;]$(echo actions/update-docs-${GITHUB_REF})"
+          echo "##[set-output name=branch_name;]$(echo hotfix/update-docs-${GITHUB_SHA:0:6})"
       - name: Create Pull Request
         id: cpr
         if: steps.build.outputs.has_changes
@@ -34,6 +34,7 @@ jobs:
           branch: ${{ steps.build.outputs.branch_name }}
           commit-message: Auto update docs
           labels: docs, automated pr
+          reviewers: vemel, amirkav
           title: "[Actions] Auto update docs"
           body: Auto-generated docs were updated to reflect latest changes.
       - name: Check outputs
