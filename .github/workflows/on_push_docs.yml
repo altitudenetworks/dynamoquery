@@ -26,7 +26,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           HAS_CHANGES=`git diff --stat | grep docs`
-          GITHUB_SHA_SHORT = echo "${GITHUB_SHA}" | cut -c -4
+          GITHUB_SHA_SHORT=`echo "${GITHUB_SHA}" | cut -c -4`
           BRANCH_NAME="hotfix/update-docs-${GITHUB_SHA_SHORT}"
           echo "HAS_CHANGES: ${HAS_CHANGES}"
           echo "BRANCH_NAME: ${BRANCH_NAME}"
