@@ -34,7 +34,7 @@ from dynamo_query.json_tools import dumps
 
 class DynamoQueryError(Exception):
     """
-    Main error for `dynamo_query.DynamoQuery` class.
+    Main error for `dynamo_query.dynamo_query.DynamoQuery` class.
     """
 
 
@@ -57,18 +57,6 @@ class BaseDynamoQuery:
     )
     ```
 
-    Attributes:
-        MAX_PAGE_SIZE -- Max size of one scan/query request
-        MAX_BATCH_SIZE -- Max size of one batch_get/write/delete_item request
-        MAX_LIMIT -- Max size of scan/query requests
-        TABLE_KEYS -- Define in a subclass to set table keys automatically.
-        FILTER_EXPRESSION -- Alias for `FilterExpression` parameter name.
-        CONDITION_EXPRESSION -- Alias for `ConditionExpression` parameter name.
-        UPDATE_EXPRESSION -- Alias for `UpdateExpression` parameter name.
-        PROJECTION_EXPRESSION -- Alias for `ProjectionExpression` parameter name.
-        KEY_CONDITION_EXPRESSION -- Alias for `KeyConditionExpression` parameter name.
-        ReturnConsumedCapacity -- Alias for `ReturnConsumedCapacity` enum,
-
     Arguments:
         query_type -- QueryType item.
         expressions -- Expressions for query.
@@ -77,8 +65,13 @@ class BaseDynamoQuery:
         exclusive_start_key -- Start key for scan/query requests.
     """
 
+    # Max size of one scan/query request.
     MAX_PAGE_SIZE = 1000
+
+    # Max size of one batch_get/write/delete_item request.
     MAX_BATCH_SIZE = 25
+
+    # Max size of scan/query requests.
     MAX_LIMIT = 10000000000
 
     FILTER_EXPRESSION = "FilterExpression"

@@ -1,3 +1,8 @@
+"""
+# JSON Tools
+
+Safe JSON SerDe.
+"""
 import decimal
 import datetime
 import json
