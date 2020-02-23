@@ -13,7 +13,7 @@ A clear and concise description of what the bug is.
 **To Reproduce**
 Steps to reproduce the behavior:
 1. Install 'dynamo_query'
-2.  Run the following code sample
+2. Run the following code sample
 
 ```python
 import boto3
