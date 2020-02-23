@@ -37,7 +37,7 @@ jobs:
           echo "Bumping version to ${VERSION}"
           echo "__version__ = \"${VERSION}\"" > __version__.py
           HAS_CHANGES=`git diff --stat | grep version`
-          echo "${HAS_CHANGES}"
+          echo "Changes: ${HAS_CHANGES}"
           echo "##[set-output name=has_changes;]$(echo ${HAS_CHANGES})"
       - name: Create Pull Request
         id: cpr

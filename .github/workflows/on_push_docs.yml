@@ -20,9 +20,9 @@ jobs:
       - name: Build docs
         id: build
         run: |
-          ./scripts/docs.sh -d || true
+          ./scripts/docs.sh -d
           HAS_CHANGES=`git diff --stat | grep docs`
-          echo "${HAS_CHANGES}"
+          echo "Changes: ${HAS_CHANGES}"
           echo "##[set-output name=has_changes;]$(echo ${HAS_CHANGES})"
           echo "##[set-output name=branch_name;]$(echo hotfix/update-docs-${GITHUB_SHA:0:6})"
       - name: Create Pull Request
