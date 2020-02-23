@@ -24,10 +24,11 @@ jobs:
           HAS_CHANGES=`git diff --stat | grep docs`
           echo "${HAS_CHANGES}"
           echo "##[set-output name=has_changes;]$(echo ${HAS_CHANGES})"
+          echo "##[set-output name=branch_name;]$(echo actions/update-docs-${GITHUB_REF})"
       - name: Create Pull Request
         if: ${{ steps.build.outputs.has_changes }}
         uses: peter-evans/create-pull-request@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: actions/update-docs-${{ GITHUB_REF }}
+          branch: ${{ steps.build.outputs.branch_name }}
           commit-message: Auto update docs
