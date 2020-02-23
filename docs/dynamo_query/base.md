@@ -46,19 +46,6 @@ query = BaseDynamoQuery(
 )
 ```
 
-#### Attributes
-
-- `MAX_PAGE_SIZE` - Max size of one scan/query request
-- `MAX_BATCH_SIZE` - Max size of one batch_get/write/delete_item request
-- `MAX_LIMIT` - Max size of scan/query requests
-- `TABLE_KEYS` - Define in a subclass to set table keys automatically.
-- `FILTER_EXPRESSION` - Alias for `FilterExpression` parameter name.
-- `CONDITION_EXPRESSION` - Alias for `ConditionExpression` parameter name.
-- `UPDATE_EXPRESSION` - Alias for `UpdateExpression` parameter name.
-- `PROJECTION_EXPRESSION` - Alias for `ProjectionExpression` parameter name.
-- `KEY_CONDITION_EXPRESSION` - Alias for `KeyConditionExpression` parameter name.
-- `ReturnConsumedCapacity` - Alias for `ReturnConsumedCapacity` enum,
-
 #### Arguments
 
 - `query_type` - QueryType item.
@@ -67,13 +54,19 @@ query = BaseDynamoQuery(
 - `limit` - Limit of results for scan/query requests.
 - `exclusive_start_key` - Start key for scan/query requests.
 
+#### Attributes
+
+- `MAX_PAGE_SIZE` - Max size of one scan/query request.: `1000`
+- `MAX_BATCH_SIZE` - Max size of one batch_get/write/delete_item request.: `25`
+- `MAX_LIMIT` - Max size of scan/query requests.: `10000000000`
+
 #### See also
 
 - [QueryType](enums.md#querytype)
 
 ### BaseDynamoQuery().client
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L141)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L134)
 
 ```python
 @property
@@ -86,7 +79,7 @@ def client() -> DynamoDBClient:
 
 ### BaseDynamoQuery().has_more_results
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L154)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L147)
 
 ```python
 def has_more_results() -> bool:
@@ -100,7 +93,7 @@ True if query has more results than returned or was not yet executed.
 
 ### BaseDynamoQuery().table_keys
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L134)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L127)
 
 ```python
 @property
@@ -113,7 +106,7 @@ def table_keys() -> TableKeys:
 
 ### BaseDynamoQuery().table_resource
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L127)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L120)
 
 ```python
 @property
@@ -126,7 +119,7 @@ def table_resource() -> Table:
 
 ### BaseDynamoQuery().was_executed
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L145)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base.py#L138)
 
 ```python
 def was_executed() -> bool:
@@ -146,4 +139,4 @@ True if query was executed.
 class DynamoQueryError(Exception):
 ```
 
-Main error for `dynamo_query.DynamoQuery` class.
+Main error for [DynamoQuery](dynamo_query.md#dynamoquery) class.

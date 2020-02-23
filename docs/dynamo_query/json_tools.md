@@ -1,8 +1,10 @@
-# Json Tools
+# JSON Tools
 
 > Auto-generated documentation for [dynamo_query.json_tools](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/json_tools.py) module.
 
-- [dynamo-query](../README.md#dynamoquery) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / Json Tools
+Safe JSON SerDe.
+
+- [dynamo-query](../README.md#dynamoquery) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / JSON Tools
     - [SafeJSONEncoder](#safejsonencoder)
         - [SafeJSONEncoder().default](#safejsonencoderdefault)
     - [dumps](#dumps)
@@ -10,7 +12,7 @@
 
 ## SafeJSONEncoder
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/json_tools.py#L7)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/json_tools.py#L12)
 
 ```python
 class SafeJSONEncoder(json.JSONEncoder):
@@ -40,7 +42,7 @@ json.dumps(data, cls=SafeJSONEncoder)
 
 ### SafeJSONEncoder().default
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/json_tools.py#L35)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/json_tools.py#L40)
 
 ```python
 def default(o: Any) -> Any:
@@ -59,7 +61,7 @@ Supports `decimal.Decimal` and `set`.
 
 ## dumps
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/json_tools.py#L67)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/json_tools.py#L72)
 
 ```python
 def dumps(
@@ -90,7 +92,7 @@ A string with serialized JSON.
 
 ## loads
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/json_tools.py#L89)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/json_tools.py#L94)
 
 ```python
 def loads(data: str, **kwargs: Any) -> Any:
