@@ -22,13 +22,14 @@ from dynamo_query.dynamo_query import DynamoQuery
 from dynamo_query.dynamo_table_index import DynamoTableIndex
 from dynamo_query.expressions import ConditionExpression, ConditionExpressionGroup
 from dynamo_query.types import DynamoDBClient, Table
+from dynamo_query.lazy_logger import LazyLogger
 
 __all__ = ("DynamoTable",)
 
 DynamoRecord = TypeVar("DynamoRecord", bound=Mapping[str, Any])
 
 
-class DynamoTable(Generic[DynamoRecord]):
+class DynamoTable(Generic[DynamoRecord], LazyLogger):
     """
     DynamoDB table manager, uses `DynamoQuery` underneath.
 
@@ -125,13 +126,6 @@ class DynamoTable(Generic[DynamoRecord]):
         """
         Override this method to get SK from a record.
         """
-
-    @property
-    def _logger(self) -> logging.Logger:
-        if self._lazy_logger is None:
-            self._lazy_logger = logging.Logger(__name__)
-
-        return self._lazy_logger
 
     def _get_partition_key(self, record: DynamoRecord) -> Any:
         if self.partition_key_name in record:

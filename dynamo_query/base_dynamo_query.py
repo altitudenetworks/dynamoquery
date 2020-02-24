@@ -30,6 +30,7 @@ from dynamo_query.expressions import (
 )
 from dynamo_query.utils import ascii_string_generator
 from dynamo_query.json_tools import dumps
+from dynamo_query.lazy_logger import LazyLogger
 
 
 class DynamoQueryError(Exception):
@@ -38,7 +39,7 @@ class DynamoQueryError(Exception):
     """
 
 
-class BaseDynamoQuery:
+class BaseDynamoQuery(LazyLogger):
     """
     Base class for building Boto3 DynamoDB queries. Use
     `dynamo_query.DynamoQuery` instead.
@@ -107,13 +108,6 @@ class BaseDynamoQuery:
         self._raw_responses: List[Any] = []
         self._table_resource: Optional[Table] = None
         self._table_keys: Optional[TableKeys] = None
-
-    @property
-    def _logger(self) -> logging.Logger:
-        if self._lazy_logger is None:
-            self._lazy_logger = logging.Logger(__name__)
-
-        return self._lazy_logger
 
     def __str__(self) -> str:
         return f"<{self.__class__.__name__} type={self._query_type.value}>"

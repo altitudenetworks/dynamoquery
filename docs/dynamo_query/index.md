@@ -6,7 +6,7 @@ Main import point for DynamoQuery.
 
 - [dynamo-query](../README.md#dynamoquery) / [Modules](../MODULES.md#dynamo-query-modules) / Dynamo Query
     - Modules
-        - [Base](base.md#base)
+        - [BaseDynamoQuery](base_dynamo_query.md#basedynamoquery)
         - [Boto3Retrier](boto3_retrier.md#boto3retrier)
         - [DataTable](data_table.md#datatable)
         - [DynamoQuery](dynamo_query.md#dynamoquery)
@@ -15,6 +15,7 @@ Main import point for DynamoQuery.
         - [Enums](enums.md#enums)
         - [Expressions](expressions.md#expressions)
         - [JSON Tools](json_tools.md#json-tools)
+        - [LazyLogger](lazy_logger.md#lazylogger)
         - [Sentinel](sentinel.md#sentinel)
         - [Types](types.md#types)
         - [Utils](utils.md#utils)

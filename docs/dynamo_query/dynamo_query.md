@@ -76,7 +76,7 @@ list(result_data_table.get_records())
 
 #### See also
 
-- [BaseDynamoQuery](base.md#basedynamoquery)
+- [BaseDynamoQuery](base_dynamo_query.md#basedynamoquery)
 
 ### DynamoQuery.build_batch_delete_item
 

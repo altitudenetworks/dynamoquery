@@ -21,7 +21,7 @@ from dynamo_query.types import (
     ReturnItemCollectionMetrics,
     ReturnValues,
 )
-from dynamo_query.base import BaseDynamoQuery, DynamoQueryError
+from dynamo_query.base_dynamo_query import BaseDynamoQuery, DynamoQueryError
 
 
 __all__ = (
