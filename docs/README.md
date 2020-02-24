@@ -13,6 +13,11 @@ Full dynamo-query project documentation can be found in [Modules](MODULES.md#dyn
 - [DynamoQuery](#dynamoquery)
   - [Installation](#installation)
   - [Usage](#usage)
+    - [DynamoQuery](#dynamoquery-1)
+    - [DynamoTable](#dynamotable)
+  - [Development](#development)
+    - [VSCode](#vscode)
+    - [PyCharm](#pycharm)
   - [Versioning](#versioning)
   - [dynamo-query Modules](MODULES.md#dynamo-query-modules)
 
@@ -23,6 +28,8 @@ python -m pip install dynamoquery
 ```
 
 ## Usage
+
+You can find commented usage examples in [examples](https://github.com/altitudenetworks/dynamoquery/tree/master/examples) directory.
 
 ### DynamoQuery
 
@@ -144,11 +151,11 @@ Recommended `.vscode/settings.json`
 
 ```json
 {
-    "python.pythonPath": "<pipenv_path>/bin/python",
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true,
-    "python.linting.mypyEnabled": true,
-    "python.formatting.provider": "black"
+  "python.pythonPath": "<pipenv_path>/bin/python",
+  "python.linting.pylintEnabled": true,
+  "python.linting.enabled": true,
+  "python.linting.mypyEnabled": true,
+  "python.formatting.provider": "black"
 }
 ```
 
