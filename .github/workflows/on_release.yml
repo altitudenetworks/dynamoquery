@@ -1,4 +1,4 @@
-name: Lint and test changes
+name: Prepare release PR
 
 on:
   release:
@@ -27,6 +27,10 @@ jobs:
           VERSION=`echo "$VERSION_TAG" | sed "s/-release//"`
           echo "##[set-output name=version;]$(echo ${VERSION})"
           echo "##[set-output name=branch_name;]$(echo release/${VERSION})"
+      - name: Checkout master branch
+        run: |
+          git checkout master
+          git pull
       - name: Bump version
         env:
           VERSION: ${{ steps.vars.outputs.version }}
