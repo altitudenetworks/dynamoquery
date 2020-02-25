@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from dynamo_query.data_table import DataTable
-from dynamo_query.dynamo_table import DynamoTable
+from dynamo_query.dynamo_table import DynamoTable, DynamoTableError
 from dynamo_query.expressions import ConditionExpression
 from dynamo_query.dynamo_table_index import DynamoTableIndex
 
@@ -264,22 +264,39 @@ class TestDynamoTableIndex:
         assert list(
             self.result.query(
                 partition_key="pk_value",
-                sort_key_prefix="sk_prefix",
+                sort_key="sk_value",
                 filter_expression=filter_expression_mock,
-                data={"key": ["value"]},
+                data={"key": ["key_value"]},
                 limit=1,
             )
         ) == [{"pk": "my_pk", "sk": "sk"}]
         self.table_mock.query.assert_called_with(
+            KeyConditionExpression="#aab = :aaa AND #aac = :aab",
+            FilterExpression="#aaa = :aac___0",
             ConsistentRead=False,
+            ScanIndexForward=True,
             ExpressionAttributeNames={"#aaa": "key", "#aab": "pk", "#aac": "sk"},
             ExpressionAttributeValues={
                 ":aaa": "pk_value",
-                ":aab": "sk_prefix",
-                ":aac___0": "value",
+                ":aab": "sk_value",
+                ":aac___0": "key_value",
             },
-            FilterExpression="#aaa = :aac___0",
-            KeyConditionExpression="#aab = :aaa AND begins_with(#aac, :aab)",
             Limit=1,
-            ScanIndexForward=True,
         )
+        self.table_mock.reset_mock()
+        list(
+            self.result.query(
+                partition_key_prefix="pk_prefix", sort_key_prefix="sk_prefix", limit=1,
+            )
+        )
+        self.table_mock.query.assert_called_with(
+            KeyConditionExpression="begins_with(#aaa, :aaa) AND begins_with(#aab, :aab)",
+            ConsistentRead=False,
+            ScanIndexForward=True,
+            ExpressionAttributeNames={"#aaa": "pk", "#aab": "sk"},
+            ExpressionAttributeValues={":aaa": "pk_prefix", ":aab": "sk_prefix"},
+            Limit=1,
+        )
+
+        with pytest.raises(DynamoTableError):
+            list(self.result.query(limit=1))

@@ -29,6 +29,12 @@ __all__ = ("DynamoTable",)
 DynamoRecord = TypeVar("DynamoRecord", bound=Mapping[str, Any])
 
 
+class DynamoTableError(BaseException):
+    """
+    Main error for `DynamoTable` class.
+    """
+
+
 class DynamoTable(Generic[DynamoRecord], LazyLogger):
     """
     DynamoDB table manager, uses `DynamoQuery` underneath.
@@ -189,7 +195,8 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
 
     def clear_table(
         self,
-        partition_key: Optional[str],
+        partition_key: Optional[str] = None,
+        partition_key_prefix: Optional[str] = None,
         sort_key: Optional[str] = None,
         sort_key_prefix: Optional[str] = None,
         index: DynamoTableIndex = primary_index,
@@ -199,21 +206,23 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         """
         Remove records from DB.
 
-        If `partition_key` is None - deletes all records.
+        If `partition_key` and `partition_key_prefix` are None - deletes all records.
 
         Arguments:
             partition_key -- Partition key value.
             sort_key -- Sort key value.
-            sort_key_prefix -- Sort key prefix.
+            partition_key_prefix -- Partition key prefix value.
+            sort_key_prefix -- Sort key prefix value.
             index -- DynamoTableIndex instance, primary index is used if not provided.
             filter_expression -- Query filter expression.
             limit -- Max number of results.
         """
-        if partition_key is None:
+        if partition_key is None and partition_key_prefix is None:
             records = self.scan(projection=self.table_keys)
         else:
             records = self.query(
                 partition_key=partition_key,
+                partition_key_prefix=partition_key_prefix,
                 index=index,
                 sort_key=sort_key,
                 sort_key_prefix=sort_key_prefix,
@@ -631,8 +640,9 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
 
     def query(
         self,
-        partition_key: str,
         index: DynamoTableIndex = primary_index,
+        partition_key: Optional[str] = None,
+        partition_key_prefix: Optional[str] = None,
         sort_key: Optional[str] = None,
         sort_key_prefix: Optional[str] = None,
         filter_expression: Optional[ConditionExpression] = None,
@@ -682,7 +692,8 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             partition_key -- Partition key value.
             index -- DynamoTableIndex instance, primary index is used if not provided.
             sort_key -- Sort key value.
-            sort_key_prefix -- Sort key prefix.
+            partition_key_prefix -- Partition key prefix value.
+            sort_key_prefix -- Sort key prefix value.
             filter_expression -- Query filter expression.
             scan_index_forward -- Whether to scan index from the beginning.
             projection -- Record fields to return, by default returns all fields.
@@ -692,13 +703,24 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             Matching record.
         """
         sort_key_operator: Literal["=", "begins_with"] = "="
+        partition_key_operator: Literal["=", "begins_with"] = "="
         if sort_key_prefix is not None:
             sort_key_operator = "begins_with"
             sort_key = sort_key_prefix
+        if partition_key_prefix is not None:
+            partition_key_operator = "begins_with"
+            partition_key = partition_key_prefix
+
+        if partition_key is None:
+            raise DynamoTableError(
+                "Either partition_key  or partition_key_prefix should be set."
+            )
 
         key_condition_expression: Union[
             ConditionExpression, ConditionExpressionGroup
-        ] = ConditionExpression(index.partition_key_name)
+        ] = ConditionExpression(
+            index.partition_key_name, operator=partition_key_operator
+        )
         if sort_key is not None and index.sort_key_name is not None:
             key_condition_expression = key_condition_expression & ConditionExpression(
                 index.sort_key_name, operator=sort_key_operator,
