@@ -28,7 +28,10 @@ jobs:
           echo "##[set-output name=version;]$(echo ${VERSION})"
           echo "##[set-output name=branch_name;]$(echo release/${VERSION})"
       - name: Checkout master branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          git fetch --all
           git checkout master
           git pull
       - name: Bump version
