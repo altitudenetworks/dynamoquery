@@ -21,6 +21,7 @@ jobs:
         run: |
           ./scripts/docs.sh -d
       - name: Collect changes
+        id: changes
         run: |
           HAS_CHANGES=`git diff --stat | grep docs || true`
           GITHUB_SHA_SHORT=`echo "${GITHUB_SHA}" | cut -c -4`
