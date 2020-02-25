@@ -2,8 +2,8 @@ name: Publish release
 
 on:
   push:
-    branches:
-      - release/*
+    paths:
+      - __version__.py
 
 jobs:
   build:
