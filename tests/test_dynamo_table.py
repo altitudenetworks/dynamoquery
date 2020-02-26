@@ -14,7 +14,9 @@ def _patch_datetime(monkeypatch):
     class DatetimeMock:
         @classmethod
         def utcnow(cls):
-            return "utcnow"
+            utcnow_mock = MagicMock()
+            utcnow_mock.isoformat.return_value = "utcnow"
+            return utcnow_mock
 
     monkeypatch.setattr(datetime, "datetime", DatetimeMock)
 
