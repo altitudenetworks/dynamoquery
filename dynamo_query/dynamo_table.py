@@ -367,6 +367,9 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
 
         `data_table` must have all columns to calculate table keys.
 
+        Sets `dt_created` field equal to current UTC datetime if a record was created.
+        Sets `dt_modified` field equal to current UTC datetime.
+
         Example:
 
             ```python
@@ -484,6 +487,9 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         Upsert Record to DB.
 
         `record` must have all fields to calculate table keys.
+
+        Sets `dt_created` field equal to current UTC datetime if a record was created.
+        Sets `dt_modified` field equal to current UTC datetime.
 
         Example:
 

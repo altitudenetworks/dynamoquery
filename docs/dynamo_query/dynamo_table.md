@@ -192,6 +192,9 @@ Upsert multuple records as a DataTable to DB.
 
 `data_table` must have all columns to calculate table keys.
 
+Sets `dt_created` field equal to current UTC datetime if a record was created.
+Sets `dt_modified` field equal to current UTC datetime.
+
 #### Examples
 
 ```python
@@ -283,7 +286,7 @@ UserTable.create_table()
 
 ### DynamoTable().delete_record
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L546)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L552)
 
 ```python
 def delete_record(
@@ -345,7 +348,7 @@ Override this method to get PK from a record.
 
 ### DynamoTable().get_record
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L431)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L434)
 
 ```python
 def get_record(record: DynamoRecord) -> Optional[DynamoRecord]:
@@ -404,7 +407,7 @@ Override this method to get SK from a record.
 
 ### DynamoTable().query
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L650)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L656)
 
 ```python
 def query(
@@ -479,7 +482,7 @@ Matching record.
 
 ### DynamoTable().scan
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L593)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L599)
 
 ```python
 def scan(
@@ -541,7 +544,7 @@ Override this method to get DynamoDB Table resource.
 
 ### DynamoTable().upsert_record
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L477)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L480)
 
 ```python
 def upsert_record(
@@ -554,6 +557,9 @@ def upsert_record(
 Upsert Record to DB.
 
 `record` must have all fields to calculate table keys.
+
+Sets `dt_created` field equal to current UTC datetime if a record was created.
+Sets `dt_modified` field equal to current UTC datetime.
 
 #### Examples
 
