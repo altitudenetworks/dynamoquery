@@ -360,7 +360,9 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         return results
 
     def batch_upsert(
-        self, data_table: DataTable[DynamoRecord]
+        self,
+        data_table: DataTable[DynamoRecord],
+        set_if_not_exists_keys: Iterable[str] = (),
     ) -> DataTable[DynamoRecord]:
         """
         Upsert multuple records as a DataTable to DB.
@@ -399,6 +401,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
 
         Arguments:
             data_table -- Request DataTable.
+            set_if_not_exists_keys -- List of keys to set only if they no do exist in DB.
 
         Returns:
             A DataTable with upserted results.
@@ -406,6 +409,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         if not data_table:
             return DataTable[DynamoRecord]()
 
+        set_if_not_exists = set(set_if_not_exists_keys)
         existing_records = self.batch_get(data_table)
         now = datetime.datetime.utcnow()
         now_str = now.isoformat()
@@ -413,11 +417,17 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         update_data_table: DataTable[DynamoRecord] = DataTable()
         for record_index, record in enumerate(existing_records.get_records()):
             updated_record = data_table.get_record(record_index)
+            preserve_keys_record: Dict[str, Any] = {}
+            for key in set_if_not_exists:
+                if key in record:
+                    preserve_keys_record[key] = record[key]
+
             new_record = cast(
                 DynamoRecord,
                 {
                     **record,
                     **updated_record,
+                    **preserve_keys_record,
                     "dt_created": record.get("dt_created", now_str),
                     "dt_modified": now_str,
                 },
@@ -481,6 +491,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         self,
         record: DynamoRecord,
         condition_expression: Optional[ConditionExpression] = None,
+        set_if_not_exists_keys: Iterable[str] = (),
         extra_data: Dict[str, Any] = None,
     ) -> DynamoRecord:
         """
@@ -499,29 +510,31 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
 
             # we should provide table keys or fields to calculate them
             # in our case, PK is calculated from `email` field.
-            deleted_record = user_table.delete_record({
-                "email": "newuser@gmail.com",
-                "name": "Somebody Oncetoldme"
-                "age": 23,
-            })
+            user_record = user_table.upsert_record(
+                {
+                    "email": "newuser@gmail.com",
+                    "name": "Somebody Oncetoldme"
+                    "age": 23,
+                },
+                set_if_not_exists_keys=["age"], # set age if it does not exist in DB yet.
+            )
 
-            if deleted_record is None:
-                # no record found, so nothing was deleted
-                pass
-            else:
-                # print deleted record
-                print(user_record)
+            # print upserted record
+            print(user_record)
             ```
 
         Arguments:
             record -- Record to insert/update.
             condition_expression -- Condition for update.
+            set_if_not_exists_keys -- List of keys to set only if they no do exist in DB.
             extra_data -- Data for query.
 
         Returns:
             A dict with updated record data.
         """
-        update_keys = set(record.keys()) - self.table_keys
+        set_if_not_exists = set(set_if_not_exists_keys)
+        set_if_not_exists.add("dt_created")
+        update_keys = set(record.keys()) - self.table_keys - set_if_not_exists
         update_keys.add("dt_modified")
 
         partition_key = self._get_partition_key(record)
@@ -534,7 +547,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             DynamoQuery.build_update_item(
                 condition_expression=condition_expression, logger=self._logger,
             )
-            .update(update=update_keys, set_if_not_exists=["dt_created"])
+            .update(update=update_keys, set_if_not_exists=set_if_not_exists)
             .table(table_keys=self.table_keys, table=self.table,)
             .execute_dict(
                 {

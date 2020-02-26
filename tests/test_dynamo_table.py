@@ -170,17 +170,38 @@ class TestDynamoTableIndex:
     def test_batch_upsert(self, _patch_datetime):
         self.client_mock.batch_write_item.return_value = {
             "Responses": {
-                "my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value1"}]
+                "my_table_name": [
+                    {"pk": "my_pk", "sk": "my_sk", "data": "value1", "preserve": "p1"}
+                ]
+            }
+        }
+        self.client_mock.batch_get_item.return_value = {
+            "Responses": {
+                "my_table_name": [
+                    {"pk": "my_pk", "sk": "my_sk", "data": "value1", "preserve": "p1"}
+                ]
             }
         }
         data_table = DataTable().add_record(
-            {"pk": "my_pk", "sk": "my_sk", "data": "value1"}
-        )
-        assert list(self.result.batch_upsert(data_table).get_records()) == [
             {
                 "pk": "my_pk",
                 "sk": "my_sk",
-                "data": "value1",
+                "data": "value2",
+                "preserve": "p2",
+                "preserve2": "p3",
+            }
+        )
+        assert list(
+            self.result.batch_upsert(
+                data_table, set_if_not_exists_keys=["preserve", "preserve2"]
+            ).get_records()
+        ) == [
+            {
+                "pk": "my_pk",
+                "sk": "my_sk",
+                "data": "value2",
+                "preserve": "p1",
+                "preserve2": "p3",
                 "dt_created": "utcnow",
                 "dt_modified": "utcnow",
             }
@@ -193,7 +214,9 @@ class TestDynamoTableIndex:
                             "Item": {
                                 "pk": "my_pk",
                                 "sk": "my_sk",
-                                "data": "value1",
+                                "data": "value2",
+                                "preserve": "p1",
+                                "preserve2": "p3",
                                 "dt_created": "utcnow",
                                 "dt_modified": "utcnow",
                             }
