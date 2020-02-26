@@ -405,6 +405,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
 
         existing_records = self.batch_get(data_table)
         now = datetime.datetime.utcnow()
+        now_str = now.isoformat()
 
         update_data_table: DataTable[DynamoRecord] = DataTable()
         for record_index, record in enumerate(existing_records.get_records()):
@@ -414,8 +415,8 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
                 {
                     **record,
                     **updated_record,
-                    "dt_created": record.get("dt_created", now),
-                    "dt_modified": now,
+                    "dt_created": record.get("dt_created", now_str),
+                    "dt_modified": now_str,
                 },
             )
             update_data_table.add_record(new_record)
@@ -515,13 +516,19 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             A dict with updated record data.
         """
         update_keys = set(record.keys()) - self.table_keys
+        update_keys.add("dt_modified")
+
         partition_key = self._get_partition_key(record)
         sort_key = self._get_sort_key(record)
+
+        now = datetime.datetime.utcnow()
+        now_str = now.isoformat()
+
         result: DataTable[DynamoRecord] = (
             DynamoQuery.build_update_item(
                 condition_expression=condition_expression, logger=self._logger,
             )
-            .update(*update_keys)
+            .update(update=update_keys, set_if_not_exists=["dt_created"])
             .table(table_keys=self.table_keys, table=self.table,)
             .execute_dict(
                 {
@@ -529,6 +536,8 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
                     self.sort_key_name: sort_key,
                     **record,
                     **(extra_data or {}),
+                    "dt_modified": now_str,
+                    "dt_created": now_str,
                 }
             )
         )

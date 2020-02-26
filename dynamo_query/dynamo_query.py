@@ -785,6 +785,7 @@ class DynamoQuery(BaseDynamoQuery):
         self: DynamoQueryType,
         *args: str,
         update: Iterable[str] = tuple(),
+        set_if_not_exists: Iterable[str] = tuple(),
         add: Iterable[str] = tuple(),
         delete: Iterable[str] = tuple(),
         remove: Iterable[str] = tuple(),
@@ -806,6 +807,7 @@ class DynamoQuery(BaseDynamoQuery):
         Arguments:
             args -- Keys to use SET expression, use to update values.
             update -- Keys to use SET expression, use to update values.
+            set_if_not_exists -- Keys to use SET expression, use to add new keys.
             add -- Keys to use ADD expression, use to extend lists.
             delete -- Keys to use DELETE expression, use to subtract lists.
             remove -- Keys to use REMOVE expression, use to remove values.
@@ -817,6 +819,11 @@ class DynamoQuery(BaseDynamoQuery):
             raise DynamoQueryError(f"{self} does not support UpdateExpression")
 
         self._expressions[self.UPDATE_EXPRESSION] = UpdateExpression(
-            *args, update=update, add=add, delete=delete, remove=remove
+            *args,
+            update=update,
+            set_if_not_exists=set_if_not_exists,
+            add=add,
+            delete=delete,
+            remove=remove,
         )
         return self

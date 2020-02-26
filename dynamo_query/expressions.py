@@ -562,15 +562,21 @@ class UpdateExpression(BaseExpression):
     ```
     update_expression = UpdateExpression(
         update=['first_name'],
+        set_if_not_exists=['created_at'],
         add=['tags'],
     )
     update_expression
-    # 'SET {first_name} = {first_name__value} ADD {tags} {tags__value}'
+    # (
+    #   'SET {first_name} = {first_name__value},'
+    #   ' {created_at} = if_not_exists({created_at}, {created_at__value})
+    #   ' ADD {tags} {tags__value}'
+    # )
     ```
 
     Arguments:
         args -- Keys to use SET expression, use to update values.
         update -- Keys to use SET expression, use to update values.
+        set_if_not_exists -- Keys to use SET expression, use to add new keys.
         add -- Keys to use ADD expression, use to extend lists.
         delete -- Keys to use DELETE expression, use to subtract lists.
         remove -- Keys to use REMOVE expression, use to remove values.
@@ -580,11 +586,13 @@ class UpdateExpression(BaseExpression):
         self,
         *args: str,
         update: Iterable[str] = tuple(),
+        set_if_not_exists: Iterable[str] = tuple(),
         add: Iterable[str] = tuple(),
         delete: Iterable[str] = tuple(),
         remove: Iterable[str] = tuple(),
     ):
         self.update = tuple(args) + tuple(update)
+        self.set_if_not_exists = tuple(set_if_not_exists)
         self.add = tuple(add)
         self.delete = tuple(delete)
         self.remove = tuple(remove)
@@ -619,7 +627,9 @@ class UpdateExpression(BaseExpression):
             A set of keys.
         """
         result: Set[str] = set()
-        result.update(self.update, self.add, self.delete, self.remove)
+        result.update(
+            self.update, self.set_if_not_exists, self.add, self.delete, self.remove
+        )
         return result
 
     def get_format_values(self) -> Set[str]:
@@ -630,7 +640,7 @@ class UpdateExpression(BaseExpression):
             A set of keys.
         """
         result: Set[str] = set()
-        result.update(self.update, self.add, self.delete)
+        result.update(self.update, self.set_if_not_exists, self.add, self.delete)
         return result
 
     def __and__(
@@ -639,6 +649,9 @@ class UpdateExpression(BaseExpression):
         if isinstance(other, UpdateExpression):
             return self.__class__(
                 update=self._extend_lists_dedup(self.update, other.update),
+                set_if_not_exists=self._extend_lists_dedup(
+                    self.set_if_not_exists, other.set_if_not_exists
+                ),
                 add=self._extend_lists_dedup(self.add, other.add),
                 delete=self._extend_lists_dedup(self.delete, other.delete),
                 remove=self._extend_lists_dedup(self.remove, other.remove),
@@ -662,6 +675,9 @@ class UpdateExpression(BaseExpression):
         for key in self.update:
             value_key = f"{key}{self._value_key_postfix}"
             set_list.append(f"{{{key}}} = {{{value_key}}}")
+        for key in self.set_if_not_exists:
+            value_key = f"{key}{self._value_key_postfix}"
+            set_list.append(f"{{{key}}} = if_not_exists({{{key}}}, {{{value_key}}})")
         for key in self.add:
             value_key = f"{key}{self._value_key_postfix}"
             add_list.append(f"{{{key}}} {{{value_key}}}")

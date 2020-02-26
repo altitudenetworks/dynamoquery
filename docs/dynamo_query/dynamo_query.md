@@ -784,6 +784,7 @@ Set table resource and table keys.
 ```python
 def update(
     update: Iterable[str] = tuple(),
+    set_if_not_exists: Iterable[str] = tuple(),
     add: Iterable[str] = tuple(),
     delete: Iterable[str] = tuple(),
     remove: Iterable[str] = tuple(),
@@ -808,6 +809,7 @@ query = DynamoQuery.build_update(
 
 - `args` - Keys to use SET expression, use to update values.
 - `update` - Keys to use SET expression, use to update values.
+- `set_if_not_exists` - Keys to use SET expression, use to add new keys.
 - `add` - Keys to use ADD expression, use to extend lists.
 - `delete` - Keys to use DELETE expression, use to subtract lists.
 - `remove` - Keys to use REMOVE expression, use to remove values.
