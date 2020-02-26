@@ -185,6 +185,7 @@ DataTable with existing records.
 ```python
 def batch_upsert(
     data_table: DataTable[DynamoRecord],
+    set_if_not_exists_keys: Iterable[str] = (),
 ) -> DataTable[DynamoRecord]:
 ```
 
@@ -225,6 +226,7 @@ for upserted_record in upserted_records:
 #### Arguments
 
 - `data_table` - Request DataTable.
+- `set_if_not_exists_keys` - List of keys to set only if they no do exist in DB.
 
 #### Returns
 
@@ -286,7 +288,7 @@ UserTable.create_table()
 
 ### DynamoTable().delete_record
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L552)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L565)
 
 ```python
 def delete_record(
@@ -348,7 +350,7 @@ Override this method to get PK from a record.
 
 ### DynamoTable().get_record
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L434)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L444)
 
 ```python
 def get_record(record: DynamoRecord) -> Optional[DynamoRecord]:
@@ -407,7 +409,7 @@ Override this method to get SK from a record.
 
 ### DynamoTable().query
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L656)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L669)
 
 ```python
 def query(
@@ -482,7 +484,7 @@ Matching record.
 
 ### DynamoTable().scan
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L599)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L612)
 
 ```python
 def scan(
@@ -544,12 +546,13 @@ Override this method to get DynamoDB Table resource.
 
 ### DynamoTable().upsert_record
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L480)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L490)
 
 ```python
 def upsert_record(
     record: DynamoRecord,
     condition_expression: Optional[ConditionExpression] = None,
+    set_if_not_exists_keys: Iterable[str] = (),
     extra_data: Dict[str, Any] = None,
 ) -> DynamoRecord:
 ```
@@ -569,24 +572,24 @@ user_table = UserTable()
 
 # we should provide table keys or fields to calculate them
 # in our case, PK is calculated from `email` field.
-deleted_record = user_table.delete_record({
-    "email": "newuser@gmail.com",
-    "name": "Somebody Oncetoldme"
-    "age": 23,
-})
+user_record = user_table.upsert_record(
+    {
+        "email": "newuser@gmail.com",
+        "name": "Somebody Oncetoldme"
+        "age": 23,
+    },
+    set_if_not_exists_keys=["age"], # set age if it does not exist in DB yet.
+)
 
-if deleted_record is None:
-    # no record found, so nothing was deleted
-    pass
-else:
-    # print deleted record
-    print(user_record)
+# print upserted record
+print(user_record)
 ```
 
 #### Arguments
 
 - `record` - Record to insert/update.
 - `condition_expression` - Condition for update.
+- `set_if_not_exists_keys` - List of keys to set only if they no do exist in DB.
 - `extra_data` - Data for query.
 
 #### Returns
