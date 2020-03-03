@@ -121,6 +121,10 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         Override this method to get DynamoDB Table resource.
         """
 
+    @property
+    def client(self) -> DynamoDBClient:
+        return cast(DynamoDBClient, self.table.meta.client)
+
     @abstractmethod
     def get_partition_key(self, record: DynamoRecord) -> Any:
         """
@@ -145,6 +149,22 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
 
         return self.get_sort_key(record)
 
+    def delete_table(self) -> None:
+        """
+        Delete the table from DynamoDB.
+
+        Example:
+
+            ```python
+            # UserTable is a subclass of a DynamoTable
+            user_table = UserTable()
+
+            # delete table
+            UserTable.delete_table()
+            ```
+        """
+        self.table.delete()
+
     def create_table(self) -> None:
         """
         Create a table in DynamoDB.
@@ -165,8 +185,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         local_secondary_indexes = [
             i.as_local_secondary_index() for i in self.local_secondary_indexes
         ]
-        client: DynamoDBClient = self.table.meta.client
-        client.create_table(
+        self.client.create_table(
             AttributeDefinitions=self.primary_index.as_attribute_definitions(),
             TableName=self.table.name,
             KeySchema=self.primary_index.as_key_schema(),
