@@ -55,6 +55,10 @@ class TestDynamoTableIndex:
     def test_init(self):
         assert self.result.table.name == "my_table_name"
 
+    def test_delete_table(self):
+        self.result.delete_table()
+        self.table_mock.delete.assert_called_once_with()
+
     def test_create_table(self):
         self.result.create_table()
         self.client_mock.create_table.assert_called_once_with(
