@@ -13,7 +13,7 @@
 
 ## DynamoTableIndex
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L14)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L12)
 
 ```python
 class DynamoTableIndex():
@@ -51,21 +51,22 @@ table_index.as_dynamodb_dict()
 #### Attributes
 
 - `PRIMARY` - Special name for primary table index: `'primary'`
+- `TYPES_MAP` - Map to python types: `{'S': str, 'N': int, 'B': bytes}`
 
 ### DynamoTableIndex().as_attribute_definitions
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L124)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L121)
 
 ```python
-def as_attribute_definitions() -> List[ClientCreateTableAttributeDefinitionsTypeDef]:
+def as_attribute_definitions() -> List[AttributeDefinitionTypeDef]:
 ```
 
 ### DynamoTableIndex().as_global_secondary_index
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L65)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L66)
 
 ```python
-def as_global_secondary_index() -> ClientCreateTableGlobalSecondaryIndexesTypeDef:
+def as_global_secondary_index() -> GlobalSecondaryIndexTypeDef:
 ```
 
 Output a dictionary to use in `dynamo_client.create_table` method.
@@ -76,14 +77,14 @@ A dict with index data.
 
 #### See also
 
-- [ClientCreateTableGlobalSecondaryIndexesTypeDef](types.md#clientcreatetableglobalsecondaryindexestypedef)
+- [GlobalSecondaryIndexTypeDef](types.md#globalsecondaryindextypedef)
 
 ### DynamoTableIndex().as_key_schema
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L109)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L106)
 
 ```python
-def as_key_schema() -> List[ClientCreateTableKeySchemaTypeDef]:
+def as_key_schema() -> List[KeySchemaElementTypeDef]:
 ```
 
 Output a dictionary to use in `dynamo_client.create_table` method.
@@ -94,10 +95,10 @@ A dict with index data.
 
 ### DynamoTableIndex().as_local_secondary_index
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L87)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L86)
 
 ```python
-def as_local_secondary_index() -> ClientCreateTableLocalSecondaryIndexesTypeDef:
+def as_local_secondary_index() -> LocalSecondaryIndexTypeDef:
 ```
 
 Output a dictionary to use in `dynamo_client.create_table` method.
@@ -108,11 +109,11 @@ A dict with index data.
 
 #### See also
 
-- [ClientCreateTableLocalSecondaryIndexesTypeDef](types.md#clientcreatetablelocalsecondaryindexestypedef)
+- [LocalSecondaryIndexTypeDef](types.md#localsecondaryindextypedef)
 
 ### DynamoTableIndex().get_query_data
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L145)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L140)
 
 ```python
 def get_query_data(
@@ -134,7 +135,7 @@ Query-ready data.
 
 ### DynamoTableIndex().name
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L55)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L56)
 
 ```python
 @property
