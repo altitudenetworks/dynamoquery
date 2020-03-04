@@ -25,7 +25,8 @@ from dynamo_query.expressions import ConditionExpression, ConditionExpressionGro
 from dynamo_query.types import (
     DynamoDBClient,
     Table,
-    ClientCreateTableAttributeDefinitionsTypeDef,
+    AttributeDefinitionTypeDef,
+    CreateTableOutputTypeDef,
 )
 from dynamo_query.lazy_logger import LazyLogger
 from dynamo_query import json_tools
@@ -187,7 +188,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         """
         self.table.delete()
 
-    def create_table(self) -> None:
+    def create_table(self) -> CreateTableOutputTypeDef:
         """
         Create a table in DynamoDB.
 
@@ -208,7 +209,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             i.as_local_secondary_index() for i in self.local_secondary_indexes
         ]
 
-        self.client.create_table(
+        return self.client.create_table(
             AttributeDefinitions=self._attribute_definitions,
             TableName=self.table.name,
             KeySchema=self.primary_index.as_key_schema(),
@@ -216,10 +217,8 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             LocalSecondaryIndexes=local_secondary_indexes,
         )
 
-    def _get_attribute_definitions(
-        self,
-    ) -> List[ClientCreateTableAttributeDefinitionsTypeDef]:
-        attribute_definitions: List[ClientCreateTableAttributeDefinitionsTypeDef] = []
+    def _get_attribute_definitions(self,) -> List[AttributeDefinitionTypeDef]:
+        attribute_definitions: List[AttributeDefinitionTypeDef] = []
         attribute_names: Set[str] = set()
         indexes = (
             self.primary_index,

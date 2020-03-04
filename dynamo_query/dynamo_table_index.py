@@ -2,12 +2,10 @@ from typing import Dict, Optional, List
 from typing_extensions import Literal
 
 from dynamo_query.types import (
-    ClientCreateTableGlobalSecondaryIndexesTypeDef,
-    ClientCreateTableLocalSecondaryIndexesTypeDef,
-    ClientCreateTableGlobalSecondaryIndexesKeySchemaTypeDef,
-    ClientCreateTableLocalSecondaryIndexesKeySchemaTypeDef,
-    ClientCreateTableKeySchemaTypeDef,
-    ClientCreateTableAttributeDefinitionsTypeDef,
+    GlobalSecondaryIndexTypeDef,
+    LocalSecondaryIndexTypeDef,
+    KeySchemaElementTypeDef,
+    AttributeDefinitionTypeDef,
 )
 
 
@@ -65,16 +63,14 @@ class DynamoTableIndex:
 
         return self._name
 
-    def as_global_secondary_index(
-        self,
-    ) -> ClientCreateTableGlobalSecondaryIndexesTypeDef:
+    def as_global_secondary_index(self) -> GlobalSecondaryIndexTypeDef:
         """
         Output a dictionary to use in `dynamo_client.create_table` method.
 
         Returns:
             A dict with index data.
         """
-        key_schema: List[ClientCreateTableGlobalSecondaryIndexesKeySchemaTypeDef]
+        key_schema: List[KeySchemaElementTypeDef]
         key_schema = [
             {"AttributeName": self.partition_key_name, "KeyType": "HASH"},
         ]
@@ -87,16 +83,14 @@ class DynamoTableIndex:
             "Projection": {"ProjectionType": "ALL"},
         }
 
-    def as_local_secondary_index(
-        self,
-    ) -> ClientCreateTableLocalSecondaryIndexesTypeDef:
+    def as_local_secondary_index(self) -> LocalSecondaryIndexTypeDef:
         """
         Output a dictionary to use in `dynamo_client.create_table` method.
 
         Returns:
             A dict with index data.
         """
-        key_schema: List[ClientCreateTableLocalSecondaryIndexesKeySchemaTypeDef]
+        key_schema: List[KeySchemaElementTypeDef]
         key_schema = [
             {"AttributeName": self.partition_key_name, "KeyType": "HASH"},
         ]
@@ -109,14 +103,14 @@ class DynamoTableIndex:
             "Projection": {"ProjectionType": "ALL"},
         }
 
-    def as_key_schema(self) -> List[ClientCreateTableKeySchemaTypeDef]:
+    def as_key_schema(self) -> List[KeySchemaElementTypeDef]:
         """
         Output a dictionary to use in `dynamo_client.create_table` method.
 
         Returns:
             A dict with index data.
         """
-        key_schema: List[ClientCreateTableKeySchemaTypeDef] = [
+        key_schema: List[KeySchemaElementTypeDef] = [
             {"AttributeName": self.partition_key_name, "KeyType": "HASH"},
         ]
         if self.sort_key_name:
@@ -124,10 +118,8 @@ class DynamoTableIndex:
 
         return key_schema
 
-    def as_attribute_definitions(
-        self,
-    ) -> List[ClientCreateTableAttributeDefinitionsTypeDef]:
-        attribute_definitions: List[ClientCreateTableAttributeDefinitionsTypeDef] = [
+    def as_attribute_definitions(self) -> List[AttributeDefinitionTypeDef]:
+        attribute_definitions: List[AttributeDefinitionTypeDef] = [
             {
                 "AttributeName": self.partition_key_name,
                 "AttributeType": self.partition_key_type,

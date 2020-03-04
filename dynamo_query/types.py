@@ -8,38 +8,36 @@ if TYPE_CHECKING:
     from mypy_boto3.dynamodb.service_resource import Table
     from mypy_boto3.dynamodb.client import DynamoDBClient
     from mypy_boto3.dynamodb.type_defs import (
-        ClientGetItemResponseTypeDef,
-        ClientUpdateItemResponseTypeDef,
-        ClientDeleteItemResponseTypeDef,
-        ClientQueryResponseTypeDef,
-        ClientScanResponseTypeDef,
-        ClientBatchGetItemResponseTypeDef,
-        ClientBatchWriteItemResponseTypeDef,
-        ClientCreateTableGlobalSecondaryIndexesTypeDef,
-        ClientCreateTableLocalSecondaryIndexesTypeDef,
-        ClientCreateTableGlobalSecondaryIndexesKeySchemaTypeDef,
-        ClientCreateTableLocalSecondaryIndexesKeySchemaTypeDef,
-        ClientCreateTableKeySchemaTypeDef,
-        ClientCreateTableAttributeDefinitionsTypeDef,
+        GetItemOutputTypeDef,
+        UpdateItemOutputTypeDef,
+        DeleteItemOutputTypeDef,
+        QueryOutputTypeDef,
+        ScanOutputTypeDef,
+        BatchGetItemOutputTypeDef,
+        BatchWriteItemOutputTypeDef,
+        CreateTableOutputTypeDef,
+        LocalSecondaryIndexTypeDef,
+        GlobalSecondaryIndexTypeDef,
+        KeySchemaElementTypeDef,
+        AttributeDefinitionTypeDef,
     )
 
 else:
     Table = object
     DynamoDBClient = object
     BaseExpression = object
-    ClientGetItemResponseTypeDef = object
-    ClientUpdateItemResponseTypeDef = object
-    ClientDeleteItemResponseTypeDef = object
-    ClientQueryResponseTypeDef = object
-    ClientScanResponseTypeDef = object
-    ClientBatchGetItemResponseTypeDef = object
-    ClientBatchWriteItemResponseTypeDef = object
-    ClientCreateTableGlobalSecondaryIndexesTypeDef = object
-    ClientCreateTableLocalSecondaryIndexesTypeDef = object
-    ClientCreateTableGlobalSecondaryIndexesKeySchemaTypeDef = object
-    ClientCreateTableLocalSecondaryIndexesKeySchemaTypeDef = object
-    ClientCreateTableKeySchemaTypeDef = object
-    ClientCreateTableAttributeDefinitionsTypeDef = object
+    GetItemOutputTypeDef = object
+    UpdateItemOutputTypeDef = object
+    DeleteItemOutputTypeDef = object
+    QueryOutputTypeDef = object
+    ScanOutputTypeDef = object
+    BatchGetItemOutputTypeDef = object
+    BatchWriteItemOutputTypeDef = object
+    CreateTableOutputTypeDef = object
+    LocalSecondaryIndexTypeDef = object
+    GlobalSecondaryIndexTypeDef = object
+    KeySchemaElementTypeDef = object
+    AttributeDefinitionTypeDef = object
 
 
 BaseExpression = TypeVar("BaseExpression")
