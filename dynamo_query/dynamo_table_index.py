@@ -38,6 +38,9 @@ class DynamoTableIndex:
     # Special name for primary table index
     PRIMARY = "primary"
 
+    # Map to python types
+    TYPES_MAP = {"S": str, "N": int, "B": bytes}
+
     def __init__(
         self,
         name: str,

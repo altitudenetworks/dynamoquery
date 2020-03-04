@@ -10,6 +10,7 @@ from typing import (
     Mapping,
     Optional,
     Set,
+    List,
     TypeVar,
     Union,
     cast,
@@ -21,10 +22,15 @@ from dynamo_query.data_table import DataTable
 from dynamo_query.dynamo_query import DynamoQuery
 from dynamo_query.dynamo_table_index import DynamoTableIndex
 from dynamo_query.expressions import ConditionExpression, ConditionExpressionGroup
-from dynamo_query.types import DynamoDBClient, Table
+from dynamo_query.types import (
+    DynamoDBClient,
+    Table,
+    ClientCreateTableAttributeDefinitionsTypeDef,
+)
 from dynamo_query.lazy_logger import LazyLogger
+from dynamo_query import json_tools
 
-__all__ = ("DynamoTable",)
+__all__ = ("DynamoTable", "DynamoTableError")
 
 DynamoRecord = TypeVar("DynamoRecord", bound=Mapping[str, Any])
 
@@ -32,7 +38,21 @@ DynamoRecord = TypeVar("DynamoRecord", bound=Mapping[str, Any])
 class DynamoTableError(BaseException):
     """
     Main error for `DynamoTable` class.
+
+    Arguments:
+        message -- Error message.
+        data -- Addition JSON-serializeable data.
     """
+
+    def __init__(self, message: str, data: Any = None) -> None:
+        super().__init__(message)
+        self.message = message
+        self.data = data
+
+    def __str__(self) -> str:
+        if self.data is not None:
+            return f"{self.message} data={json_tools.dumps(self.data)}"
+        return self.message
 
 
 class DynamoTable(Generic[DynamoRecord], LazyLogger):
@@ -114,6 +134,8 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         self, logger: Optional[logging.Logger] = None,
     ):
         self._lazy_logger = logger
+        self._attribute_definitions = self._get_attribute_definitions()
+        self._attribute_types = self._get_attribute_types()
 
     @abstractproperty
     def table(self) -> Table:
@@ -185,13 +207,57 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         local_secondary_indexes = [
             i.as_local_secondary_index() for i in self.local_secondary_indexes
         ]
+
         self.client.create_table(
-            AttributeDefinitions=self.primary_index.as_attribute_definitions(),
+            AttributeDefinitions=self._attribute_definitions,
             TableName=self.table.name,
             KeySchema=self.primary_index.as_key_schema(),
             GlobalSecondaryIndexes=global_secondary_indexes,
             LocalSecondaryIndexes=local_secondary_indexes,
         )
+
+    def _get_attribute_definitions(
+        self,
+    ) -> List[ClientCreateTableAttributeDefinitionsTypeDef]:
+        attribute_definitions: List[ClientCreateTableAttributeDefinitionsTypeDef] = []
+        attribute_names: Set[str] = set()
+        indexes = (
+            self.primary_index,
+            *self.global_secondary_indexes,
+            *self.local_secondary_indexes,
+        )
+        for index in indexes:
+            index_attribute_definitions = index.as_attribute_definitions()
+            for attribute_definition in index_attribute_definitions:
+                attribute_name = attribute_definition["AttributeName"]
+                if attribute_name in attribute_names:
+                    continue
+                attribute_definitions.append(attribute_definition)
+                attribute_names.add(attribute_name)
+
+        return attribute_definitions
+
+    def _get_attribute_types(self) -> Dict[str, Any]:
+        attribute_types: Dict[str, Any] = {}
+        for attribute_definition in self._attribute_definitions:
+            attribute_type = DynamoTableIndex.TYPES_MAP[
+                attribute_definition["AttributeType"]
+            ]
+            attribute_types[attribute_definition["AttributeName"]] = attribute_type
+        return attribute_types
+
+    def _validate_record_attributes(self, record: DynamoRecord) -> None:
+        for attribute_name, attribute_type in self._attribute_types.items():
+            if attribute_name not in record:
+                raise DynamoTableError(
+                    f"Attribute {attribute_name} is not set in record.", data=record,
+                )
+            value = record[attribute_name]
+            if not isinstance(value, attribute_type):
+                raise DynamoTableError(
+                    f"Attribute {attribute_name} has invalid type, {attribute_type} expected.",
+                    data=record,
+                )
 
     def _yield_from_query(
         self, query: DynamoQuery, data: Dict[str, Any], limit: Optional[int] = None
@@ -451,6 +517,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
                     "dt_modified": now_str,
                 },
             )
+            self._validate_record_attributes(new_record)
             update_data_table.add_record(new_record)
 
         results: DataTable[DynamoRecord] = DynamoQuery.build_batch_update_item(

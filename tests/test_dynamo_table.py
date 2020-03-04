@@ -21,7 +21,20 @@ def _patch_datetime(monkeypatch):
     monkeypatch.setattr(datetime, "datetime", DatetimeMock)
 
 
-class TestDynamoTableIndex:
+class TestDynamoTableError:
+    result: DynamoTableError
+    result_data: DynamoTableError
+
+    def setup_method(self):
+        self.result = DynamoTableError("Test")
+        self.result_data = DynamoTableError("Test", {"key": "value"})
+
+    def test_init(self):
+        assert str(self.result) == "Test"
+        assert str(self.result_data) == 'Test data={"key": "value"}'
+
+
+class TestDynamoTable:
     result: DynamoTable
     primary: DynamoTable
     table_mock: MagicMock
@@ -38,7 +51,7 @@ class TestDynamoTableIndex:
 
         class MyDynamoTable(DynamoTable):
             global_secondary_indexes = [DynamoTableIndex("gsi", "gsi_pk", "gsi_sk")]
-            local_secondary_indexes = [DynamoTableIndex("lsi", "lsi_pk", None)]
+            local_secondary_indexes = [DynamoTableIndex("lsi", "lsi_pk", "sk")]
 
             @property
             def table(self):
@@ -65,6 +78,9 @@ class TestDynamoTableIndex:
             AttributeDefinitions=[
                 {"AttributeName": "pk", "AttributeType": "S"},
                 {"AttributeName": "sk", "AttributeType": "S"},
+                {"AttributeName": "gsi_pk", "AttributeType": "S"},
+                {"AttributeName": "gsi_sk", "AttributeType": "S"},
+                {"AttributeName": "lsi_pk", "AttributeType": "S"},
             ],
             GlobalSecondaryIndexes=[
                 {
@@ -83,7 +99,10 @@ class TestDynamoTableIndex:
             LocalSecondaryIndexes=[
                 {
                     "IndexName": "lsi",
-                    "KeySchema": [{"AttributeName": "lsi_pk", "KeyType": "HASH"}],
+                    "KeySchema": [
+                        {"AttributeName": "lsi_pk", "KeyType": "HASH"},
+                        {"AttributeName": "sk", "KeyType": "RANGE"},
+                    ],
                     "Projection": {"ProjectionType": "ALL"},
                 }
             ],
@@ -193,6 +212,9 @@ class TestDynamoTableIndex:
                 "data": "value2",
                 "preserve": "p2",
                 "preserve2": "p3",
+                "gsi_pk": "gsi_pk",
+                "gsi_sk": "gsi_sk",
+                "lsi_pk": "lsi_pk",
             }
         )
         assert list(
@@ -206,6 +228,9 @@ class TestDynamoTableIndex:
                 "data": "value2",
                 "preserve": "p1",
                 "preserve2": "p3",
+                "gsi_pk": "gsi_pk",
+                "gsi_sk": "gsi_sk",
+                "lsi_pk": "lsi_pk",
                 "dt_created": "utcnow",
                 "dt_modified": "utcnow",
             }
@@ -221,6 +246,9 @@ class TestDynamoTableIndex:
                                 "data": "value2",
                                 "preserve": "p1",
                                 "preserve2": "p3",
+                                "gsi_pk": "gsi_pk",
+                                "gsi_sk": "gsi_sk",
+                                "lsi_pk": "lsi_pk",
                                 "dt_created": "utcnow",
                                 "dt_modified": "utcnow",
                             }
@@ -233,6 +261,36 @@ class TestDynamoTableIndex:
         )
 
         assert list(self.result.batch_upsert(DataTable()).get_records()) == []
+
+        with pytest.raises(DynamoTableError):
+            self.result.batch_upsert(
+                DataTable().add_record(
+                    {
+                        "pk": "my_pk",
+                        "sk": "my_sk",
+                        "data": "value2",
+                        "preserve": "p2",
+                        "preserve2": "p3",
+                        "gsi_pk": "gsi_pk",
+                        "gsi_sk": "gsi_sk",
+                    }
+                )
+            )
+        with pytest.raises(DynamoTableError):
+            self.result.batch_upsert(
+                DataTable().add_record(
+                    {
+                        "pk": "my_pk",
+                        "sk": "my_sk",
+                        "data": "value2",
+                        "preserve": "p2",
+                        "preserve2": "p3",
+                        "gsi_pk": "gsi_pk",
+                        "gsi_sk": "gsi_sk",
+                        "lsi_pk": 12,
+                    }
+                )
+            )
 
     def test_get_record(self):
         self.table_mock.get_item.return_value = {
