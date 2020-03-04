@@ -51,10 +51,11 @@ table_index.as_dynamodb_dict()
 #### Attributes
 
 - `PRIMARY` - Special name for primary table index: `'primary'`
+- `TYPES_MAP` - Map to python types: `{'S': str, 'N': int, 'B': bytes}`
 
 ### DynamoTableIndex().as_attribute_definitions
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L124)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L127)
 
 ```python
 def as_attribute_definitions() -> List[ClientCreateTableAttributeDefinitionsTypeDef]:
@@ -62,7 +63,7 @@ def as_attribute_definitions() -> List[ClientCreateTableAttributeDefinitionsType
 
 ### DynamoTableIndex().as_global_secondary_index
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L65)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L68)
 
 ```python
 def as_global_secondary_index() -> ClientCreateTableGlobalSecondaryIndexesTypeDef:
@@ -80,7 +81,7 @@ A dict with index data.
 
 ### DynamoTableIndex().as_key_schema
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L109)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L112)
 
 ```python
 def as_key_schema() -> List[ClientCreateTableKeySchemaTypeDef]:
@@ -94,7 +95,7 @@ A dict with index data.
 
 ### DynamoTableIndex().as_local_secondary_index
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L87)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L90)
 
 ```python
 def as_local_secondary_index() -> ClientCreateTableLocalSecondaryIndexesTypeDef:
@@ -112,7 +113,7 @@ A dict with index data.
 
 ### DynamoTableIndex().get_query_data
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L145)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L148)
 
 ```python
 def get_query_data(
@@ -134,7 +135,7 @@ Query-ready data.
 
 ### DynamoTableIndex().name
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L55)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L58)
 
 ```python
 @property
