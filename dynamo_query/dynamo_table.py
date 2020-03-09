@@ -245,6 +245,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             attribute_types[attribute_definition["AttributeName"]] = attribute_type
         return attribute_types
 
+    # pylint: disable=no-self-use
     def normalize_record(self, record: DynamoRecord) -> DynamoRecord:
         """
         Modify record before upsert.
