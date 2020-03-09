@@ -642,8 +642,6 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         """
         set_if_not_exists = set(set_if_not_exists_keys)
         set_if_not_exists.add("dt_created")
-        update_keys = set(record.keys()) - self.table_keys - set_if_not_exists
-        update_keys.add("dt_modified")
 
         partition_key = self._get_partition_key(record)
         sort_key = self._get_sort_key(record)
@@ -663,6 +661,8 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             },
         )
         new_record = self.normalize_record(new_record)
+        update_keys = set(new_record.keys()) - self.table_keys - set_if_not_exists
+        update_keys.add("dt_modified")
         result: DataTable[DynamoRecord] = (
             DynamoQuery.build_update_item(
                 condition_expression=condition_expression, logger=self._logger,
