@@ -1,5 +1,5 @@
 black==19.10b0
-boto3_stubs[dynamodb,application-autoscaling]==1.12.5.0
+boto3_stubs[dynamodb,application-autoscaling]==1.12.16.0
 codecov
 handsdown
 mypy
