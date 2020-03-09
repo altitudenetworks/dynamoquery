@@ -215,6 +215,7 @@ class TestDynamoTable:
                 "gsi_pk": "gsi_pk",
                 "gsi_sk": "gsi_sk",
                 "lsi_pk": "lsi_pk",
+                "dt_created": None,
             }
         )
         assert list(

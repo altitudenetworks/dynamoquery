@@ -534,7 +534,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
                     **record,
                     **updated_record,
                     **preserve_keys_record,
-                    "dt_created": record.get("dt_created", now_str),
+                    "dt_created": record.get("dt_created") or now_str,
                     "dt_modified": now_str,
                 },
             )
