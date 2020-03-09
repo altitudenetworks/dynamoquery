@@ -245,7 +245,28 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             attribute_types[attribute_definition["AttributeName"]] = attribute_type
         return attribute_types
 
-    def _validate_record_attributes(self, record: DynamoRecord) -> None:
+    def normalize_record(self, record: DynamoRecord) -> DynamoRecord:
+        """
+        Modify record before upsert.
+
+        Arguments:
+            record -- Record for upsert.
+
+        Returns:
+            Normalized record.
+        """
+        return record
+
+    def validate_record_attributes(self, record: DynamoRecord) -> None:
+        """
+        Check that all index keys are set correctly in record.
+
+        Arguments:
+            record -- Record for upsert.
+
+        Raises:
+            DynamoTableError -- If index key is missing.
+        """
         for attribute_name, attribute_type in self._attribute_types.items():
             if attribute_name not in record:
                 raise DynamoTableError(
@@ -516,7 +537,8 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
                     "dt_modified": now_str,
                 },
             )
-            self._validate_record_attributes(new_record)
+            self.normalize_record(new_record)
+            self.validate_record_attributes(new_record)
             update_data_table.add_record(new_record)
 
         results: DataTable[DynamoRecord] = DynamoQuery.build_batch_update_item(
@@ -628,22 +650,25 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         now = datetime.datetime.utcnow()
         now_str = now.isoformat()
 
+        new_record = cast(
+            DynamoRecord,
+            {
+                self.partition_key_name: partition_key,
+                self.sort_key_name: sort_key,
+                **record,
+                **(extra_data or {}),
+                "dt_modified": now_str,
+                "dt_created": now_str,
+            },
+        )
+        new_record = self.normalize_record(new_record)
         result: DataTable[DynamoRecord] = (
             DynamoQuery.build_update_item(
                 condition_expression=condition_expression, logger=self._logger,
             )
             .update(update=update_keys, set_if_not_exists=set_if_not_exists)
             .table(table_keys=self.table_keys, table=self.table,)
-            .execute_dict(
-                {
-                    self.partition_key_name: partition_key,
-                    self.sort_key_name: sort_key,
-                    **record,
-                    **(extra_data or {}),
-                    "dt_modified": now_str,
-                    "dt_created": now_str,
-                }
-            )
+            .execute_dict(cast(Dict[str, Any], new_record))
         )
         return result.get_record(0)
 
