@@ -883,3 +883,15 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
 
         for record in self._yield_from_query(query, data=query_data, limit=limit):
             yield record
+
+    def wait_until_exists(self) -> None:
+        """
+        Proxy method for `resource.Table.wait_until_exists`.
+        """
+        self.table.wait_until_exists()
+
+    def wait_until_not_exists(self) -> None:
+        """
+        Proxy method for `resource.Table.wait_until_not_exists`.
+        """
+        self.table.wait_until_not_exists()

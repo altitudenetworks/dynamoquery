@@ -388,3 +388,11 @@ class TestDynamoTable:
 
         with pytest.raises(DynamoTableError):
             list(self.result.query(limit=1))
+
+    def test_wait_until_exists(self):
+        self.result.wait_until_exists()
+        self.table_mock.wait_until_exists.assert_called_with()
+
+    def test_wait_until_not_exists(self):
+        self.result.wait_until_not_exists()
+        self.table_mock.wait_until_not_exists.assert_called_with()
