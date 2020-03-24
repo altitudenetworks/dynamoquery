@@ -21,6 +21,8 @@
         - [DynamoTable().table](#dynamotabletable)
         - [DynamoTable().upsert_record](#dynamotableupsert_record)
         - [DynamoTable().validate_record_attributes](#dynamotablevalidate_record_attributes)
+        - [DynamoTable().wait_until_exists](#dynamotablewait_until_exists)
+        - [DynamoTable().wait_until_not_exists](#dynamotablewait_until_not_exists)
     - [DynamoTableError](#dynamotableerror)
 
 ## DynamoTable
@@ -685,6 +687,26 @@ Check that all index keys are set correctly in record.
 #### See also
 
 - [DynamoRecord](#dynamorecord)
+
+### DynamoTable().wait_until_exists
+
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L887)
+
+```python
+def wait_until_exists() -> None:
+```
+
+Proxy method for `resource.Table.wait_until_exists`.
+
+### DynamoTable().wait_until_not_exists
+
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L893)
+
+```python
+def wait_until_not_exists() -> None:
+```
+
+Proxy method for `resource.Table.wait_until_not_exists`.
 
 ## DynamoTableError
 
