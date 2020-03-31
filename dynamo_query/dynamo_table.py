@@ -538,9 +538,9 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
                     "dt_modified": now_str,
                 },
             )
-            self.normalize_record(new_record)
-            self.validate_record_attributes(new_record)
-            update_data_table.add_record(new_record)
+            normalized_record = self.normalize_record(new_record)
+            self.validate_record_attributes(normalized_record)
+            update_data_table.add_record(normalized_record)
 
         results: DataTable[DynamoRecord] = DynamoQuery.build_batch_update_item(
             logger=self._logger,
