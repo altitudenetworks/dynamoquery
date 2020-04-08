@@ -73,7 +73,7 @@ def read_files():
 
 - `NOT_SET` - `SentinelValue` for not provided arguments.
 - `default_exceptions` - A list of expected exceptions. By default, accepts all.
-- `default_num_tries` - Default number of tries - 3
+- `default_num_tries` - Default number of tries - 5
 - `default_delay` - Default delay - 1 second
 - `default_log_level` - `Logger.ERROR`
 - `default_fallback_value` - `NOT_SET`
