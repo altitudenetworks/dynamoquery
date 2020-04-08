@@ -323,17 +323,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             filter_expression -- Query filter expression.
             limit -- Max number of results.
         """
-        if partition_key is None and partition_key_prefix is None:
-            records = self.scan(projection=self.table_keys)
-        elif partition_key is None and partition_key_prefix is not None:
-            records = self.scan(
-                filter_expression=ConditionExpression(
-                    self.partition_key_name, operator=Operator.BEGINS_WITH.value
-                ),
-                data={self.partition_key_name: partition_key_prefix},
-                projection=self.table_keys
-            )
-        else:
+        if partition_key is not None:
             records = self.query(
                 partition_key=partition_key,
                 index=index,
@@ -343,6 +333,16 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
                 limit=limit,
                 projection=self.table_keys,
             )
+        elif partition_key is None and partition_key_prefix is not None:
+            records = self.scan(
+                filter_expression=ConditionExpression(
+                    self.partition_key_name, operator="begins_with"
+                ),
+                data={self.partition_key_name: partition_key_prefix},
+                projection=self.table_keys
+            )
+        else:
+            records = self.scan(projection=self.table_keys)
 
         existing_records = DataTable[DynamoRecord]().add_record(*records)
 
