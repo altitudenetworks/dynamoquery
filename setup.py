@@ -15,23 +15,19 @@ URL = f"https://github.com/altitudenetworks/{ROOT_PATH.name}"
 if not README_PATH.exists():
     raise ValueError("README.md file does not exists")
 
-try:
-    import __version__ as v
-
-    version = v.__version__
-except ImportError:
-    raise ValueError("__version__.py file does not exists")
+version = (ROOT_PATH / "dynamo_query" / "version.txt").read_text().strip()
 
 #######################################
 # USER INPUTS:
-REQUIRES_PYTHON = ">=3.6"
+REQUIRES_PYTHON = ">=3.6.10"
 AUTHOR = "Altitude Networks Engineering Team"
 AUTHOR_EMAIL = "engineering@altitudenetworks.com"
 
 # Required Packages
 REQUIRED = [
-    "botocore",
-    "typing_extensions",
+    i.strip()
+    for i in (ROOT_PATH / "requirements.txt").read_text().split("\n")
+    if i.strip()
 ]
 
 # EXTERNAL DEPENDENCY LINKS
@@ -39,6 +35,8 @@ DEPENDENCY_LINKS = []  # type: List[str]
 
 # Optional Packages
 EXTRAS = {}  # type: Dict[str, str]
+
+PACKAGE_DATA = {"dynamo_query": ["version.txt"]}
 
 
 setup(
@@ -53,6 +51,7 @@ setup(
     packages=find_packages(
         exclude=["tests", "*.tests", "*.tests.*", "tests.*", "__pycache__"]
     ),
+    package_data=PACKAGE_DATA,
     python_requires=REQUIRES_PYTHON,
     install_requires=REQUIRED,
     extras_require=EXTRAS,

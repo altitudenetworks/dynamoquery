@@ -1,0 +1,2 @@
+botocore
+typing_extensions
