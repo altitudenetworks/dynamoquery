@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-- `clear_table` error if `partition_key_prefix` is used
+- `DynamoTable.clear_table` error if `partition_key_prefix` is used
 - On fail, requests are repeated 5 times (was 3)
 - Check for valid operators in `DynamoTable.query` opertaion
 
