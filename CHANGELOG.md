@@ -9,11 +9,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # [Released]
 
-## [1.0.2] - 2020-04-08
+## [1.1.0] - 2020-04-08
+
+### Changed
+
+- `partiton_key` argument is mandatory in `DynamoTable.query`
 
 ### Fixed
 
-- `clear_table` error if `partition_key` prefix is used
+- `clear_table` error if `partition_key_prefix` is used
 - On fail, requests are repeated 5 times (was 3)
-- Check for valid operators in `query` oprtaion
+- Check for valid operators in `DynamoTable.query` opertaion
 
