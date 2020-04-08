@@ -29,7 +29,7 @@ from dynamo_query.types import (
     CreateTableOutputTypeDef,
 )
 from dynamo_query.lazy_logger import LazyLogger
-from dynamo_query import json_tools
+from dynamo_query import json_tools, Operator
 
 __all__ = ("DynamoTable", "DynamoTableError")
 
@@ -325,10 +325,17 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         """
         if partition_key is None and partition_key_prefix is None:
             records = self.scan(projection=self.table_keys)
+        elif partition_key is None and partition_key_prefix is not None:
+            records = self.scan(
+                filter_expression=ConditionExpression(
+                    self.partition_key_name, operator=Operator.BEGINS_WITH.value
+                ),
+                data={self.partition_key_name: partition_key_prefix},
+                projection=self.table_keys
+            )
         else:
             records = self.query(
                 partition_key=partition_key,
-                partition_key_prefix=partition_key_prefix,
                 index=index,
                 sort_key=sort_key,
                 sort_key_prefix=sort_key_prefix,
@@ -779,9 +786,8 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
 
     def query(
         self,
+        partition_key: str,
         index: DynamoTableIndex = primary_index,
-        partition_key: Optional[str] = None,
-        partition_key_prefix: Optional[str] = None,
         sort_key: Optional[str] = None,
         sort_key_prefix: Optional[str] = None,
         filter_expression: Optional[ConditionExpression] = None,
@@ -831,7 +837,6 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             partition_key -- Partition key value.
             index -- DynamoTableIndex instance, primary index is used if not provided.
             sort_key -- Sort key value.
-            partition_key_prefix -- Partition key prefix value.
             sort_key_prefix -- Sort key prefix value.
             filter_expression -- Query filter expression.
             scan_index_forward -- Whether to scan index from the beginning.
@@ -842,17 +847,14 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             Matching record.
         """
         sort_key_operator: Literal["=", "begins_with"] = "="
-        partition_key_operator: Literal["=", "begins_with"] = "="
+        partition_key_operator: Literal["="] = "="
         if sort_key_prefix is not None:
             sort_key_operator = "begins_with"
             sort_key = sort_key_prefix
-        if partition_key_prefix is not None:
-            partition_key_operator = "begins_with"
-            partition_key = partition_key_prefix
 
         if partition_key is None:
             raise DynamoTableError(
-                "Either partition_key  or partition_key_prefix should be set."
+                "partition_key should be set."
             )
 
         key_condition_expression: Union[

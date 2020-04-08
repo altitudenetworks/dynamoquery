@@ -374,20 +374,20 @@ class TestDynamoTable:
         self.table_mock.reset_mock()
         list(
             self.result.query(
-                partition_key_prefix="pk_prefix", sort_key_prefix="sk_prefix", limit=1,
+                partition_key="pk", sort_key_prefix="sk_prefix", limit=1,
             )
         )
         self.table_mock.query.assert_called_with(
-            KeyConditionExpression="begins_with(#aaa, :aaa) AND begins_with(#aab, :aab)",
+            KeyConditionExpression="#aaa = :aaa AND begins_with(#aab, :aab)",
             ConsistentRead=False,
             ScanIndexForward=True,
             ExpressionAttributeNames={"#aaa": "pk", "#aab": "sk"},
-            ExpressionAttributeValues={":aaa": "pk_prefix", ":aab": "sk_prefix"},
+            ExpressionAttributeValues={":aaa": "pk", ":aab": "sk_prefix"},
             Limit=1,
         )
 
         with pytest.raises(DynamoTableError):
-            list(self.result.query(limit=1))
+            list(self.result.query(partition_key=None, limit=1))
 
     def test_wait_until_exists(self):
         self.result.wait_until_exists()
