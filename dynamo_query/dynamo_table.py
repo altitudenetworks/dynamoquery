@@ -29,7 +29,7 @@ from dynamo_query.types import (
     CreateTableOutputTypeDef,
 )
 from dynamo_query.lazy_logger import LazyLogger
-from dynamo_query import json_tools, Operator
+from dynamo_query import json_tools
 
 __all__ = ("DynamoTable", "DynamoTableError")
 
