@@ -11,7 +11,7 @@ from dynamo_query.expressions import (
     BaseConditionExpression,
 )
 from dynamo_query.enums import QueryType
-from dynamo_query.types import (
+from dynamo_query.dynamo_query_types import (
     ExclusiveStartKey,
     Table,
     TableKeys,

@@ -22,7 +22,7 @@ from dynamo_query.data_table import DataTable
 from dynamo_query.dynamo_query import DynamoQuery
 from dynamo_query.dynamo_table_index import DynamoTableIndex
 from dynamo_query.expressions import ConditionExpression, ConditionExpressionGroup
-from dynamo_query.types import (
+from dynamo_query.dynamo_query_types import (
     DynamoDBClient,
     Table,
     AttributeDefinitionTypeDef,
@@ -339,7 +339,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
                     self.partition_key_name, operator="begins_with"
                 ),
                 data={self.partition_key_name: partition_key_prefix},
-                projection=self.table_keys
+                projection=self.table_keys,
             )
         else:
             records = self.scan(projection=self.table_keys)
@@ -853,9 +853,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             sort_key = sort_key_prefix
 
         if partition_key is None:
-            raise DynamoTableError(
-                "partition_key should be set."
-            )
+            raise DynamoTableError("partition_key should be set.")
 
         key_condition_expression: Union[
             ConditionExpression, ConditionExpressionGroup

@@ -1,7 +1,7 @@
 from typing import Dict, Optional, List
 from typing_extensions import Literal
 
-from dynamo_query.types import (
+from dynamo_query.dynamo_query_types import (
     GlobalSecondaryIndexTypeDef,
     LocalSecondaryIndexTypeDef,
     KeySchemaElementTypeDef,

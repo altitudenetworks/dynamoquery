@@ -7,7 +7,7 @@ import logging
 from dynamo_query.utils import chunkify
 from dynamo_query.data_table import DataTable
 from dynamo_query.boto3_retrier import Boto3Retrier
-from dynamo_query.types import (
+from dynamo_query.dynamo_query_types import (
     ExpressionMap,
     FormatDict,
     TableKeys,

@@ -6,7 +6,7 @@ from typing import Iterable, List, Union, Any, Set, Tuple, Dict, TypeVar
 
 from dynamo_query.utils import get_format_keys
 from dynamo_query.enums import Operator
-from dynamo_query.types import (
+from dynamo_query.dynamo_query_types import (
     ConditionExpressionOperatorStr,
     ConditionExpressionJoinOperatorStr,
 )
