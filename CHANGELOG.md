@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # [Released]
 
+## [1.2.0] - 2020-04-16
+
+### Changed
+
+- `DataTable` is a regular dictionary, used to be a `defaultdict`
+
+### Fixed
+
+- Circular error due to bad naming
+
 ## [1.1.0] - 2020-04-08
 
 ### Changed
@@ -18,4 +28,3 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `DynamoTable.clear_table` error if `partition_key_prefix` is used
 - On fail, requests are repeated 5 times (was 3)
 - Check for valid operators in `DynamoTable.query` opertaion
-
