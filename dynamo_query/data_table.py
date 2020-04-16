@@ -33,9 +33,9 @@ class DataTableError(BaseException):
     """
 
 
-class DataTable(defaultdict, Generic[RecordType]):
+class DataTable(dict, Generic[RecordType]):
     """
-    Defaultdict that has lists as values
+    Dictionary that has lists as values
 
     Examples:
 
@@ -83,7 +83,7 @@ class DataTable(defaultdict, Generic[RecordType]):
     NOT_SET_RESOLVED_VALUE: Any = None
 
     def __init__(self, base_dict: Optional[Dict[str, List[Any]]] = None) -> None:
-        super(DataTable, self).__init__(list)
+        super(DataTable, self).__init__()
         if base_dict:
             if not isinstance(base_dict, dict):
                 raise DataTableError(

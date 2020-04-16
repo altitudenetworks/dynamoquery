@@ -14,18 +14,13 @@ class TestDataTable:
         assert data_table["a"] is not base_dict["a"]
         assert data_table["a"] == [1, 2, 3]
         assert data_table["b"] == [1, 2]
-        assert data_table["c"] == []
-        assert data_table == {"a": [1, 2, 3], "b": [1, 2], "c": []}
+        with pytest.raises(KeyError):
+            _ = data_table["c"]
+        assert data_table == {"a": [1, 2, 3], "b": [1, 2]}
 
         assert not DataTable.create()
         assert not DataTable.create({"a": []})
         assert DataTable.create({"a": [1]})
-
-        data_table = DataTable({})
-        assert data_table["a"] == []
-
-        data_table = DataTable()
-        assert data_table["a"] == []
 
         with pytest.raises(DataTableError):
             DataTable.create({"a": "b"})

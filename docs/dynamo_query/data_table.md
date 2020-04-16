@@ -33,11 +33,11 @@
 [[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L36)
 
 ```python
-class DataTable(defaultdict, Generic[RecordType]):
+class DataTable(dict, Generic[RecordType]):
     def __init__(base_dict: Optional[Dict[str, List[Any]]] = None) -> None:
 ```
 
-Defaultdict that has lists as values
+Dictionary that has lists as values
 
 #### Examples
 
