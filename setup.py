@@ -49,7 +49,7 @@ setup(
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     packages=find_packages(
-        exclude=["tests", "*.tests", "*.tests.*", "tests.*", "__pycache__"]
+        exclude=["tests", "*.tests", "*.tests.*", "tests.*", "__pycache__", "examples"]
     ),
     package_data=PACKAGE_DATA,
     python_requires=REQUIRES_PYTHON,

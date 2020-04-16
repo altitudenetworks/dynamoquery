@@ -77,7 +77,7 @@ A dict with index data.
 
 #### See also
 
-- [GlobalSecondaryIndexTypeDef](types.md#globalsecondaryindextypedef)
+- [GlobalSecondaryIndexTypeDef](dynamo_query_types.md#globalsecondaryindextypedef)
 
 ### DynamoTableIndex().as_key_schema
 
@@ -109,7 +109,7 @@ A dict with index data.
 
 #### See also
 
-- [LocalSecondaryIndexTypeDef](types.md#localsecondaryindextypedef)
+- [LocalSecondaryIndexTypeDef](dynamo_query_types.md#localsecondaryindextypedef)
 
 ### DynamoTableIndex().get_query_data
 

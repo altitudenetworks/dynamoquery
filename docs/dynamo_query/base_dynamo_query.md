@@ -77,7 +77,7 @@ def client() -> DynamoDBClient:
 
 #### See also
 
-- [DynamoDBClient](types.md#dynamodbclient)
+- [DynamoDBClient](dynamo_query_types.md#dynamodbclient)
 
 ### BaseDynamoQuery().has_more_results
 
@@ -104,7 +104,7 @@ def table_keys() -> TableKeys:
 
 #### See also
 
-- [TableKeys](types.md#tablekeys)
+- [TableKeys](dynamo_query_types.md#tablekeys)
 
 ### BaseDynamoQuery().table_resource
 
@@ -117,7 +117,7 @@ def table_resource() -> Table:
 
 #### See also
 
-- [Table](types.md#table)
+- [Table](dynamo_query_types.md#table)
 
 ### BaseDynamoQuery().was_executed
 
@@ -141,4 +141,4 @@ True if query was executed.
 class DynamoQueryError(Exception):
 ```
 
-Main error for [DynamoQuery](dynamo_query.md#dynamoquery) class.
+Main error for `dynamo_query.dynamo_query.DynamoQuery` class.

@@ -19,7 +19,7 @@ from typing import (
 from typing_extensions import Literal
 
 from dynamo_query.data_table import DataTable
-from dynamo_query.dynamo_query import DynamoQuery
+from dynamo_query.dynamo_query_main import DynamoQuery
 from dynamo_query.dynamo_table_index import DynamoTableIndex
 from dynamo_query.expressions import ConditionExpression, ConditionExpressionGroup
 from dynamo_query.dynamo_query_types import (

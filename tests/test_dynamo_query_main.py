@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, ANY
 
 import pytest
 
-from dynamo_query.dynamo_query import DynamoQuery, DynamoQueryError
+from dynamo_query.dynamo_query_main import DynamoQuery, DynamoQueryError
 from dynamo_query.data_table import DataTable
 from dynamo_query.expressions import (
     ConditionExpression,

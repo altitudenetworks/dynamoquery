@@ -284,7 +284,7 @@ def client() -> DynamoDBClient:
 
 #### See also
 
-- [DynamoDBClient](types.md#dynamodbclient)
+- [DynamoDBClient](dynamo_query_types.md#dynamodbclient)
 
 ### DynamoTable().create_table
 
@@ -308,7 +308,7 @@ UserTable.create_table()
 
 #### See also
 
-- [CreateTableOutputTypeDef](types.md#createtableoutputtypedef)
+- [CreateTableOutputTypeDef](dynamo_query_types.md#createtableoutputtypedef)
 
 ### DynamoTable().delete_record
 
@@ -606,7 +606,7 @@ Override this method to get DynamoDB Table resource.
 
 #### See also
 
-- [Table](types.md#table)
+- [Table](dynamo_query_types.md#table)
 
 ### DynamoTable().upsert_record
 
@@ -688,7 +688,7 @@ Check that all index keys are set correctly in record.
 
 ### DynamoTable().wait_until_exists
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L889)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L887)
 
 ```python
 def wait_until_exists() -> None:
@@ -698,7 +698,7 @@ Proxy method for `resource.Table.wait_until_exists`.
 
 ### DynamoTable().wait_until_not_exists
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L895)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L893)
 
 ```python
 def wait_until_not_exists() -> None:

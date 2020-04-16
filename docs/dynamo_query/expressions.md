@@ -49,7 +49,7 @@ ConditionExpression(key='name', operator=Operator.IN, value='test').render()
 #### See also
 
 - [BaseConditionExpression](#baseconditionexpression)
-- [ConditionExpressionOperatorStr](types.md#conditionexpressionoperatorstr)
+- [ConditionExpressionOperatorStr](dynamo_query_types.md#conditionexpressionoperatorstr)
 
 ### ConditionExpression().get_format_keys
 
