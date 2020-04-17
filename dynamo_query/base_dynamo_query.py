@@ -6,7 +6,6 @@ import logging
 
 from dynamo_query.utils import chunkify
 from dynamo_query.data_table import DataTable
-from dynamo_query.boto3_retrier import Boto3Retrier
 from dynamo_query.dynamo_query_types import (
     ExpressionMap,
     FormatDict,
@@ -438,43 +437,36 @@ class BaseDynamoQuery(LazyLogger):
 
         return data_table
 
-    @Boto3Retrier()
     def _batch_get_item(self, **kwargs: Any) -> BatchGetItemOutputTypeDef:
         response = self.client.batch_get_item(**kwargs)
         self._raw_responses.append(response)
         return response
 
-    @Boto3Retrier()
     def _batch_write_item(self, **kwargs: Any) -> BatchWriteItemOutputTypeDef:
         response = self.client.batch_write_item(**kwargs)
         self._raw_responses.append(response)
         return response
 
-    @Boto3Retrier()
     def _execute_get_item(self, **kwargs: Any) -> GetItemOutputTypeDef:
         response = self.table_resource.get_item(**kwargs)
         self._raw_responses.append(response)
         return response
 
-    @Boto3Retrier()
     def _execute_update_item(self, **kwargs: Any) -> UpdateItemOutputTypeDef:
         response = self.table_resource.update_item(**kwargs)
         self._raw_responses.append(response)
         return response
 
-    @Boto3Retrier()
     def _execute_delete_item(self, **kwargs: Any) -> DeleteItemOutputTypeDef:
         response = self.table_resource.delete_item(**kwargs)
         self._raw_responses.append(response)
         return response
 
-    @Boto3Retrier()
     def _execute_query(self, **kwargs: Any) -> QueryOutputTypeDef:
         response = self.table_resource.query(**kwargs)
         self._raw_responses.append(response)
         return response
 
-    @Boto3Retrier()
     def _execute_scan(self, **kwargs: Any) -> ScanOutputTypeDef:
         response = self.table_resource.scan(**kwargs)
         self._raw_responses.append(response)
