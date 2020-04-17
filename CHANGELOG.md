@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # [Released]
 
+## [2.0.0] - 2020-04-17
+
+### Removed
+
+- `Boto3Retrier` class
+- `tests/test_boto3_retrier.py` [#23](https://github.com/altitudenetworks/dynamoquery/pull/23)
+
 ## [1.2.0] - 2020-04-16
 
 ### Changed
