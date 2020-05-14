@@ -81,6 +81,18 @@ def main() -> None:
         )
     )
 
+    print("Using iterators for batch methods:")
+    record = {"pk": "my_pk", "sk": "my_sk", "value": "new"}
+    records = (i for i in [record])
+    for full_record in user_dynamo_table.batch_get_records(records):
+        print(full_record)
+
+    for updated_record in user_dynamo_table.batch_upsert_records(records):
+        print(updated_record)
+
+    for deleted_record in user_dynamo_table.batch_upsert_records(records):
+        print(deleted_record)
+
 
 if __name__ == "__main__":
     main()
