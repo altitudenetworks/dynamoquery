@@ -33,7 +33,7 @@ jobs:
           pylint dynamo_query
 
   tests:
-    name: Code style
+    name: Unit tests
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
