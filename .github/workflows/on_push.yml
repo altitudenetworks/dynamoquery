@@ -1,6 +1,12 @@
 name: Lint and test changes
 
-on: [push]
+on:
+  push:
+    paths-ignore:
+      - "docs/**"
+      - "dynamo_query/version.txt"
+      - "CHANGELOG.md"
+      - "README.md"
 
 jobs:
   code-style:
