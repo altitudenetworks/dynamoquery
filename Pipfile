@@ -12,8 +12,6 @@ mypy = "*"
 vulture = "*"
 handsdown = "*"
 "boto3_stubs[dynamodb,application-autoscaling]" = "*"
-twine = "*"
-wheel = "*"
 
 [packages]
 dynamoquery = {path = ".",editable = true}
