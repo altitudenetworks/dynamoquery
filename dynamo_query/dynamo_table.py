@@ -340,7 +340,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
                 limit=limit,
                 projection=self.table_keys,
             )
-        elif partition_key is None and partition_key_prefix is not None:
+        elif partition_key_prefix is not None:
             records = self.scan(
                 filter_expression=ConditionExpression(
                     self.partition_key_name, operator="begins_with"
@@ -352,8 +352,6 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             records = self.scan(projection=self.table_keys)
 
         for records_chunk in chunkify(records, self.max_batch_size):
-            if not records:
-                continue
             existing_records = DataTable[DynamoRecord]().add_record(*records_chunk)
             self.DynamoQueryClass.build_batch_delete_item(logger=self._logger).table(
                 table_keys=self.table_keys, table=self.table,

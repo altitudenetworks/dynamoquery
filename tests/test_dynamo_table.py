@@ -132,6 +132,24 @@ class TestDynamoTable:
             ReturnItemCollectionMetrics="NONE",
         )
 
+        self.result.clear_table(None, partition_key_prefix="prefix")
+        self.table_mock.scan.assert_called_with(
+            FilterExpression="begins_with(#aaa, :aaa)",
+            ProjectionExpression="#aaa, #aab",
+            ExpressionAttributeNames={"#aaa": "pk", "#aab": "sk"},
+            ExpressionAttributeValues={":aaa": "prefix"},
+            Limit=1000,
+        )
+        self.client_mock.batch_write_item.assert_called_with(
+            RequestItems={
+                "my_table_name": [
+                    {"DeleteRequest": {"Key": {"pk": "my_pk", "sk": "sk"}}}
+                ]
+            },
+            ReturnConsumedCapacity="NONE",
+            ReturnItemCollectionMetrics="NONE",
+        )
+
         self.result.clear_table(None)
         self.table_mock.scan.assert_called_with(
             ExpressionAttributeNames={"#aaa": "pk", "#aab": "sk"},
