@@ -5,6 +5,8 @@ import pytest
 
 from dynamo_query.data_table import DataTable
 from dynamo_query.dynamo_table import DynamoTable, DynamoTableError
+from dynamo_query.dynamo_table_attributes import DynamoTableAttributes
+from dynamo_query.dynamo_table_manager import DynamoTableManager
 from dynamo_query.expressions import ConditionExpression
 from dynamo_query.dynamo_table_index import DynamoTableIndex
 
@@ -49,10 +51,20 @@ class TestDynamoTable:
         table_mock.meta.client = client_mock
         self.table_mock = table_mock
 
-        class MyDynamoTable(DynamoTable):
+        class MyDynamoTableAttributes(DynamoTableAttributes):
             global_secondary_indexes = [DynamoTableIndex("gsi", "gsi_pk", "gsi_sk")]
             local_secondary_indexes = [DynamoTableIndex("lsi", "lsi_pk", "sk")]
 
+            @property
+            def table_name(self) -> str:
+                return "my_table_name"
+
+        class MyDynamoTableManager(DynamoTableManager):
+            @property
+            def table(self):
+                return table_mock
+
+        class MyDynamoTable(DynamoTable):
             @property
             def table(self):
                 return table_mock
@@ -63,17 +75,18 @@ class TestDynamoTable:
             def get_sort_key(self, record):
                 return record["sk_column"]
 
-        self.result = MyDynamoTable()
+        self.result = MyDynamoTable(table_attributes=MyDynamoTableAttributes())
+        self.manager = MyDynamoTableManager(table_attributes=MyDynamoTableAttributes())
 
     def test_init(self):
-        assert self.result.table.name == "my_table_name"
+        assert self.manager.table.name == "my_table_name"
 
     def test_delete_table(self):
-        self.result.delete_table()
+        self.manager.delete_table()
         self.table_mock.delete.assert_called_once_with()
 
     def test_create_table(self):
-        self.result.create_table()
+        self.manager.create_table()
         self.client_mock.create_table.assert_called_once_with(
             AttributeDefinitions=[
                 {"AttributeName": "pk", "AttributeType": "S"},
@@ -110,46 +123,82 @@ class TestDynamoTable:
         )
 
     def test_clear_table(self):
-        self.table_mock.query.return_value = {"Items": [{"pk": "my_pk", "sk": "sk"}]}
-        self.table_mock.scan.return_value = {"Items": [{"pk": "my_pk", "sk": "sk"}]}
-        self.result.clear_table("my_pk")
-        self.table_mock.query.assert_called_with(
-            ConsistentRead=False,
-            ExpressionAttributeNames={"#aaa": "pk", "#aab": "sk"},
-            ExpressionAttributeValues={":aaa": "my_pk"},
-            KeyConditionExpression="#aaa = :aaa",
-            Limit=1000,
-            ProjectionExpression="#aaa, #aab",
-            ScanIndexForward=True,
+        self.manager.clear_table()
+        self.table_mock.delete.assert_called_once_with()
+        self.client_mock.create_table.assert_called_once_with(
+            AttributeDefinitions=[
+                {"AttributeName": "pk", "AttributeType": "S"},
+                {"AttributeName": "sk", "AttributeType": "S"},
+                {"AttributeName": "gsi_pk", "AttributeType": "S"},
+                {"AttributeName": "gsi_sk", "AttributeType": "S"},
+                {"AttributeName": "lsi_pk", "AttributeType": "S"},
+            ],
+            GlobalSecondaryIndexes=[
+                {
+                    "IndexName": "gsi",
+                    "KeySchema": [
+                        {"AttributeName": "gsi_pk", "KeyType": "HASH"},
+                        {"AttributeName": "gsi_sk", "KeyType": "RANGE"},
+                    ],
+                    "Projection": {"ProjectionType": "ALL"},
+                }
+            ],
+            KeySchema=[
+                {"AttributeName": "pk", "KeyType": "HASH"},
+                {"AttributeName": "sk", "KeyType": "RANGE"},
+            ],
+            LocalSecondaryIndexes=[
+                {
+                    "IndexName": "lsi",
+                    "KeySchema": [
+                        {"AttributeName": "lsi_pk", "KeyType": "HASH"},
+                        {"AttributeName": "sk", "KeyType": "RANGE"},
+                    ],
+                    "Projection": {"ProjectionType": "ALL"},
+                }
+            ],
+            TableName="my_table_name",
         )
-        self.client_mock.batch_write_item.assert_called_with(
-            RequestItems={
-                "my_table_name": [
-                    {"DeleteRequest": {"Key": {"pk": "my_pk", "sk": "sk"}}}
-                ]
-            },
-            ReturnConsumedCapacity="NONE",
-            ReturnItemCollectionMetrics="NONE",
-        )
-
-        self.result.clear_table(None)
-        self.table_mock.scan.assert_called_with(
-            ExpressionAttributeNames={"#aaa": "pk", "#aab": "sk"},
-            Limit=1000,
-            ProjectionExpression="#aaa, #aab",
-        )
-        self.client_mock.batch_write_item.assert_called_with(
-            RequestItems={
-                "my_table_name": [
-                    {"DeleteRequest": {"Key": {"pk": "my_pk", "sk": "sk"}}}
-                ]
-            },
-            ReturnConsumedCapacity="NONE",
-            ReturnItemCollectionMetrics="NONE",
-        )
-
-        self.table_mock.scan.return_value = {"Items": []}
-        self.result.clear_table(None)
+        # self.table_mock.query.return_value = {"Items": [{"pk": "my_pk", "sk": "sk"}]}
+        # self.table_mock.scan.return_value = {"Items": [{"pk": "my_pk", "sk": "sk"}]}
+        # self.result.clear_table("my_pk")
+        # self.table_mock.query.assert_called_with(
+        #     ConsistentRead=False,
+        #     ExpressionAttributeNames={"#aaa": "pk", "#aab": "sk"},
+        #     ExpressionAttributeValues={":aaa": "my_pk"},
+        #     KeyConditionExpression="#aaa = :aaa",
+        #     Limit=1000,
+        #     ProjectionExpression="#aaa, #aab",
+        #     ScanIndexForward=True,
+        # )
+        # self.client_mock.batch_write_item.assert_called_with(
+        #     RequestItems={
+        #         "my_table_name": [
+        #             {"DeleteRequest": {"Key": {"pk": "my_pk", "sk": "sk"}}}
+        #         ]
+        #     },
+        #     ReturnConsumedCapacity="NONE",
+        #     ReturnItemCollectionMetrics="NONE",
+        # )
+        #
+        # self.result.clear_table(None)
+        # self.table_mock.scan.assert_called_with(
+        #     ExpressionAttributeNames={"#aaa": "pk", "#aab": "sk"},
+        #     Limit=1000,
+        #     ProjectionExpression="#aaa, #aab",
+        # )
+        # self.client_mock.batch_write_item.assert_called_with(
+        #     RequestItems={
+        #         "my_table_name": [
+        #             {"DeleteRequest": {"Key": {"pk": "my_pk", "sk": "sk"}}}
+        #         ]
+        #     },
+        #     ReturnConsumedCapacity="NONE",
+        #     ReturnItemCollectionMetrics="NONE",
+        # )
+        #
+        # self.table_mock.scan.return_value = {"Items": []}
+        # self.result.clear_table(None)
 
     def test_batch_get(self):
         self.client_mock.batch_get_item.return_value = {
@@ -390,9 +439,9 @@ class TestDynamoTable:
             list(self.result.query(partition_key=None, limit=1))
 
     def test_wait_until_exists(self):
-        self.result.wait_until_exists()
+        self.manager.wait_until_exists()
         self.table_mock.wait_until_exists.assert_called_with()
 
     def test_wait_until_not_exists(self):
-        self.result.wait_until_not_exists()
+        self.manager.wait_until_not_exists()
         self.table_mock.wait_until_not_exists.assert_called_with()
