@@ -1,6 +1,6 @@
 import datetime
 import logging
-from abc import abstractmethod, abstractproperty
+from abc import abstractmethod, abstractproperty, ABC
 from typing import (
     Any,
     Dict,
@@ -56,7 +56,7 @@ class DynamoTableError(BaseException):
         return self.message
 
 
-class DynamoTable(Generic[DynamoRecord], LazyLogger):
+class DynamoTable(Generic[DynamoRecord], LazyLogger, ABC):
     """
     DynamoDB table manager, uses `DynamoQuery` underneath.
 
