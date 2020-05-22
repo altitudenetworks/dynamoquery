@@ -134,7 +134,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
     )
 
     # class to use as DynamoQuery for easier subclassing
-    DynamoQueryClass: Type[DynamoQuery] = DynamoQuery
+    dynamo_query_class: Type[DynamoQuery] = DynamoQuery
 
     def __init__(self, logger: Optional[logging.Logger] = None):
         self._lazy_logger = logger
@@ -153,7 +153,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
 
     @property
     def max_batch_size(self) -> int:
-        return self.DynamoQueryClass.MAX_BATCH_SIZE
+        return self.dynamo_query_class.MAX_BATCH_SIZE
 
     @abstractmethod
     def get_partition_key(self, record: DynamoRecord) -> Any:
@@ -353,7 +353,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
 
         for records_chunk in chunkify(records, self.max_batch_size):
             existing_records = DataTable[DynamoRecord]().add_record(*records_chunk)
-            self.DynamoQueryClass.build_batch_delete_item(logger=self._logger).table(
+            self.dynamo_query_class.build_batch_delete_item(logger=self._logger).table(
                 table_keys=self.table_keys, table=self.table,
             ).execute(existing_records)
 
@@ -410,7 +410,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             )
             get_data_table.add_record(new_record)
 
-        results: DataTable[DynamoRecord] = self.DynamoQueryClass.build_batch_get_item(
+        results: DataTable[DynamoRecord] = self.dynamo_query_class.build_batch_get_item(
             logger=self._logger,
         ).table(table_keys=self.table_keys, table=self.table).execute(
             data_table=get_data_table,
@@ -471,7 +471,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
 
         results: DataTable[
             DynamoRecord
-        ] = self.DynamoQueryClass.build_batch_delete_item(logger=self._logger,).table(
+        ] = self.dynamo_query_class.build_batch_delete_item(logger=self._logger,).table(
             table_keys=self.table_keys, table=self.table,
         ).execute(
             delete_data_table
@@ -557,7 +557,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
 
         results: DataTable[
             DynamoRecord
-        ] = self.DynamoQueryClass.build_batch_update_item(logger=self._logger,).table(
+        ] = self.dynamo_query_class.build_batch_update_item(logger=self._logger,).table(
             table_keys=self.table_keys, table=self.table,
         ).execute(
             update_data_table
@@ -664,7 +664,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         partition_key = self._get_partition_key(record)
         sort_key = self._get_sort_key(record)
         result = (
-            self.DynamoQueryClass.build_get_item(logger=self._logger)
+            self.dynamo_query_class.build_get_item(logger=self._logger)
             .table(table_keys=self.table_keys, table=self.table,)
             .execute_dict(
                 {self.partition_key_name: partition_key, self.sort_key_name: sort_key}
@@ -744,7 +744,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         update_keys = set(new_record.keys()) - self.table_keys - set_if_not_exists
         update_keys.add("dt_modified")
         result: DataTable[DynamoRecord] = (
-            self.DynamoQueryClass.build_update_item(
+            self.dynamo_query_class.build_update_item(
                 condition_expression=condition_expression, logger=self._logger,
             )
             .update(update=update_keys, set_if_not_exists=set_if_not_exists)
@@ -791,7 +791,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
         """
         partition_key = self._get_partition_key(record)
         sort_key = self._get_sort_key(record)
-        result: DataTable[DynamoRecord] = self.DynamoQueryClass.build_delete_item(
+        result: DataTable[DynamoRecord] = self.dynamo_query_class.build_delete_item(
             condition_expression=condition_expression, logger=self._logger,
         ).table(table=self.table, table_keys=self.table_keys).execute_dict(
             {self.partition_key_name: partition_key, self.sort_key_name: sort_key},
@@ -841,7 +841,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             projection -- Record fields to return, by default returns all fields.
             limit -- Max number of results.
         """
-        query = self.DynamoQueryClass.build_scan(
+        query = self.dynamo_query_class.build_scan(
             filter_expression=filter_expression, logger=self._logger,
         )
         if limit:
@@ -937,7 +937,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger):
             key_condition_expression = key_condition_expression & ConditionExpression(
                 index.sort_key_name, operator=sort_key_operator,
             )
-        query = self.DynamoQueryClass.build_query(
+        query = self.dynamo_query_class.build_query(
             index_name=index.name,
             key_condition_expression=key_condition_expression,
             filter_expression=filter_expression,
