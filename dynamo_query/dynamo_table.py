@@ -20,7 +20,7 @@ from typing_extensions import Literal
 from dynamo_query.data_table import DataTable
 from dynamo_query.dynamo_query_main import DynamoQuery
 from dynamo_query.dynamo_table_index import DynamoTableIndex
-from dynamo_query.expressions import CondictionExpressionType, ConditionExpression
+from dynamo_query.expressions import ConditionExpressionType, ConditionExpression
 from dynamo_query.dynamo_query_types import (
     DynamoDBClient,
     Table,
@@ -305,7 +305,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger, ABC):
         sort_key: Optional[str] = None,
         sort_key_prefix: Optional[str] = None,
         index: DynamoTableIndex = primary_index,
-        filter_expression: Optional[CondictionExpressionType] = None,
+        filter_expression: Optional[ConditionExpressionType] = None,
         limit: Optional[int] = None,
     ) -> None:
         """
@@ -728,7 +728,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger, ABC):
 
     def scan(
         self,
-        filter_expression: Optional[CondictionExpressionType] = None,
+        filter_expression: Optional[ConditionExpressionType] = None,
         projection: Iterable[str] = tuple(),
         data: Optional[Dict[str, Any]] = None,
         limit: Optional[int] = None,
@@ -789,7 +789,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger, ABC):
         index: DynamoTableIndex = primary_index,
         sort_key: Optional[str] = None,
         sort_key_prefix: Optional[str] = None,
-        filter_expression: Optional[CondictionExpressionType] = None,
+        filter_expression: Optional[ConditionExpressionType] = None,
         scan_index_forward: bool = True,
         projection: Iterable[str] = tuple(),
         data: Optional[Dict[str, Any]] = None,
@@ -854,7 +854,7 @@ class DynamoTable(Generic[DynamoRecord], LazyLogger, ABC):
         if partition_key is None:
             raise DynamoTableError("partition_key should be set.")
 
-        key_condition_expression: CondictionExpressionType = ConditionExpression(
+        key_condition_expression: ConditionExpressionType = ConditionExpression(
             index.partition_key_name, operator=partition_key_operator
         )
         if sort_key is not None and index.sort_key_name is not None:

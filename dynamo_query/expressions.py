@@ -705,4 +705,4 @@ class UpdateExpression(BaseExpression):
         return set()
 
 
-CondictionExpressionType = Union[ConditionExpression, ConditionExpressionGroup]
+ConditionExpressionType = Union[ConditionExpression, ConditionExpressionGroup]
