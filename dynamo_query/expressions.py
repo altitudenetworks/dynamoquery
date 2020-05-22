@@ -552,7 +552,7 @@ class ConditionExpressionGroup(BaseConditionExpression):
                 results.append(self.join_operators[index - 1])
             results.append(expression.render())
 
-        return f" ".join(results)
+        return " ".join(results)
 
 
 class UpdateExpression(BaseExpression):
@@ -703,3 +703,6 @@ class UpdateExpression(BaseExpression):
         Get a set of all operators that used in expession group.
         """
         return set()
+
+
+CondictionExpressionType = Union[ConditionExpression, ConditionExpressionGroup]
