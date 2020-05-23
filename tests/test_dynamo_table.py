@@ -130,6 +130,22 @@ class TestDynamoTable:
             ReturnItemCollectionMetrics="NONE",
         )
 
+        self.result.clear_table(None, partition_key_prefix="prefix")
+        self.table_mock.scan.assert_called_with(
+            FilterExpression="begins_with(#aaa, :aaa)",
+            ProjectionExpression="#aaa, #aab",
+            ExpressionAttributeNames={"#aaa": "pk", "#aab": "sk"},
+            ExpressionAttributeValues={":aaa": "prefix"},
+            Limit=1000,
+        )
+        self.client_mock.batch_write_item.assert_called_with(
+            RequestItems={
+                "my_table_name": [{"DeleteRequest": {"Key": {"pk": "my_pk", "sk": "sk"}}}]
+            },
+            ReturnConsumedCapacity="NONE",
+            ReturnItemCollectionMetrics="NONE",
+        )
+
         self.result.clear_table(None)
         self.table_mock.scan.assert_called_with(
             ExpressionAttributeNames={"#aaa": "pk", "#aab": "sk"},
@@ -361,7 +377,7 @@ class TestDynamoTable:
             Limit=1,
         )
         self.table_mock.reset_mock()
-        list(self.result.query(partition_key="pk", sort_key_prefix="sk_prefix", limit=1,))
+        list(self.result.query(partition_key="pk", sort_key_prefix="sk_prefix", limit=1))
         self.table_mock.query.assert_called_with(
             KeyConditionExpression="#aaa = :aaa AND begins_with(#aab, :aab)",
             ConsistentRead=False,
@@ -381,3 +397,71 @@ class TestDynamoTable:
     def test_wait_until_not_exists(self):
         self.result.wait_until_not_exists()
         self.table_mock.wait_until_not_exists.assert_called_with()
+
+    def test_batch_get_records(self):
+        self.client_mock.batch_get_item.return_value = {
+            "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]}
+        }
+        assert list(self.result.batch_get_records([{"pk": "my_pk", "sk": "my_sk"}])) == [
+            {"pk": "my_pk", "sk": "my_sk", "data": "value"}
+        ]
+        self.client_mock.batch_get_item.assert_called_with(
+            RequestItems={"my_table_name": {"Keys": [{"pk": "my_pk", "sk": "my_sk"}]}},
+            ReturnConsumedCapacity="NONE",
+        )
+
+        assert list(self.result.batch_get(DataTable()).get_records()) == []
+
+    def test_batch_upsert_records(self, _patch_datetime):
+        self.client_mock.batch_write_item.return_value = {
+            "Responses": {
+                "my_table_name": [
+                    {"pk": "my_pk", "sk": "my_sk", "data": "value1", "preserve": "p1"}
+                ]
+            }
+        }
+        self.client_mock.batch_get_item.return_value = {
+            "Responses": {
+                "my_table_name": [
+                    {"pk": "my_pk", "sk": "my_sk", "data": "value1", "preserve": "p1"}
+                ]
+            }
+        }
+        assert list(
+            self.result.batch_upsert_records(
+                [
+                    {
+                        "pk": "my_pk",
+                        "sk": "my_sk",
+                        "data": "value2",
+                        "preserve": "p2",
+                        "preserve2": "p3",
+                        "gsi_pk": "gsi_pk",
+                        "gsi_sk": "gsi_sk",
+                        "lsi_pk": "lsi_pk",
+                        "dt_created": None,
+                    }
+                ],
+                set_if_not_exists_keys=["preserve", "preserve2"],
+            )
+        ) == [
+            {
+                "pk": "my_pk",
+                "sk": "my_sk",
+                "data": "value2",
+                "preserve": "p1",
+                "preserve2": "p3",
+                "gsi_pk": "gsi_pk",
+                "gsi_sk": "gsi_sk",
+                "lsi_pk": "lsi_pk",
+                "dt_created": "utcnow",
+                "dt_modified": "utcnow",
+            }
+        ]
+
+    def test_batch_delete_records(self):
+        self.client_mock.batch_write_item.return_value = {
+            "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]}
+        }
+        records = (i for i in [{"pk": "my_pk", "sk": "my_sk"}])
+        assert list(self.result.batch_delete_records(records)) == [{"pk": "my_pk", "sk": "my_sk"}]
