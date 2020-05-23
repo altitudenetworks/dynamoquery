@@ -381,7 +381,6 @@ result_data_table = query.execute(
 #### See also
 
 - [ConditionExpressionType](expressions.md#conditionexpressiontype)
-- [DynamoQueryType](#dynamoquerytype)
 
 ### DynamoQuery.build_scan
 

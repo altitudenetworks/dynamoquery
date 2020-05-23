@@ -15,11 +15,7 @@ from dynamo_query.dynamo_query_types import (
     Table,
 )
 from dynamo_query.dynamo_table_index import DynamoTableIndex
-from dynamo_query.expressions import (
-    ConditionExpression,
-    ConditionExpressionGroup,
-    ConditionExpressionType,
-)
+from dynamo_query.expressions import ConditionExpression, ConditionExpressionType
 from dynamo_query.lazy_logger import LazyLogger
 from dynamo_query.utils import chunkify
 
