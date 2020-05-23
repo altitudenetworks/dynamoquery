@@ -19,13 +19,11 @@ from typing import (
 
 from dynamo_query.sentinel import SentinelValue
 
-DictRecordType = Dict[str, Any]
 _RecordType = TypeVar("_RecordType", bound=Mapping[str, Any])
 
 
 __all__ = (
     "DataTable",
-    "DictRecordType",
     "DataTableError",
 )
 
@@ -103,7 +101,7 @@ class DataTable(Generic[_RecordType], UserDict):
     @classmethod
     def create(
         cls, base_dict: Optional[Dict[str, List[Any]]] = None
-    ) -> "DataTable[DictRecordType]":
+    ) -> "DataTable[Dict[str, Any]]":
         """
         Create a DataTable with untyped dicts as records.
 
@@ -284,7 +282,7 @@ class DataTable(Generic[_RecordType], UserDict):
 
         return self
 
-    def filter_keys(self, keys: Iterable[str]) -> "DataTable[DictRecordType]":
+    def filter_keys(self, keys: Iterable[str]) -> "DataTable[Dict[str, Any]]":
         """
         Create a new `DataTable` instance only with keys listed it `keys`
 
