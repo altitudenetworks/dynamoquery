@@ -1,5 +1,5 @@
-from dataclasses import dataclass, asdict, fields
-from typing import Dict, Any, Iterator, TypeVar, Type
+from dataclasses import dataclass, asdict, fields, Field
+from typing import Dict, Any, Iterator, TypeVar, Type, Tuple
 from typing import _GenericAlias as GenericAlias  # type: ignore
 from collections import UserDict
 
@@ -45,9 +45,12 @@ class DynamoRecord(UserDict):
         self._validate_fields()
 
     def _validate_fields(self) -> None:
-        field_names = [i.name for i in fields(self)]
+        accepted_fields = fields(self)
+        field_names = [i.name for i in accepted_fields]
         if "data" in field_names:
             raise KeyError(f"{self._class_name}.data key should not be set directly")
+        for key, value in self.data.items():
+            self._validate_key(key, value, accepted_fields)
 
     def asdict(self) -> Dict[str, Any]:
         """
@@ -86,8 +89,10 @@ class DynamoRecord(UserDict):
     def _class_name(self) -> str:
         return self.__class__.__name__
 
-    def __setitem__(self, key: str, value: Any) -> None:
-        for accepted_field in fields(self):
+    def _validate_key(
+        self, key: str, value: Any, accepted_fields: Tuple[Field, ...]
+    ) -> None:
+        for accepted_field in accepted_fields:
             if accepted_field.name != key:
                 continue
 
@@ -97,11 +102,13 @@ class DynamoRecord(UserDict):
                     raise ValueError(
                         f"{self._class_name}.{key} should have type {accepted_type.__name__}, got {value}"
                     )
-
-            setattr(self, key, value)
             return
 
         raise KeyError(f"Key `{key}` is incorrect for {self._class_name}")
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        self._validate_key(key, value, fields(self))
+        setattr(self, key, value)
 
     def __str__(self) -> str:
         return f"{self._class_name}({self.asdict()})"

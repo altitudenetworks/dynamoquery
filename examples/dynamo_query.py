@@ -1,25 +1,27 @@
 """
 Usage examples for `DynamoQuery` class.
 """
-from typing_extensions import TypedDict, Literal
+from dataclasses import dataclass
 
 from dynamo_query.data_table import DataTable
+from dynamo_query.dynamo_record import DynamoRecord
 from dynamo_query.dynamo_query_main import DynamoQuery
 from dynamo_query.expressions import ConditionExpression
 
 
 # define keys of a record structure
-class UserRecord(TypedDict):
+@dataclass
+class UserRecord(DynamoRecord):
     pk: str
     sk: str
     email: str
-    company: Literal["IBM", "CiscoSystems"]
+    company: str
     name: str
     age: int
 
 
 def main() -> None:
-    users_table = DataTable[UserRecord]().add_record(
+    users_table = DataTable[UserRecord](record_type=UserRecord).add_record(
         {
             "pk": "john_student@gmail.com",
             "sk": "IBM",

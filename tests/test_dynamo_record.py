@@ -24,6 +24,9 @@ class TestDynamoRecord:
         assert my_record.age is None
         assert dict(my_record) == {"name": "test"}
         assert str(my_record) == "MyRecord({'name': 'test'})"
+        assert list(my_record.keys()) == ["name"]
+        assert list(my_record.items()) == [("name", "test")]
+        assert my_record == MyRecord(name="test")
 
         my_record.name = "test2"
         my_record.age = 42

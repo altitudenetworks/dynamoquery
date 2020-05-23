@@ -1,9 +1,18 @@
 from copy import copy, deepcopy
+from dataclasses import dataclass
+from typing import Optional
 
 from typing_extensions import TypedDict
 import pytest
 
 from dynamo_query.data_table import DataTable, DataTableError
+from dynamo_query.dynamo_record import DynamoRecord
+
+
+@dataclass
+class UserRecord(DynamoRecord):
+    name: str
+    age: Optional[int] = None
 
 
 class TestDataTable:
@@ -259,3 +268,22 @@ class TestDataTable:
         data_table.add_record({"key": "value"})
         data_table.add_record({"wrong_key": "value"})
         assert data_table
+
+    def test_custom_record(self):
+        data_table = DataTable[UserRecord](record_type=UserRecord)
+        data_table.add_record({"name": "Jon"})
+        data_table.add_record(UserRecord(name="test", age=12))
+        assert isinstance(data_table.get_record(0), UserRecord)
+        assert list(data_table.get_records()) == [
+            UserRecord(name="Jon"),
+            UserRecord(name="test", age=12),
+        ]
+
+        with pytest.raises(TypeError):
+            data_table.add_record({"unknown": "Jon"})
+
+        with pytest.raises(TypeError):
+            data_table.add_record({})
+
+        with pytest.raises(ValueError):
+            data_table.add_record({"name": 12})

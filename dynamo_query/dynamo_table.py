@@ -65,15 +65,16 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger):
 
     Example:
         ```python
-        from typing_extensions import TypedDict
-        from dynamo_query import DynamoTable
+        from dataclasses import dataclass
+        from dynamo_query import DynamoTable, DynamoRecord
+        from typing import Optional
 
-        # first, define your record
-        class UserRecord(TypedDict, total=False):
+        @dataclass
+        class UserRecord(DynamoRecord):
             pk: str
             email: str
             name: str
-            points: int
+            points: Optional[int] = None
 
 
         # Create your dynamo table manager with your record class
@@ -88,7 +89,7 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger):
 
             # define how to get PK from a record
             def get_partition_key(self, record: UserRecord) -> str:
-                return record["email"]
+                return record.email
 
             # we do not have a sort key in our table
             def get_sort_key(self, record: UserRecord) -> None:
