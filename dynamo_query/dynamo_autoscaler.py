@@ -3,16 +3,15 @@ Helper that handles registration and deregistration of auto scaling for DynamoDB
 tables and indexes.
 """
 import logging
-from typing import Optional, Iterable
+from typing import Iterable, Optional
 
-from dynamo_query.dynamo_table_index import DynamoTableIndex
-from dynamo_query.types import (
-    MetricType,
-    ScalableDimension,
-    ApplicationAutoScalingClient,
-    ClientPutScalingPolicyTargetTrackingScalingPolicyConfigurationTypeDef,
+from mypy_boto3.application_autoscaling.client import ApplicationAutoScalingClient
+from mypy_boto3.application_autoscaling.type_defs import (
     TargetTrackingScalingPolicyConfigurationTypeDef,
 )
+from typing_extensions import Literal
+
+from dynamo_query.dynamo_table_index import DynamoTableIndex
 
 
 class DynamoAutoscaler:
@@ -31,9 +30,6 @@ class DynamoAutoscaler:
 
     SCALE_MIN_CAPACITY = 50
     SCALE_MAX_CAPACITY = 40000
-
-    METRIC_TYPE_READ = "read"
-    METRIC_TYPE_WRITE = "write"
 
     def __init__(
         self,
@@ -172,7 +168,12 @@ class DynamoAutoscaler:
     def deregister_scalable_target(
         self,
         table_name: str,
-        scalable_dimension: ScalableDimension,
+        scalable_dimension: Literal[
+            "dynamodb:index:ReadCapacityUnits",
+            "dynamodb:index:WriteCapacityUnits",
+            "dynamodb:table:ReadCapacityUnits",
+            "dynamodb:table:WriteCapacityUnits",
+        ],
         index_name: Optional[str] = None,
     ) -> None:
         """
@@ -196,7 +197,12 @@ class DynamoAutoscaler:
     def register_scalable_target(
         self,
         table_name: str,
-        scalable_dimension: ScalableDimension,
+        scalable_dimension: Literal[
+            "dynamodb:index:ReadCapacityUnits",
+            "dynamodb:index:WriteCapacityUnits",
+            "dynamodb:table:ReadCapacityUnits",
+            "dynamodb:table:WriteCapacityUnits",
+        ],
         index_name: Optional[str] = None,
         min_capacity: int = SCALE_MIN_CAPACITY,
         max_capacity: int = SCALE_MAX_CAPACITY,
@@ -225,7 +231,9 @@ class DynamoAutoscaler:
 
     @staticmethod
     def create_scaling_policy_configs(
-        metric_type: MetricType,
+        metric_type: Literal[
+            "DynamoDBReadCapacityUtilization", "DynamoDBWriteCapacityUtilization"
+        ],
         target_value: float = SCALE_TARGET_VALUE,
         scale_out_cooldown: int = SCALE_OUT_COOLDOWN,
         scale_in_cooldown: int = SCALE_IN_COOLDOWN,
@@ -234,8 +242,8 @@ class DynamoAutoscaler:
         Create auto scaling policy dict.
 
         Arguments:
-            metric_type -- METRIC_TYPE_READ or METRIC_TYPE_WRITE
-            target_value -- percent of use to aim for
+            metric_type -- DynamoDB Metric type
+            target_value -- Percent of use to aim for
             scale_out_cooldown -- Scale out cooldown in seconds
             scale_in_cooldown -- Scale in cooldown in seconds
 
@@ -252,7 +260,12 @@ class DynamoAutoscaler:
     def put_scaling_policy(
         self,
         table_name: str,
-        scalable_dimension: ScalableDimension,
+        scalable_dimension: Literal[
+            "dynamodb:index:ReadCapacityUnits",
+            "dynamodb:index:WriteCapacityUnits",
+            "dynamodb:table:ReadCapacityUnits",
+            "dynamodb:table:WriteCapacityUnits",
+        ],
         scaling_policy_configs: TargetTrackingScalingPolicyConfigurationTypeDef,
         index_name: Optional[str] = None,
     ) -> None:
