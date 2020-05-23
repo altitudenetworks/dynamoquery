@@ -1,7 +1,20 @@
 import datetime
 import logging
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, Dict, Generic, Iterable, Iterator, List, Optional, Set, Type, TypeVar, cast
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Type,
+    TypeVar,
+    cast,
+)
 
 from typing_extensions import Literal
 
@@ -14,14 +27,15 @@ from dynamo_query.dynamo_query_types import (
     DynamoDBClient,
     Table,
 )
+from dynamo_query.dynamo_record import DynamoRecord
 from dynamo_query.dynamo_table_index import DynamoTableIndex
 from dynamo_query.expressions import ConditionExpression, ConditionExpressionType
 from dynamo_query.lazy_logger import LazyLogger
 from dynamo_query.utils import chunkify
 
-__all__ = ("DynamoTable", "DynamoTableError", "DynamoRecordType")
+__all__ = ("DynamoTable", "DynamoTableError")
 
-DynamoRecordType = TypeVar("DynamoRecordType", bound=Dict[str, Any])
+_R = TypeVar("_R", bound=Mapping[str, Any])
 
 
 class DynamoTableError(BaseException):
@@ -44,7 +58,7 @@ class DynamoTableError(BaseException):
         return self.message
 
 
-class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
+class DynamoTable(Generic[_R], LazyLogger, ABC):
     """
     DynamoDB table manager, uses `DynamoQuery` underneath.
 
@@ -123,6 +137,8 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
     # class to use as DynamoQuery for easier subclassing
     dynamo_query_class: Type[DynamoQuery] = DynamoQuery
 
+    record_class: Optional[DynamoRecord] = None
+
     def __init__(self, logger: Optional[logging.Logger] = None):
         self._lazy_logger = logger
         self._attribute_definitions = self._get_attribute_definitions()
@@ -143,24 +159,24 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
         return self.dynamo_query_class.MAX_BATCH_SIZE
 
     @abstractmethod
-    def get_partition_key(self, record: DynamoRecordType) -> Any:
+    def get_partition_key(self, record: _R) -> Any:
         """
         Override this method to get PK from a record.
         """
 
     @abstractmethod
-    def get_sort_key(self, record: DynamoRecordType) -> Any:
+    def get_sort_key(self, record: _R) -> Any:
         """
         Override this method to get SK from a record.
         """
 
-    def _get_partition_key(self, record: DynamoRecordType) -> Any:
+    def _get_partition_key(self, record: _R) -> Any:
         if self.partition_key_name in record:
             return record[self.partition_key_name]
 
         return self.get_partition_key(record)
 
-    def _get_sort_key(self, record: DynamoRecordType) -> Any:
+    def _get_sort_key(self, record: _R) -> Any:
         if self.sort_key_name in record:
             return record[self.sort_key_name]
 
@@ -238,7 +254,7 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
         return attribute_types
 
     # pylint: disable=no-self-use
-    def normalize_record(self, record: DynamoRecordType) -> DynamoRecordType:
+    def normalize_record(self, record: _R) -> _R:
         """
         Modify record before upsert.
 
@@ -250,7 +266,7 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
         """
         return record
 
-    def validate_record_attributes(self, record: DynamoRecordType) -> None:
+    def validate_record_attributes(self, record: _R) -> None:
         """
         Check that all index keys are set correctly in record.
 
@@ -274,7 +290,7 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
 
     def _yield_from_query(
         self, query: DynamoQuery, data: Dict[str, Any], limit: Optional[int] = None
-    ) -> Iterator[DynamoRecordType]:
+    ) -> Iterator[_R]:
         records_count = 0
         while True:
             results_data_table = query.table(
@@ -337,12 +353,12 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
             records = self.scan(projection=self.table_keys)
 
         for records_chunk in chunkify(records, self.max_batch_size):
-            existing_records = DataTable[DynamoRecordType]().add_record(*records_chunk)
+            existing_records = DataTable[_R]().add_record(*records_chunk)
             self.dynamo_query_class.build_batch_delete_item(logger=self._logger).table(
                 table_keys=self.table_keys, table=self.table,
             ).execute(existing_records)
 
-    def batch_get(self, data_table: DataTable[DynamoRecordType]) -> DataTable[DynamoRecordType]:
+    def batch_get(self, data_table: DataTable[_R]) -> DataTable[_R]:
         """
         Get multuple records as a DataTable from DB.
 
@@ -381,18 +397,22 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
         """
         if not data_table:
             return DataTable()
-        get_data_table = DataTable[DynamoRecordType]()
+        get_data_table = DataTable[_R]()
         for record in data_table.get_records():
-            record[self.partition_key_name] = self._get_partition_key(record)
-            record[self.sort_key_name] = self._get_sort_key(record)
-            get_data_table.add_record(record)
+            get_data_table.add_record(
+                {
+                    **record,
+                    self.partition_key_name: self._get_partition_key(record),
+                    self.sort_key_name: self._get_sort_key(record),
+                }
+            )
 
-        results: DataTable[DynamoRecordType] = DynamoQuery.build_batch_get_item(
-            logger=self._logger,
-        ).table(table_keys=self.table_keys, table=self.table).execute(data_table=get_data_table)
+        results: DataTable[_R] = DynamoQuery.build_batch_get_item(logger=self._logger,).table(
+            table_keys=self.table_keys, table=self.table
+        ).execute(data_table=get_data_table)
         return results
 
-    def batch_delete(self, data_table: DataTable[DynamoRecordType]) -> DataTable[DynamoRecordType]:
+    def batch_delete(self, data_table: DataTable[_R]) -> DataTable[_R]:
         """
         Delete multuple records as a DataTable from DB.
 
@@ -430,26 +450,25 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
             DataTable with deleted records.
         """
         if not data_table:
-            return DataTable[DynamoRecordType]()
+            return DataTable[_R]()
 
-        delete_data_table = DataTable[DynamoRecordType]()
+        delete_data_table = DataTable[_R]()
         for record in data_table.get_records():
             partition_key = self._get_partition_key(record)
             sort_key = self._get_sort_key(record)
             new_record = cast(
-                DynamoRecordType,
-                {self.partition_key_name: partition_key, self.sort_key_name: sort_key},
+                _R, {self.partition_key_name: partition_key, self.sort_key_name: sort_key},
             )
             delete_data_table.add_record(new_record)
 
-        results: DataTable[DynamoRecordType] = DynamoQuery.build_batch_delete_item(
-            logger=self._logger,
-        ).table(table_keys=self.table_keys, table=self.table,).execute(delete_data_table)
+        results: DataTable[_R] = DynamoQuery.build_batch_delete_item(logger=self._logger,).table(
+            table_keys=self.table_keys, table=self.table,
+        ).execute(delete_data_table)
         return results
 
     def batch_upsert(
-        self, data_table: DataTable[DynamoRecordType], set_if_not_exists_keys: Iterable[str] = (),
-    ) -> DataTable[DynamoRecordType]:
+        self, data_table: DataTable[_R], set_if_not_exists_keys: Iterable[str] = (),
+    ) -> DataTable[_R]:
         """
         Upsert multuple records as a DataTable to DB.
 
@@ -493,14 +512,14 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
             A DataTable with upserted results.
         """
         if not data_table:
-            return DataTable[DynamoRecordType]()
+            return DataTable[_R]()
 
         set_if_not_exists = set(set_if_not_exists_keys)
         existing_records = self.batch_get(data_table)
         now = datetime.datetime.utcnow()
         now_str = now.isoformat()
 
-        update_data_table: DataTable[DynamoRecordType] = DataTable()
+        update_data_table: DataTable[_R] = DataTable()
         for record_index, record in enumerate(existing_records.get_records()):
             updated_record = data_table.get_record(record_index)
             preserve_keys_record: Dict[str, Any] = {}
@@ -509,7 +528,7 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
                     preserve_keys_record[key] = record[key]
 
             new_record = cast(
-                DynamoRecordType,
+                _R,
                 {
                     **record,
                     **updated_record,
@@ -522,12 +541,12 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
             self.validate_record_attributes(normalized_record)
             update_data_table.add_record(normalized_record)
 
-        results: DataTable[DynamoRecordType] = DynamoQuery.build_batch_update_item(
-            logger=self._logger,
-        ).table(table_keys=self.table_keys, table=self.table,).execute(update_data_table)
+        results: DataTable[_R] = DynamoQuery.build_batch_update_item(logger=self._logger,).table(
+            table_keys=self.table_keys, table=self.table,
+        ).execute(update_data_table)
         return results
 
-    def batch_get_records(self, records: Iterable[DynamoRecordType]) -> Iterator[DynamoRecordType]:
+    def batch_get_records(self, records: Iterable[_R]) -> Iterator[_R]:
         """
         Get records as an iterator from DB.
 
@@ -540,14 +559,12 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
             Found or not found record data.
         """
         for records_chunk in chunkify(records, self.max_batch_size):
-            get_data_table = DataTable[DynamoRecordType]().add_record(*records_chunk)
+            get_data_table = DataTable[_R]().add_record(*records_chunk)
             result_data_table = self.batch_get(get_data_table)
             for record in result_data_table.get_records():
                 yield record
 
-    def batch_delete_records(
-        self, records: Iterable[DynamoRecordType]
-    ) -> Iterator[DynamoRecordType]:
+    def batch_delete_records(self, records: Iterable[_R]) -> Iterator[_R]:
         """
         Delete records from DB.
 
@@ -560,14 +577,14 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
             Deleted or not found record data.
         """
         for records_chunk in chunkify(records, self.max_batch_size):
-            upsert_data_table = DataTable[DynamoRecordType]().add_record(*records_chunk)
+            upsert_data_table = DataTable[_R]().add_record(*records_chunk)
             result = self.batch_delete(upsert_data_table)
             for record in result.get_records():
                 yield record
 
     def batch_upsert_records(
-        self, records: Iterable[DynamoRecordType], set_if_not_exists_keys: Iterable[str] = (),
-    ) -> Iterator[DynamoRecordType]:
+        self, records: Iterable[_R], set_if_not_exists_keys: Iterable[str] = (),
+    ) -> Iterator[_R]:
         """
         Upsert records to DB.
 
@@ -581,14 +598,14 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
             Created, updated or not found record data.
         """
         for records_chunk in chunkify(records, self.max_batch_size):
-            upsert_data_table = DataTable[DynamoRecordType]().add_record(*records_chunk)
+            upsert_data_table = DataTable[_R]().add_record(*records_chunk)
             result = self.batch_upsert(
                 upsert_data_table, set_if_not_exists_keys=set_if_not_exists_keys
             )
             for record in result.get_records():
                 yield record
 
-    def get_record(self, record: DynamoRecordType) -> Optional[DynamoRecordType]:
+    def get_record(self, record: _R) -> Optional[_R]:
         """
         Get Record from DB.
 
@@ -630,15 +647,15 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
         if set(result.get_set_column_names()).issubset(self.table_keys):
             return None
 
-        return cast(DynamoRecordType, result.get_record(0))
+        return cast(_R, result.get_record(0))
 
     def upsert_record(
         self,
-        record: DynamoRecordType,
+        record: _R,
         condition_expression: Optional[ConditionExpression] = None,
         set_if_not_exists_keys: Iterable[str] = (),
         extra_data: Dict[str, Any] = None,
-    ) -> DynamoRecordType:
+    ) -> _R:
         """
         Upsert Record to DB.
 
@@ -687,7 +704,7 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
         now_str = now.isoformat()
 
         new_record = cast(
-            DynamoRecordType,
+            _R,
             {
                 self.partition_key_name: partition_key,
                 self.sort_key_name: sort_key,
@@ -700,7 +717,7 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
         new_record = self.normalize_record(new_record)
         update_keys = set(new_record.keys()) - self.table_keys - set_if_not_exists
         update_keys.add("dt_modified")
-        result: DataTable[DynamoRecordType] = (
+        result: DataTable[_R] = (
             DynamoQuery.build_update_item(
                 condition_expression=condition_expression, logger=self._logger,
             )
@@ -711,8 +728,8 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
         return result.get_record(0)
 
     def delete_record(
-        self, record: DynamoRecordType, condition_expression: Optional[ConditionExpression] = None,
-    ) -> Optional[DynamoRecordType]:
+        self, record: _R, condition_expression: Optional[ConditionExpression] = None,
+    ) -> Optional[_R]:
         """
         Delete Record from DB.
 
@@ -746,7 +763,7 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
         """
         partition_key = self._get_partition_key(record)
         sort_key = self._get_sort_key(record)
-        result: DataTable[DynamoRecordType] = DynamoQuery.build_delete_item(
+        result: DataTable[_R] = DynamoQuery.build_delete_item(
             condition_expression=condition_expression, logger=self._logger,
         ).table(table=self.table, table_keys=self.table_keys).execute_dict(
             {self.partition_key_name: partition_key, self.sort_key_name: sort_key},
@@ -761,7 +778,7 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
         projection: Iterable[str] = tuple(),
         data: Optional[Dict[str, Any]] = None,
         limit: Optional[int] = None,
-    ) -> Iterator[DynamoRecordType]:
+    ) -> Iterator[_R]:
         """
         List table records.
 
@@ -823,7 +840,7 @@ class DynamoTable(Generic[DynamoRecordType], LazyLogger, ABC):
         projection: Iterable[str] = tuple(),
         data: Optional[Dict[str, Any]] = None,
         limit: Optional[int] = None,
-    ) -> Iterator[DynamoRecordType]:
+    ) -> Iterator[_R]:
         """
         Query table records by index.
 
