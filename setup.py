@@ -32,7 +32,7 @@ DEPENDENCY_LINKS = []  # type: List[str]
 # Optional Packages
 EXTRAS = {}  # type: Dict[str, str]
 
-PACKAGE_DATA = {"dynamo_query": ["version.txt"]}
+PACKAGE_DATA = {"dynamo_query": ["version.txt", "py.typed"]}
 
 
 setup(

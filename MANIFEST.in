@@ -1,3 +1,4 @@
 include README.md
 include requirements.txt
 include dynamo_query/version.txt
+include dynamo_query/py.typed

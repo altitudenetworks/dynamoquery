@@ -17,7 +17,7 @@ from dynamo_query.dynamo_query_types import (
     TableKeys,
 )
 from dynamo_query.enums import QueryType
-from dynamo_query.expressions import BaseConditionExpression, ProjectionExpression, UpdateExpression
+from dynamo_query.expressions import ConditionExpressionType, ProjectionExpression, UpdateExpression
 
 __all__ = (
     "DynamoQuery",
@@ -77,10 +77,10 @@ class DynamoQuery(BaseDynamoQuery):
     @classmethod
     def build_query(
         cls: Type[_R],
-        key_condition_expression: BaseConditionExpression,
+        key_condition_expression: ConditionExpressionType,
         index_name: Optional[str] = None,
         projection_expression: Optional[ProjectionExpression] = None,
-        filter_expression: Optional[BaseConditionExpression] = None,
+        filter_expression: Optional[ConditionExpressionType] = None,
         limit: int = MAX_LIMIT,
         exclusive_start_key: Optional[ExclusiveStartKey] = None,
         consistent_read: bool = False,
@@ -153,7 +153,7 @@ class DynamoQuery(BaseDynamoQuery):
     @classmethod
     def build_scan(
         cls: Type[_R],
-        filter_expression: Optional[BaseConditionExpression] = None,
+        filter_expression: Optional[ConditionExpressionType] = None,
         projection_expression: Optional[ProjectionExpression] = None,
         limit: int = MAX_LIMIT,
         exclusive_start_key: Optional[ExclusiveStartKey] = None,
@@ -271,7 +271,7 @@ class DynamoQuery(BaseDynamoQuery):
     @classmethod
     def build_update_item(
         cls: Type[_R],
-        condition_expression: Optional[BaseConditionExpression] = None,
+        condition_expression: Optional[ConditionExpressionType] = None,
         update_expression: Optional[UpdateExpression] = None,
         return_consumed_capacity: ReturnConsumedCapacity = "NONE",
         return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
@@ -340,7 +340,7 @@ class DynamoQuery(BaseDynamoQuery):
     @classmethod
     def build_delete_item(
         cls: Type[_R],
-        condition_expression: Optional[BaseConditionExpression] = None,
+        condition_expression: Optional[ConditionExpressionType] = None,
         return_consumed_capacity: ReturnConsumedCapacity = "NONE",
         return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
         return_values: ReturnValues = "ALL_OLD",
