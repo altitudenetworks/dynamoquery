@@ -280,6 +280,7 @@ class TestUpdateExpression:
             " DELETE {delete} {delete__value}, {delete2} {delete2__value}"
             " REMOVE {remove}, {remove2}"
         )
+        assert UpdateExpression(remove=["value"]).render() == "REMOVE {value}"
 
     def test_operators(self) -> None:
         and_result = self.result & self.other

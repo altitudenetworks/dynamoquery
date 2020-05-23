@@ -1,28 +1,29 @@
 """
 Usage examples for `DynamoTable` class.
 """
-import boto3
-from typing_extensions import TypedDict, Literal
+from dataclasses import dataclass
+from typing import Optional
 
+import boto3
 from mypy_boto3.dynamodb.service_resource import DynamoDBServiceResource, Table
 
 from dynamo_query.data_table import DataTable
+from dynamo_query.dynamo_record import DynamoRecord
 from dynamo_query.dynamo_table import DynamoTable
 from dynamo_query.dynamo_table_index import DynamoTableIndex
 
 
-# define required keys of a record structure
-class UserRecordKeys(TypedDict):
+@dataclass
+class UserRecord(DynamoRecord):
+    # define required keys of a record structure
     email: str
-    company: Literal["IBM", "CiscoSystems"]
+    company: str
 
-
-# define optional keys of a record structure
-class UserRecord(UserRecordKeys, total=False):
-    pk: str
-    sk: str
-    name: str
-    age: int
+    # define optional keys of a record structure
+    pk: Optional[str] = None
+    sk: Optional[str] = None
+    name: Optional[str] = None
+    age: Optional[int] = None
 
 
 class UserDynamoTable(DynamoTable):
@@ -37,27 +38,19 @@ class UserDynamoTable(DynamoTable):
         return resource.Table("users_table")  # pylint: disable=no-member
 
     def get_partition_key(self, record: UserRecord) -> str:
-        return record["email"]
+        return record.email
 
     def get_sort_key(self, record: UserRecord) -> str:
-        return record["company"]
+        return record.company
 
 
 def main() -> None:
     user_dynamo_table = UserDynamoTable()
     users_table = DataTable[UserRecord]().add_record(
-        {
-            "email": "john_student@gmail.com",
-            "company": "IBM",
-            "name": "John",
-            "age": 34,
-        },
-        {
-            "email": "mary@gmail.com",
-            "company": "CiscoSystems",
-            "name": "Mary",
-            "age": 34,
-        },
+        UserRecord(email="john_student@gmail.com", company="IBM", name="John", age=34),
+        UserRecord.fromdict(
+            dict(email="mary@gmail.com", company="CiscoSystems", name="Mary", age=34)
+        ),
     )
     user_dynamo_table.batch_upsert(users_table)
 

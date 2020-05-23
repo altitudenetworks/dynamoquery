@@ -4,7 +4,7 @@ Usage examples for `DynamoQuery` class.
 from typing_extensions import TypedDict, Literal
 
 from dynamo_query.data_table import DataTable
-from dynamo_query.dynamo_query import DynamoQuery
+from dynamo_query.dynamo_query_main import DynamoQuery
 from dynamo_query.expressions import ConditionExpression
 
 

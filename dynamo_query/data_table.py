@@ -17,12 +17,13 @@ from typing import (
 
 from dynamo_query.sentinel import SentinelValue
 
-DictRecord = Dict[str, Any]
-RecordType = TypeVar("RecordType", bound=Mapping[str, Any])
+DictRecordType = Dict[str, Any]
+_RecordType = TypeVar("_RecordType", bound=Mapping[str, Any])
 
 
 __all__ = (
     "DataTable",
+    "DictRecordType",
     "DataTableError",
 )
 
@@ -33,7 +34,7 @@ class DataTableError(BaseException):
     """
 
 
-class DataTable(dict, Generic[RecordType]):
+class DataTable(dict, Generic[_RecordType]):
     """
     Dictionary that has lists as values
 
@@ -95,7 +96,7 @@ class DataTable(dict, Generic[RecordType]):
     @classmethod
     def create(
         cls, base_dict: Optional[Dict[str, List[Any]]] = None
-    ) -> "DataTable[DictRecord]":
+    ) -> "DataTable[DictRecordType]":
         """
         Create a DataTable with untyped dicts as records.
 
@@ -107,12 +108,12 @@ class DataTable(dict, Generic[RecordType]):
         Returns:
             A new DataTable instance.
         """
-        return DataTable[DictRecord](base_dict)
+        return DataTable[DictRecordType](base_dict)
 
-    def __copy__(self) -> "DataTable[RecordType]":
+    def __copy__(self) -> "DataTable[_RecordType]":
         return DataTable(copy(self.as_defaultdict()))
 
-    def __deepcopy__(self, memo: Any) -> "DataTable[RecordType]":
+    def __deepcopy__(self, memo: Any) -> "DataTable[_RecordType]":
         return DataTable(deepcopy(self.as_defaultdict()))
 
     def __bool__(self) -> bool:
@@ -128,7 +129,7 @@ class DataTable(dict, Generic[RecordType]):
             self[key] = list()
         self[key].extend(values)
 
-    def extend(self, *extra_dicts: Dict[str, List[Any]]) -> "DataTable[RecordType]":
+    def extend(self, *extra_dicts: Dict[str, List[Any]]) -> "DataTable[_RecordType]":
         """
         Extend values lists with values from `extra_dicts`
         If some keys are missing from this dict, they will be created.
@@ -158,7 +159,7 @@ class DataTable(dict, Generic[RecordType]):
 
         return self
 
-    def append(self, key: str, values: List) -> "DataTable[RecordType]":
+    def append(self, key: str, values: List) -> "DataTable[_RecordType]":
         """
         Append `values` to specified `key` value
 
@@ -276,7 +277,7 @@ class DataTable(dict, Generic[RecordType]):
 
         return self
 
-    def filter_keys(self, keys: Iterable[str]) -> "DataTable[DictRecord]":
+    def filter_keys(self, keys: Iterable[str]) -> "DataTable[DictRecordType]":
         """
         Create a new `DataTable` instance only with keys listed it `keys`
 
@@ -318,7 +319,7 @@ class DataTable(dict, Generic[RecordType]):
 
         return new_item
 
-    def get_records(self) -> Iterator[RecordType]:
+    def get_records(self) -> Iterator[_RecordType]:
         """
         Generator for all records with keys in DataTable.
 
@@ -334,7 +335,7 @@ class DataTable(dict, Generic[RecordType]):
         for record_index in range(self.max_length):
             yield self.get_record(record_index)
 
-    def get_record(self, record_index: int) -> RecordType:
+    def get_record(self, record_index: int) -> _RecordType:
         """
         Get one record of DataTable by `record_index` as dict of `{key: value}`.
         Not set values are resolved to `NOT_SET_RESOLVED_VALUE` by
@@ -372,9 +373,9 @@ class DataTable(dict, Generic[RecordType]):
                 )
             result[key] = record_value
 
-        return cast(RecordType, result)
+        return cast(_RecordType, result)
 
-    def filter_records(self, query: Dict[str, Any]) -> "DataTable[RecordType]":
+    def filter_records(self, query: Dict[str, Any]) -> "DataTable[_RecordType]":
         """
         Create a new `DataTable` instance with records that match `query`
 
@@ -397,7 +398,7 @@ class DataTable(dict, Generic[RecordType]):
                 "Cannot filter not normalized table. Use `normalize` method."
             )
 
-        result: DataTable[RecordType] = DataTable({key: [] for key in self.keys()})
+        result: DataTable[_RecordType] = DataTable({key: [] for key in self.keys()})
         for record in self.get_records():
             record_match = True
             for lookup_key, lookup_value in query.items():
@@ -410,7 +411,7 @@ class DataTable(dict, Generic[RecordType]):
 
         return result
 
-    def add_record(self, *records: RecordType) -> "DataTable[RecordType]":
+    def add_record(self, *records: _RecordType) -> "DataTable[_RecordType]":
         """
         Add a new record to existing data and normalizes it after each record add.
 
@@ -615,7 +616,7 @@ class DataTable(dict, Generic[RecordType]):
 
     def set(
         self, column_name: str, record_index: int, value: Any
-    ) -> "DataTable[RecordType]":
+    ) -> "DataTable[_RecordType]":
         """
         Set `value` in-place for `column_name` and `record_index`.
 

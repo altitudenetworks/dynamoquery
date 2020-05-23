@@ -149,7 +149,13 @@ class TestDynamoTable:
         )
 
         self.table_mock.scan.return_value = {"Items": []}
+        self.table_mock.scan.reset_mock()
         self.result.clear_table(None)
+
+        self.table_mock.scan.reset_mock()
+        self.result.clear_table(None, partition_key_prefix="prefix_")
+        self.table_mock.scan.return_value = {"Items": []}
+        self.table_mock.scan.assert_called()
 
     def test_batch_get(self):
         self.client_mock.batch_get_item.return_value = {
@@ -373,9 +379,7 @@ class TestDynamoTable:
         )
         self.table_mock.reset_mock()
         list(
-            self.result.query(
-                partition_key="pk", sort_key_prefix="sk_prefix", limit=1,
-            )
+            self.result.query(partition_key="pk", sort_key_prefix="sk_prefix", limit=1,)
         )
         self.table_mock.query.assert_called_with(
             KeyConditionExpression="#aaa = :aaa AND begins_with(#aab, :aab)",

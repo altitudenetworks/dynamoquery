@@ -7,11 +7,11 @@ extension-pkg-whitelist=
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
-ignore=CVS
+ignore=CVS,vulture_whitelist.py
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.
-ignore-patterns=
+ignore-patterns=test_.*\.py
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
@@ -153,6 +153,7 @@ disable=
         too-many-return-statements,
         too-many-public-methods,
         too-many-instance-attributes,
+        too-many-ancestors,
         too-many-arguments
 
 # Enable the message, report, category or checker with the given id(s). You can
