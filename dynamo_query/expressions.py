@@ -703,3 +703,6 @@ class UpdateExpression(BaseExpression):
         Get a set of all operators that used in expession group.
         """
         return set()
+
+
+ConditionExpressionType = Union[ConditionExpression, ConditionExpressionGroup]

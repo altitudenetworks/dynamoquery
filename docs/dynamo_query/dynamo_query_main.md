@@ -222,7 +222,7 @@ result_data_table = query.execute(
 ```python
 @classmethod
 def build_delete_item(
-    condition_expression: Optional[BaseConditionExpression] = None,
+    condition_expression: Optional[ConditionExpressionType] = None,
     return_consumed_capacity: ReturnConsumedCapacity = 'NONE',
     return_item_collection_metrics: ReturnItemCollectionMetrics = 'NONE',
     return_values: ReturnValues = 'ALL_OLD',
@@ -328,10 +328,10 @@ result_data_table = query.execute(
 ```python
 @classmethod
 def build_query(
-    key_condition_expression: BaseConditionExpression,
+    key_condition_expression: ConditionExpressionType,
     index_name: Optional[str] = None,
     projection_expression: Optional[ProjectionExpression] = None,
-    filter_expression: Optional[BaseConditionExpression] = None,
+    filter_expression: Optional[ConditionExpressionType] = None,
     limit: int = MAX_LIMIT,
     exclusive_start_key: Optional[ExclusiveStartKey] = None,
     consistent_read: bool = False,
@@ -385,7 +385,7 @@ result_data_table = query.execute(
 
 #### See also
 
-- [BaseConditionExpression](expressions.md#baseconditionexpression)
+- [ConditionExpressionType](expressions.md#conditionexpressiontype)
 - [DynamoQueryType](#dynamoquerytype)
 
 ### DynamoQuery.build_scan
@@ -395,7 +395,7 @@ result_data_table = query.execute(
 ```python
 @classmethod
 def build_scan(
-    filter_expression: Optional[BaseConditionExpression] = None,
+    filter_expression: Optional[ConditionExpressionType] = None,
     projection_expression: Optional[ProjectionExpression] = None,
     limit: int = MAX_LIMIT,
     exclusive_start_key: Optional[ExclusiveStartKey] = None,
@@ -454,7 +454,7 @@ result_data_table = query.execute(
 ```python
 @classmethod
 def build_update_item(
-    condition_expression: Optional[BaseConditionExpression] = None,
+    condition_expression: Optional[ConditionExpressionType] = None,
     update_expression: Optional[UpdateExpression] = None,
     return_consumed_capacity: ReturnConsumedCapacity = 'NONE',
     return_item_collection_metrics: ReturnItemCollectionMetrics = 'NONE',

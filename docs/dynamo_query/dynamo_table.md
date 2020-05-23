@@ -34,7 +34,7 @@
 [[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L61)
 
 ```python
-class DynamoTable(Generic[DynamoRecord], LazyLogger):
+class DynamoTable(Generic[DynamoRecord], LazyLogger, ABC):
     def __init__(logger: Optional[logging.Logger] = None):
 ```
 
@@ -322,7 +322,7 @@ def clear_table(
     sort_key: Optional[str] = None,
     sort_key_prefix: Optional[str] = None,
     index: DynamoTableIndex = primary_index,
-    filter_expression: Optional[ConditionExpression] = None,
+    filter_expression: Optional[ConditionExpressionType] = None,
     limit: Optional[int] = None,
 ) -> None:
 ```
@@ -564,7 +564,7 @@ def query(
     index: DynamoTableIndex = primary_index,
     sort_key: Optional[str] = None,
     sort_key_prefix: Optional[str] = None,
-    filter_expression: Optional[ConditionExpression] = None,
+    filter_expression: Optional[ConditionExpressionType] = None,
     scan_index_forward: bool = True,
     projection: Iterable[str] = tuple(),
     data: Optional[Dict[str, Any]] = None,
@@ -633,7 +633,7 @@ Matching record.
 
 ```python
 def scan(
-    filter_expression: Optional[ConditionExpression] = None,
+    filter_expression: Optional[ConditionExpressionType] = None,
     projection: Iterable[str] = tuple(),
     data: Optional[Dict[str, Any]] = None,
     limit: Optional[int] = None,

@@ -530,25 +530,29 @@ class BaseDynamoQuery(LazyLogger):
         if expression_attribute_values:
             extra_params["ExpressionAttributeValues"] = expression_attribute_values
 
+        result: Optional[Dict[str, Any]] = None
         if self._query_type == QueryType.UPDATE_ITEM:
             update_response = self._execute_update_item(
                 Key=key_data, **formatted_expressions, **extra_params,
             )
             self._was_executed = True
-            return update_response.get("Attributes")
+            result = update_response.get("Attributes")
 
         if self._query_type == QueryType.DELETE_ITEM:
             delete_response = self._execute_delete_item(
                 Key=key_data, **formatted_expressions, **extra_params,
             )
             self._was_executed = True
-            return delete_response.get("Attributes")
+            result = delete_response.get("Attributes")
 
-        get_response = self._execute_get_item(
-            Key=key_data, **formatted_expressions, **extra_params,
-        )
-        self._was_executed = True
-        return get_response.get("Item")
+        if self._query_type == QueryType.GET_ITEM:
+            get_response = self._execute_get_item(
+                Key=key_data, **formatted_expressions, **extra_params,
+            )
+            self._was_executed = True
+            result = get_response.get("Item")
+
+        return result
 
     def _execute_paginated_query(self, data: Dict[str, Any]) -> DataTable:
         self._logger.debug(f"query_data = {dumps(data)}")
