@@ -8,10 +8,10 @@ Main import point for DynamoQuery.
     - Modules
         - [Module](module.md#module)
         - [BaseDynamoQuery](base_dynamo_query.md#basedynamoquery)
-        - [Boto3Retrier](boto3_retrier.md#boto3retrier)
         - [DataTable](data_table.md#datatable)
         - [Dynamo Query Main](dynamo_query_main.md#dynamo-query-main)
         - [Dynamo Query Types](dynamo_query_types.md#dynamo-query-types)
+        - [DynamoRecord](dynamo_record.md#dynamorecord)
         - [DynamoTable](dynamo_table.md#dynamotable)
         - [DynamoTableIndex](dynamo_table_index.md#dynamotableindex)
         - [Enums](enums.md#enums)

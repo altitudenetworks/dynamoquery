@@ -25,7 +25,7 @@ jobs:
           python setup.py install
       - name: Lint
         run: |
-          vulture dynamo_query vulture_whitelist.txt
+          vulture dynamo_query vulture_whitelist.py
           mypy dynamo_query
           pylint dynamo_query
       - name: Unit tests
