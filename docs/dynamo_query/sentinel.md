@@ -9,7 +9,7 @@ Sentinel value than can be used as a placeholder.
 
 ## SentinelValue
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/sentinel.py#L5)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/sentinel.py#L6)
 
 ```python
 class SentinelValue():

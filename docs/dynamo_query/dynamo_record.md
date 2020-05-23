@@ -9,7 +9,7 @@
 
 ## DynamoRecord
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L14)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L13)
 
 ```python
 dataclass
@@ -45,7 +45,7 @@ record2.asdict() # {"name": "Jon", "age": 30}
 
 ### DynamoRecord().asdict
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L55)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L54)
 
 ```python
 def asdict() -> Dict[str, Any]:
@@ -67,7 +67,7 @@ A dictionary.
 
 ### DynamoRecord.fromdict
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L72)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L71)
 
 ```python
 @classmethod
