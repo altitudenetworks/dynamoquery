@@ -8,7 +8,6 @@ Full list of [dynamo-query](README.md#dynamoquery) project modules.
 - [Dynamo Query](dynamo_query/index.md#dynamo-query)
     - [Module](dynamo_query/module.md#module)
     - [BaseDynamoQuery](dynamo_query/base_dynamo_query.md#basedynamoquery)
-    - [Boto3Retrier](dynamo_query/boto3_retrier.md#boto3retrier)
     - [DataTable](dynamo_query/data_table.md#datatable)
     - [Dynamo Query Main](dynamo_query/dynamo_query_main.md#dynamo-query-main)
     - [Dynamo Query Types](dynamo_query/dynamo_query_types.md#dynamo-query-types)
