@@ -1,7 +1,7 @@
 """
 Usage examples for `DataTable` class.
 """
-from typing_extensions import TypedDict, Literal
+from typing_extensions import Literal, TypedDict
 
 from dynamo_query.data_table import DataTable
 
@@ -21,18 +21,8 @@ class UserRecord(UserRecordKeys, total=False):
 def main() -> None:
     users_table = DataTable[UserRecord]()
     users_table.add_record(
-        {
-            "email": "john_student@gmail.com",
-            "company": "IBM",
-            "name": "John",
-            "age": 34,
-        },
-        {
-            "email": "mary@gmail.com",
-            "company": "CiscoSystems",
-            "name": "Mary",
-            "age": 34,
-        },
+        {"email": "john_student@gmail.com", "company": "IBM", "name": "John", "age": 34,},
+        {"email": "mary@gmail.com", "company": "CiscoSystems", "name": "Mary", "age": 34,},
     )
 
     print("Get John's record:")

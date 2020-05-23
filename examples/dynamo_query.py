@@ -4,8 +4,8 @@ Usage examples for `DynamoQuery` class.
 from dataclasses import dataclass
 
 from dynamo_query.data_table import DataTable
-from dynamo_query.dynamo_record import DynamoRecord
 from dynamo_query.dynamo_query_main import DynamoQuery
+from dynamo_query.dynamo_record import DynamoRecord
 from dynamo_query.expressions import ConditionExpression
 
 
@@ -46,11 +46,7 @@ def main() -> None:
         print(user_record)
 
     print("Get John's record:")
-    print(
-        DynamoQuery.build_get_item().execute_dict(
-            {"pk": "john_student@gmail.com", "sk": "IBM",}
-        )
-    )
+    print(DynamoQuery.build_get_item().execute_dict({"pk": "john_student@gmail.com", "sk": "IBM",}))
 
     print("Query by a specific index:")
     print(

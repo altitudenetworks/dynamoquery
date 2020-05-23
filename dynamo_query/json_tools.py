@@ -3,8 +3,8 @@
 
 Safe JSON SerDe.
 """
-import decimal
 import datetime
+import decimal
 import json
 from typing import Any, Type
 
@@ -70,10 +70,7 @@ class SafeJSONEncoder(json.JSONEncoder):
 
 
 def dumps(
-    data: Any,
-    sort_keys: bool = True,
-    cls: Type[json.JSONEncoder] = SafeJSONEncoder,
-    **kwargs: Any,
+    data: Any, sort_keys: bool = True, cls: Type[json.JSONEncoder] = SafeJSONEncoder, **kwargs: Any,
 ) -> str:
     """
         Alias for `json.dumps`. Uses `SafeJSONEncoder` to serialize

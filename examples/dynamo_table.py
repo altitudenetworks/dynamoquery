@@ -59,20 +59,10 @@ def main() -> None:
         print(user_record)
 
     print("Get John's record:")
-    print(
-        user_dynamo_table.get_record(
-            {"email": "john_student@gmail.com", "company": "IBM"}
-        )
-    )
+    print(user_dynamo_table.get_record({"email": "john_student@gmail.com", "company": "IBM"}))
 
     print("Query by a specific index:")
-    print(
-        list(
-            user_dynamo_table.query(
-                index=UserDynamoTable.lsi_name, partition_key="Mary"
-            )
-        )
-    )
+    print(list(user_dynamo_table.query(index=UserDynamoTable.lsi_name, partition_key="Mary")))
 
 
 if __name__ == "__main__":

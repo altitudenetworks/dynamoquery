@@ -1,4 +1,4 @@
-from typing import Dict, Callable, Any, Set, TypeVar, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Dict, Set, TypeVar
 
 from typing_extensions import Literal
 

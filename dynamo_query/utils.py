@@ -1,5 +1,5 @@
-from typing import Iterable, Iterator, List, Set, Any, Optional, Dict
 import string
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Set
 
 
 def chunkify(data: Iterable, size: int) -> Iterator[List[Any]]:

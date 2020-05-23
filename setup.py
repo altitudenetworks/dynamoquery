@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
 
-from setuptools import setup
-from setuptools import find_packages
-
+from setuptools import find_packages, setup
 
 ROOT_PATH = Path(__file__).absolute().parent
 README_PATH = ROOT_PATH / "README.md"
@@ -25,9 +23,7 @@ AUTHOR_EMAIL = "engineering@altitudenetworks.com"
 
 # Required Packages
 REQUIRED = [
-    i.strip()
-    for i in (ROOT_PATH / "requirements.txt").read_text().split("\n")
-    if i.strip()
+    i.strip() for i in (ROOT_PATH / "requirements.txt").read_text().split("\n") if i.strip()
 ]
 
 # EXTERNAL DEPENDENCY LINKS

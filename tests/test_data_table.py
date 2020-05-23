@@ -2,8 +2,8 @@ from copy import copy, deepcopy
 from dataclasses import dataclass
 from typing import Optional
 
-from typing_extensions import TypedDict
 import pytest
+from typing_extensions import TypedDict
 
 from dynamo_query.data_table import DataTable, DataTableError
 from dynamo_query.dynamo_record import DynamoRecord
@@ -222,9 +222,10 @@ class TestDataTable:
             "a": [1, 2, 5],
             "b": [3, 4, 6],
         }
-        assert DataTable({"a": [1, 2], "b": [3, 4]}).add_table(
-            data_table, data_table
-        ) == {"a": [1, 2, 5, 5], "b": [3, 4, 6, 6],}
+        assert DataTable({"a": [1, 2], "b": [3, 4]}).add_table(data_table, data_table) == {
+            "a": [1, 2, 5, 5],
+            "b": [3, 4, 6, 6],
+        }
 
         with pytest.raises(DataTableError):
             DataTable.create({"a": [1, 2], "b": [3, 4]}).add_table(

@@ -1,8 +1,7 @@
-from dataclasses import dataclass, asdict, fields, Field
-from typing import Dict, Any, Iterator, TypeVar, Type, Tuple
-from typing import _GenericAlias as GenericAlias  # type: ignore
 from collections import UserDict
-
+from dataclasses import Field, asdict, dataclass, fields
+from typing import Any, Dict, Iterator, Tuple, Type, TypeVar
+from typing import _GenericAlias as GenericAlias  # type: ignore
 
 __all__ = ("DynamoRecord",)
 
@@ -67,7 +66,7 @@ class DynamoRecord(UserDict):
         Returns:
             A dictionary.
         """
-        return {k: v for k, v in asdict(self).items() if not v is self.NOT_SET}
+        return {k: v for k, v in asdict(self).items() if v is not self.NOT_SET}
 
     @classmethod
     def fromdict(cls: Type[_R], *mappings: Dict[str, Any]) -> _R:
@@ -89,9 +88,7 @@ class DynamoRecord(UserDict):
     def _class_name(self) -> str:
         return self.__class__.__name__
 
-    def _validate_key(
-        self, key: str, value: Any, accepted_fields: Tuple[Field, ...]
-    ) -> None:
+    def _validate_key(self, key: str, value: Any, accepted_fields: Tuple[Field, ...]) -> None:
         for accepted_field in accepted_fields:
             if accepted_field.name != key:
                 continue

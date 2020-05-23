@@ -1,11 +1,11 @@
 import pytest
 
 from dynamo_query.utils import (
-    chunkify,
     ascii_string_generator,
+    chunkify,
     get_format_keys,
-    pluralize,
     get_nested_item,
+    pluralize,
 )
 
 

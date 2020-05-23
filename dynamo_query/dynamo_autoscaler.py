@@ -32,9 +32,7 @@ class DynamoAutoscaler:
     SCALE_MAX_CAPACITY = 40000
 
     def __init__(
-        self,
-        client: ApplicationAutoScalingClient,
-        logger: Optional[logging.Logger] = None,
+        self, client: ApplicationAutoScalingClient, logger: Optional[logging.Logger] = None,
     ) -> None:
         self.client: ApplicationAutoScalingClient = client
         self._lazy_logger = logger
@@ -47,9 +45,7 @@ class DynamoAutoscaler:
         return self._lazy_logger
 
     def deregister_auto_scaling(
-        self,
-        table_name: str,
-        global_secondary_indexes: Iterable[DynamoTableIndex] = (),
+        self, table_name: str, global_secondary_indexes: Iterable[DynamoTableIndex] = (),
     ) -> None:
         """
         Deregister auto scaling for table.
@@ -71,12 +67,10 @@ class DynamoAutoscaler:
             )
 
         self.deregister_scalable_target(
-            table_name=table_name,
-            scalable_dimension="dynamodb:table:ReadCapacityUnits",
+            table_name=table_name, scalable_dimension="dynamodb:table:ReadCapacityUnits",
         )
         self.deregister_scalable_target(
-            table_name=table_name,
-            scalable_dimension="dynamodb:table:WriteCapacityUnits",
+            table_name=table_name, scalable_dimension="dynamodb:table:WriteCapacityUnits",
         )
 
     def register_auto_scaling(
@@ -231,9 +225,7 @@ class DynamoAutoscaler:
 
     @staticmethod
     def create_scaling_policy_configs(
-        metric_type: Literal[
-            "DynamoDBReadCapacityUtilization", "DynamoDBWriteCapacityUtilization"
-        ],
+        metric_type: Literal["DynamoDBReadCapacityUtilization", "DynamoDBWriteCapacityUtilization"],
         target_value: float = SCALE_TARGET_VALUE,
         scale_out_cooldown: int = SCALE_OUT_COOLDOWN,
         scale_in_cooldown: int = SCALE_IN_COOLDOWN,

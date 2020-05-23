@@ -1,20 +1,19 @@
-from collections import defaultdict, UserDict
+from collections import UserDict, defaultdict
 from copy import copy, deepcopy
-
 from typing import (
     Any,
     DefaultDict,
     Dict,
-    Iterator,
-    Iterable,
-    List,
-    Optional,
-    TypeVar,
-    Type,
     Generic,
-    cast,
+    Iterable,
+    Iterator,
+    List,
     Mapping,
+    Optional,
+    Type,
+    TypeVar,
     Union,
+    cast,
 )
 
 from dynamo_query.sentinel import SentinelValue
@@ -126,9 +125,7 @@ class DataTable(Generic[_RecordType], UserDict):
 
     def _extend_key(self, key: str, values: List) -> None:
         if not isinstance(values, list):
-            raise DataTableError(
-                f"DataTable values can only be lists, got {values} instead"
-            )
+            raise DataTableError(f"DataTable values can only be lists, got {values} instead")
 
         if not key in self:
             self[key] = list()
@@ -402,9 +399,7 @@ class DataTable(Generic[_RecordType], UserDict):
             A copy of original `DataTable` with matching records
         """
         if not self.is_normalized():
-            raise DataTableError(
-                "Cannot filter not normalized table. Use `normalize` method."
-            )
+            raise DataTableError("Cannot filter not normalized table. Use `normalize` method.")
 
         result: DataTable[_RecordType] = DataTable(
             {key: [] for key in self.keys()}, record_type=self.record_type
@@ -421,9 +416,7 @@ class DataTable(Generic[_RecordType], UserDict):
 
         return result
 
-    def add_record(
-        self, *records: Union[Dict, _RecordType]
-    ) -> "DataTable[_RecordType]":
+    def add_record(self, *records: Union[Dict, _RecordType]) -> "DataTable[_RecordType]":
         """
         Add a new record to existing data and normalizes it after each record add.
 
@@ -491,9 +484,7 @@ class DataTable(Generic[_RecordType], UserDict):
         if not self.has_column(column_name):
             for record_index in range(self.max_length):
                 result.append(
-                    self.resolve_not_set_value(
-                        column_name=column_name, record_index=record_index
-                    )
+                    self.resolve_not_set_value(column_name=column_name, record_index=record_index)
                 )
             return result
         column_values = self.get(column_name) or []
@@ -585,9 +576,7 @@ class DataTable(Generic[_RecordType], UserDict):
 
         for data_table in data_tables:
             if not data_table.is_normalized():
-                raise DataTableError(
-                    "Cannot add not normalized table. Use `normalize` method."
-                )
+                raise DataTableError("Cannot add not normalized table. Use `normalize` method.")
 
         for data_table in data_tables:
             for record in data_table.get_records():
@@ -630,9 +619,7 @@ class DataTable(Generic[_RecordType], UserDict):
 
         return result
 
-    def set(
-        self, column_name: str, record_index: int, value: Any
-    ) -> "DataTable[_RecordType]":
+    def set(self, column_name: str, record_index: int, value: Any) -> "DataTable[_RecordType]":
         """
         Set `value` in-place for `column_name` and `record_index`.
 
@@ -657,8 +644,6 @@ class DataTable(Generic[_RecordType], UserDict):
         try:
             self[column_name][record_index] = value
         except IndexError:
-            raise DataTableError(
-                f"Column {column_name} does not have index {record_index}"
-            )
+            raise DataTableError(f"Column {column_name} does not have index {record_index}")
 
         return self

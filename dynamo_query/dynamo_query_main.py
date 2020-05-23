@@ -2,27 +2,22 @@
 Helper for building Boto3 DynamoDB queries.
 """
 import logging
-from typing import Optional, Dict, Any, List, Iterable, TypeVar, Type
+from typing import Any, Dict, Iterable, List, Optional, Type, TypeVar
 
+from dynamo_query.base_dynamo_query import BaseDynamoQuery, DynamoQueryError
 from dynamo_query.data_table import DataTable
-from dynamo_query.expressions import (
-    UpdateExpression,
-    ProjectionExpression,
-    BaseConditionExpression,
-)
-from dynamo_query.enums import QueryType
 from dynamo_query.dynamo_query_types import (
     ExclusiveStartKey,
-    Table,
-    TableKeys,
-    QueryMethod,
     ExpressionMap,
+    QueryMethod,
     ReturnConsumedCapacity,
     ReturnItemCollectionMetrics,
     ReturnValues,
+    Table,
+    TableKeys,
 )
-from dynamo_query.base_dynamo_query import BaseDynamoQuery, DynamoQueryError
-
+from dynamo_query.enums import QueryType
+from dynamo_query.expressions import BaseConditionExpression, ProjectionExpression, UpdateExpression
 
 __all__ = (
     "DynamoQuery",
@@ -134,9 +129,7 @@ class DynamoQuery(BaseDynamoQuery):
         Returns:
             `DynamoQuery` instance to execute.
         """
-        expressions: ExpressionMap = {
-            cls.KEY_CONDITION_EXPRESSION: key_condition_expression
-        }
+        expressions: ExpressionMap = {cls.KEY_CONDITION_EXPRESSION: key_condition_expression}
         if filter_expression:
             expressions[cls.FILTER_EXPRESSION] = filter_expression
         if projection_expression:
@@ -265,8 +258,7 @@ class DynamoQuery(BaseDynamoQuery):
             expressions[cls.PROJECTION_EXPRESSION] = projection_expression
 
         extra_params: Dict[str, Any] = dict(
-            ConsistentRead=consistent_read,
-            ReturnConsumedCapacity=return_consumed_capacity,
+            ConsistentRead=consistent_read, ReturnConsumedCapacity=return_consumed_capacity,
         )
 
         return cls(
@@ -590,13 +582,10 @@ class DynamoQuery(BaseDynamoQuery):
             raise DynamoQueryError("Input DataTable is not normalized.")
 
         self.table(
-            table=table or self.table_resource,
-            table_keys=table_keys or self._table_keys,
+            table=table or self.table_resource, table_keys=table_keys or self._table_keys,
         )
 
-        self._logger.debug(
-            f"Execute {self._query_type.value} on {self.table_resource.name}"
-        )
+        self._logger.debug(f"Execute {self._query_type.value} on {self.table_resource.name}")
 
         if self._table_keys is None:
             self._logger.warning(
@@ -651,8 +640,7 @@ class DynamoQuery(BaseDynamoQuery):
         """
         data_table = DataTable.create().add_record(data or {"dummy": True})
         self.table(
-            table=table or self.table_resource,
-            table_keys=table_keys or self._table_keys,
+            table=table or self.table_resource, table_keys=table_keys or self._table_keys,
         )
         return self.execute(data_table=data_table)
 
@@ -749,11 +737,7 @@ class DynamoQuery(BaseDynamoQuery):
         Returns:
             Itself, so this method can be chained.
         """
-        if self._query_type not in (
-            QueryType.QUERY,
-            QueryType.SCAN,
-            QueryType.GET_ITEM,
-        ):
+        if self._query_type not in (QueryType.QUERY, QueryType.SCAN, QueryType.GET_ITEM,):
             raise DynamoQueryError(f"{self} does not support ProjectionExpression")
         self._expressions[self.PROJECTION_EXPRESSION] = ProjectionExpression(*fields)
         return self

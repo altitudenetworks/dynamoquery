@@ -1,11 +1,12 @@
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
+
 from typing_extensions import Literal
 
 from dynamo_query.dynamo_query_types import (
-    GlobalSecondaryIndexTypeDef,
-    LocalSecondaryIndexTypeDef,
-    KeySchemaElementTypeDef,
     AttributeDefinitionTypeDef,
+    GlobalSecondaryIndexTypeDef,
+    KeySchemaElementTypeDef,
+    LocalSecondaryIndexTypeDef,
 )
 
 
@@ -120,26 +121,18 @@ class DynamoTableIndex:
 
     def as_attribute_definitions(self) -> List[AttributeDefinitionTypeDef]:
         attribute_definitions: List[AttributeDefinitionTypeDef] = [
-            {
-                "AttributeName": self.partition_key_name,
-                "AttributeType": self.partition_key_type,
-            },
+            {"AttributeName": self.partition_key_name, "AttributeType": self.partition_key_type,},
         ]
         if self.sort_key_name:
             attribute_definitions.append(
-                {
-                    "AttributeName": self.sort_key_name,
-                    "AttributeType": self.sort_key_type,
-                }
+                {"AttributeName": self.sort_key_name, "AttributeType": self.sort_key_type,}
             )
         return attribute_definitions
 
     def __str__(self) -> str:
         return f"<DynamoTableIndex name={self.name}>"
 
-    def get_query_data(
-        self, partition_key: str, sort_key: Optional[str]
-    ) -> Dict[str, str]:
+    def get_query_data(self, partition_key: str, sort_key: Optional[str]) -> Dict[str, str]:
         """
         Get query-ready data with `partition_key` and `sort_key` values.
 

@@ -1,14 +1,10 @@
-from unittest.mock import MagicMock, ANY
+from unittest.mock import ANY, MagicMock
 
 import pytest
 
-from dynamo_query.dynamo_query_main import DynamoQuery, DynamoQueryError
 from dynamo_query.data_table import DataTable
-from dynamo_query.expressions import (
-    ConditionExpression,
-    ProjectionExpression,
-    UpdateExpression,
-)
+from dynamo_query.dynamo_query_main import DynamoQuery, DynamoQueryError
+from dynamo_query.expressions import ConditionExpression, ProjectionExpression, UpdateExpression
 
 
 class TestDynamoQuery:
@@ -189,9 +185,7 @@ class TestDynamoQuery:
     def test_get_item() -> None:
         table_resource_mock = MagicMock()
         query = (
-            DynamoQuery.build_get_item(
-                projection_expression=ProjectionExpression("test2"),
-            )
+            DynamoQuery.build_get_item(projection_expression=ProjectionExpression("test2"),)
             .table(table=table_resource_mock, table_keys=("pk", "sk"))
             .projection("test")
         )
@@ -216,9 +210,7 @@ class TestDynamoQuery:
             .table(table=table_resource_mock, table_keys=("pk", "sk"))
             .update("test")
         )
-        result = query.execute_dict(
-            {"pk": "pk_value", "sk": "sk_value", "test": "data"}
-        )
+        result = query.execute_dict({"pk": "pk_value", "sk": "sk_value", "test": "data"})
         table_resource_mock.update_item.assert_called_with(
             ConditionExpression="#aaa = :aaa",
             ExpressionAttributeNames={"#aaa": "pk", "#aab": "test"},
@@ -232,20 +224,14 @@ class TestDynamoQuery:
         assert list(result.get_records()) == []
 
         with pytest.raises(DynamoQueryError):
-            DynamoQuery.build_update_item(
-                condition_expression=ConditionExpression("pk"),
-            ).table(table=table_resource_mock, table_keys=("pk", "sk")).execute_dict(
-                {"pk": "value", "sk": "value", "test": "data"}
-            )
+            DynamoQuery.build_update_item(condition_expression=ConditionExpression("pk"),).table(
+                table=table_resource_mock, table_keys=("pk", "sk")
+            ).execute_dict({"pk": "value", "sk": "value", "test": "data"})
 
         with pytest.raises(DynamoQueryError):
-            DynamoQuery.build_update_item(
-                condition_expression=ConditionExpression("pk"),
-            ).table(table=table_resource_mock, table_keys=("pk", "sk")).update(
-                add=["test"],
-            ).execute_dict(
-                {"pk": "value", "sk": "value", "test": "data"}
-            )
+            DynamoQuery.build_update_item(condition_expression=ConditionExpression("pk"),).table(
+                table=table_resource_mock, table_keys=("pk", "sk")
+            ).update(add=["test"],).execute_dict({"pk": "value", "sk": "value", "test": "data"})
 
     @staticmethod
     def test_delete_item() -> None:
@@ -253,9 +239,7 @@ class TestDynamoQuery:
         query = DynamoQuery.build_delete_item(
             condition_expression=ConditionExpression("test"),
         ).table(table=table_resource_mock, table_keys=("pk", "sk"))
-        result = query.execute_dict(
-            {"pk": "pk_value", "sk": "sk_value", "test": "data"}
-        )
+        result = query.execute_dict({"pk": "pk_value", "sk": "sk_value", "test": "data"})
         table_resource_mock.delete_item.assert_called_with(
             ConditionExpression="#aaa = :aaa",
             ExpressionAttributeNames={"#aaa": "test"},
@@ -275,9 +259,7 @@ class TestDynamoQuery:
         )
         result = query.execute_dict({"pk": "value", "sk": "value"})
         table_resource_mock.meta.client.batch_get_item.assert_called_with(
-            RequestItems={
-                table_resource_mock.name: {"Keys": [{"pk": "value", "sk": "value"}]}
-            },
+            RequestItems={table_resource_mock.name: {"Keys": [{"pk": "value", "sk": "value"}]}},
             ReturnConsumedCapacity="NONE",
         )
         assert list(result.get_records()) == [{"pk": "value", "sk": "value"}]
@@ -291,9 +273,7 @@ class TestDynamoQuery:
         result = query.execute_dict({"pk": "value", "sk": "value"})
         table_resource_mock.meta.client.batch_write_item.assert_called_with(
             RequestItems={
-                table_resource_mock.name: [
-                    {"PutRequest": {"Item": {"pk": "value", "sk": "value"}}}
-                ]
+                table_resource_mock.name: [{"PutRequest": {"Item": {"pk": "value", "sk": "value"}}}]
             },
             ReturnConsumedCapacity="NONE",
             ReturnItemCollectionMetrics="NONE",
