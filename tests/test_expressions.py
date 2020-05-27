@@ -1,12 +1,12 @@
 import pytest
 
 from dynamo_query.expressions import (
-    ExpressionError,
-    Expression,
-    ProjectionExpression,
-    UpdateExpression,
     ConditionExpression,
     ConditionExpressionGroup,
+    Expression,
+    ExpressionError,
+    ProjectionExpression,
+    UpdateExpression,
 )
 
 
@@ -109,22 +109,13 @@ class TestConditionExpression:
     def test_render(self) -> None:
         assert self.result.render() == "{key} = {value__value}"
         assert self.other.render() == "attribute_exists({key2})"
-        assert (
-            self.between.render()
-            == "{key3} BETWEEN {value1__value} AND {value2__value}"
-        )
-        assert (
-            ConditionExpression("key", "IN", "value").render()
-            == "{key} IN ({value__value})"
-        )
+        assert self.between.render() == "{key3} BETWEEN {value1__value} AND {value2__value}"
+        assert ConditionExpression("key", "IN", "value").render() == "{key} IN ({value__value})"
         assert (
             ConditionExpression("key", "begins_with", "value").render()
             == "begins_with({key}, {value__value})"
         )
-        assert (
-            ConditionExpression("key", "attribute_exists").render()
-            == "attribute_exists({key})"
-        )
+        assert ConditionExpression("key", "attribute_exists").render() == "attribute_exists({key})"
         assert (
             ConditionExpression("key", "attribute_exists", False).render()
             == "attribute_not_exists({key})"
@@ -144,13 +135,9 @@ class TestConditionExpression:
 
     def test_operators(self) -> None:
         and_result = self.result & self.other
-        assert (
-            and_result.render() == "{key} = {value__value} AND attribute_exists({key2})"
-        )
+        assert and_result.render() == "{key} = {value__value} AND attribute_exists({key2})"
         or_result = self.result | self.other
-        assert (
-            or_result.render() == "{key} = {value__value} OR attribute_exists({key2})"
-        )
+        assert or_result.render() == "{key} = {value__value} OR attribute_exists({key2})"
 
         group_and_result = self.between & or_result
         assert group_and_result.render() == (
@@ -177,8 +164,7 @@ class TestConditionExpressionGroup:
 
     def setup_method(self) -> None:
         self.result = ConditionExpressionGroup(
-            [ConditionExpression("key", ">", "value"), ConditionExpression("key2")],
-            ["AND"],
+            [ConditionExpression("key", ">", "value"), ConditionExpression("key2")], ["AND"],
         )
         self.other = ConditionExpressionGroup(
             [ConditionExpression("key3"), ConditionExpression("key4")], ["OR"]
@@ -215,13 +201,11 @@ class TestConditionExpressionGroup:
 
         cexpr_and_result = self.result & self.cexpr
         assert cexpr_and_result.render() == (
-            "{key} > {value__value} AND {key2} = {key2__value}"
-            " AND {key5} = {key5__value}"
+            "{key} > {value__value} AND {key2} = {key2__value}" " AND {key5} = {key5__value}"
         )
         cexpr_or_result = self.result | self.cexpr
         assert cexpr_or_result.render() == (
-            "{key} > {value__value} AND {key2} = {key2__value}"
-            " OR {key5} = {key5__value}"
+            "{key} > {value__value} AND {key2} = {key2__value}" " OR {key5} = {key5__value}"
         )
 
         with pytest.raises(ExpressionError):
@@ -265,9 +249,7 @@ class TestUpdateExpression:
             check.validate_input_data({"add": "my_key", "delete": 4.5})
 
     def test_render(self) -> None:
-        assert (
-            self.result.render() == "SET {key1} = {key1__value}, {key2} = {key2__value}"
-        )
+        assert self.result.render() == "SET {key1} = {key1__value}, {key2} = {key2__value}"
         assert self.other.render() == "SET {key3} = {key3__value} REMOVE {key4}"
         assert UpdateExpression(
             add=["add", "add2"],
@@ -280,6 +262,7 @@ class TestUpdateExpression:
             " DELETE {delete} {delete__value}, {delete2} {delete2__value}"
             " REMOVE {remove}, {remove2}"
         )
+        assert UpdateExpression(remove=["value"]).render() == "REMOVE {value}"
 
     def test_operators(self) -> None:
         and_result = self.result & self.other

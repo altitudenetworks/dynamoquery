@@ -5,8 +5,8 @@ import pytest
 
 from dynamo_query.data_table import DataTable
 from dynamo_query.dynamo_table import DynamoTable, DynamoTableError
-from dynamo_query.expressions import ConditionExpression
 from dynamo_query.dynamo_table_index import DynamoTableIndex
+from dynamo_query.expressions import ConditionExpression
 
 
 @pytest.fixture
@@ -73,6 +73,8 @@ class TestDynamoTable:
         self.table_mock.delete.assert_called_once_with()
 
     def test_create_table(self):
+        self.result.get_table_status = MagicMock()
+        self.result.get_table_status.return_value = None
         self.result.create_table()
         self.client_mock.create_table.assert_called_once_with(
             AttributeDefinitions=[
@@ -90,6 +92,7 @@ class TestDynamoTable:
                         {"AttributeName": "gsi_sk", "KeyType": "RANGE"},
                     ],
                     "Projection": {"ProjectionType": "ALL"},
+                    "ProvisionedThroughput": {"ReadCapacityUnits": 50, "WriteCapacityUnits": 10},
                 }
             ],
             KeySchema=[
@@ -107,6 +110,7 @@ class TestDynamoTable:
                 }
             ],
             TableName="my_table_name",
+            ProvisionedThroughput={"ReadCapacityUnits": 50, "WriteCapacityUnits": 10},
         )
 
     def test_clear_table(self):
@@ -124,9 +128,7 @@ class TestDynamoTable:
         )
         self.client_mock.batch_write_item.assert_called_with(
             RequestItems={
-                "my_table_name": [
-                    {"DeleteRequest": {"Key": {"pk": "my_pk", "sk": "sk"}}}
-                ]
+                "my_table_name": [{"DeleteRequest": {"Key": {"pk": "my_pk", "sk": "sk"}}}]
             },
             ReturnConsumedCapacity="NONE",
             ReturnItemCollectionMetrics="NONE",
@@ -142,9 +144,7 @@ class TestDynamoTable:
         )
         self.client_mock.batch_write_item.assert_called_with(
             RequestItems={
-                "my_table_name": [
-                    {"DeleteRequest": {"Key": {"pk": "my_pk", "sk": "sk"}}}
-                ]
+                "my_table_name": [{"DeleteRequest": {"Key": {"pk": "my_pk", "sk": "sk"}}}]
             },
             ReturnConsumedCapacity="NONE",
             ReturnItemCollectionMetrics="NONE",
@@ -158,22 +158,24 @@ class TestDynamoTable:
         )
         self.client_mock.batch_write_item.assert_called_with(
             RequestItems={
-                "my_table_name": [
-                    {"DeleteRequest": {"Key": {"pk": "my_pk", "sk": "sk"}}}
-                ]
+                "my_table_name": [{"DeleteRequest": {"Key": {"pk": "my_pk", "sk": "sk"}}}]
             },
             ReturnConsumedCapacity="NONE",
             ReturnItemCollectionMetrics="NONE",
         )
 
         self.table_mock.scan.return_value = {"Items": []}
+        self.table_mock.scan.reset_mock()
         self.result.clear_table(None)
+
+        self.table_mock.scan.reset_mock()
+        self.result.clear_table(None, partition_key_prefix="prefix_")
+        self.table_mock.scan.return_value = {"Items": []}
+        self.table_mock.scan.assert_called()
 
     def test_batch_get(self):
         self.client_mock.batch_get_item.return_value = {
-            "Responses": {
-                "my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]
-            }
+            "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]}
         }
         data_table = DataTable().add_record({"pk": "my_pk", "sk": "my_sk"})
         assert list(self.result.batch_get(data_table).get_records()) == [
@@ -188,9 +190,7 @@ class TestDynamoTable:
 
     def test_batch_delete(self):
         self.client_mock.batch_write_item.return_value = {
-            "Responses": {
-                "my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]
-            }
+            "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]}
         }
         data_table = DataTable().add_record({"pk": "my_pk", "sk": "my_sk"})
         assert list(self.result.batch_delete(data_table).get_records()) == [
@@ -198,9 +198,7 @@ class TestDynamoTable:
         ]
         self.client_mock.batch_write_item.assert_called_with(
             RequestItems={
-                "my_table_name": [
-                    {"DeleteRequest": {"Key": {"pk": "my_pk", "sk": "my_sk"}}}
-                ]
+                "my_table_name": [{"DeleteRequest": {"Key": {"pk": "my_pk", "sk": "my_sk"}}}]
             },
             ReturnConsumedCapacity="NONE",
             ReturnItemCollectionMetrics="NONE",
@@ -312,39 +310,34 @@ class TestDynamoTable:
             )
 
     def test_get_record(self):
-        self.table_mock.get_item.return_value = {
-            "Item": {"pk": "my_pk", "pk_column": "my_pk"}
-        }
+        self.table_mock.get_item.return_value = {"Item": {"pk": "my_pk", "pk_column": "my_pk"}}
         assert self.result.get_record({"pk_column": "my_pk", "sk_column": "my_sk"}) == {
             "pk": "my_pk",
             "pk_column": "my_pk",
             "sk": "my_sk",
         }
         self.table_mock.get_item.return_value = {"Item": {"pk": "my_pk"}}
-        assert (
-            self.result.get_record({"pk_column": "my_pk", "sk_column": "my_sk"}) is None
-        )
+        assert self.result.get_record({"pk_column": "my_pk", "sk_column": "my_sk"}) is None
 
     def test_upsert_record(self):
         self.table_mock.update_item.return_value = {
             "Attributes": {"pk": "my_pk", "pk_column": "my_pk"}
         }
-        assert self.result.upsert_record(
-            {"pk_column": "my_pk", "sk_column": "my_sk"}
-        ) == {"pk": "my_pk", "pk_column": "my_pk"}
+        assert self.result.upsert_record({"pk_column": "my_pk", "sk_column": "my_sk"}) == {
+            "pk": "my_pk",
+            "pk_column": "my_pk",
+        }
 
     def test_delete_record(self):
         self.table_mock.delete_item.return_value = {
             "Attributes": {"pk": "my_pk", "pk_column": "my_pk"}
         }
-        assert self.result.delete_record(
-            {"pk_column": "my_pk", "sk_column": "my_sk"}
-        ) == {"pk": "my_pk", "pk_column": "my_pk"}
+        assert self.result.delete_record({"pk_column": "my_pk", "sk_column": "my_sk"}) == {
+            "pk": "my_pk",
+            "pk_column": "my_pk",
+        }
         self.table_mock.delete_item.return_value = {}
-        assert (
-            self.result.delete_record({"pk_column": "my_pk", "sk_column": "my_sk"})
-            is None
-        )
+        assert self.result.delete_record({"pk_column": "my_pk", "sk_column": "my_sk"}) is None
 
     def test_scan(self):
         self.table_mock.scan.return_value = {
@@ -353,9 +346,7 @@ class TestDynamoTable:
         filter_expression_mock = MagicMock()
         assert list(
             self.result.scan(
-                filter_expression=filter_expression_mock,
-                data={"key": "value"},
-                limit=1,
+                filter_expression=filter_expression_mock, data={"key": "value"}, limit=1,
             )
         ) == [{"pk": "my_pk", "sk": "sk"}]
         self.table_mock.scan.assert_called_with(
@@ -390,9 +381,7 @@ class TestDynamoTable:
             Limit=1,
         )
         self.table_mock.reset_mock()
-        list(
-            self.result.query(partition_key="pk", sort_key_prefix="sk_prefix", limit=1,)
-        )
+        list(self.result.query(partition_key="pk", sort_key_prefix="sk_prefix", limit=1))
         self.table_mock.query.assert_called_with(
             KeyConditionExpression="#aaa = :aaa AND begins_with(#aab, :aab)",
             ConsistentRead=False,
@@ -415,13 +404,11 @@ class TestDynamoTable:
 
     def test_batch_get_records(self):
         self.client_mock.batch_get_item.return_value = {
-            "Responses": {
-                "my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]
-            }
+            "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]}
         }
-        assert list(
-            self.result.batch_get_records([{"pk": "my_pk", "sk": "my_sk"}])
-        ) == [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]
+        assert list(self.result.batch_get_records([{"pk": "my_pk", "sk": "my_sk"}])) == [
+            {"pk": "my_pk", "sk": "my_sk", "data": "value"}
+        ]
         self.client_mock.batch_get_item.assert_called_with(
             RequestItems={"my_table_name": {"Keys": [{"pk": "my_pk", "sk": "my_sk"}]}},
             ReturnConsumedCapacity="NONE",
@@ -478,11 +465,7 @@ class TestDynamoTable:
 
     def test_batch_delete_records(self):
         self.client_mock.batch_write_item.return_value = {
-            "Responses": {
-                "my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]
-            }
+            "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]}
         }
         records = (i for i in [{"pk": "my_pk", "sk": "my_sk"}])
-        assert list(self.result.batch_delete_records(records)) == [
-            {"pk": "my_pk", "sk": "my_sk"}
-        ]
+        assert list(self.result.batch_delete_records(records)) == [{"pk": "my_pk", "sk": "my_sk"}]

@@ -18,6 +18,7 @@
         - [DynamoTable().get_partition_key](#dynamotableget_partition_key)
         - [DynamoTable().get_record](#dynamotableget_record)
         - [DynamoTable().get_sort_key](#dynamotableget_sort_key)
+        - [DynamoTable().get_table_status](#dynamotableget_table_status)
         - [DynamoTable().max_batch_size](#dynamotablemax_batch_size)
         - [DynamoTable().normalize_record](#dynamotablenormalize_record)
         - [DynamoTable().query](#dynamotablequery)
@@ -31,10 +32,10 @@
 
 ## DynamoTable
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L61)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L62)
 
 ```python
-class DynamoTable(Generic[DynamoRecord], LazyLogger, ABC):
+class DynamoTable(Generic[_R], LazyLogger, ABC):
     def __init__(logger: Optional[logging.Logger] = None):
 ```
 
@@ -47,16 +48,14 @@ DynamoDB table manager, uses `DynamoQuery` underneath.
 #### Examples
 
 ```python
-from typing_extensions import TypedDict
-from dynamo_query import DynamoTable
+from dynamo_query import DynamoTable, DynamoRecord
+from typing import Optional
 
-# first, define your record
-class UserRecord(TypedDict, total=False):
+class UserRecord(DynamoRecord):
     pk: str
     email: str
     name: str
-    points: int
-
+    points: Optional[int] = None
 
 # Create your dynamo table manager with your record class
 class UserTable(DynamoTable[UserRecord]):
@@ -70,7 +69,7 @@ class UserTable(DynamoTable[UserRecord]):
 
     # define how to get PK from a record
     def get_partition_key(self, record: UserRecord) -> str:
-        return record["email"]
+        return record.email
 
     # we do not have a sort key in our table
     def get_sort_key(self, record: UserRecord) -> None:
@@ -89,8 +88,6 @@ user_table.create_table()
 
 #### Attributes
 
-- `partition_key_name` - PK column name: `'pk'`
-- `sort_key_name` - SK column name: `'sk'`
 - `primary_index` - Primary global index: `DynamoTableIndex(name=DynamoTableIndex.PRIMARY,...`
 
 #### See also
@@ -99,12 +96,10 @@ user_table.create_table()
 
 ### DynamoTable().batch_delete
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L420)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L503)
 
 ```python
-def batch_delete(
-    data_table: DataTable[DynamoRecord],
-) -> DataTable[DynamoRecord]:
+def batch_delete(data_table: DataTable[_R]) -> DataTable[_R]:
 ```
 
 Delete multuple records as a DataTable from DB.
@@ -146,12 +141,10 @@ DataTable with deleted records.
 
 ### DynamoTable().batch_delete_records
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L587)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L661)
 
 ```python
-def batch_delete_records(
-    records: Iterable[DynamoRecord],
-) -> Iterator[DynamoRecord]:
+def batch_delete_records(records: Iterable[_R]) -> Iterator[_R]:
 ```
 
 Delete records from DB.
@@ -168,10 +161,10 @@ Deleted or not found record data.
 
 ### DynamoTable().batch_get
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L360)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L444)
 
 ```python
-def batch_get(data_table: DataTable[DynamoRecord]) -> DataTable[DynamoRecord]:
+def batch_get(data_table: DataTable[_R]) -> DataTable[_R]:
 ```
 
 Get multuple records as a DataTable from DB.
@@ -213,12 +206,10 @@ DataTable with existing records.
 
 ### DynamoTable().batch_get_records
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L567)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L643)
 
 ```python
-def batch_get_records(
-    records: Iterable[DynamoRecord],
-) -> Iterator[DynamoRecord]:
+def batch_get_records(records: Iterable[_R]) -> Iterator[_R]:
 ```
 
 Get records as an iterator from DB.
@@ -235,13 +226,13 @@ Found or not found record data.
 
 ### DynamoTable().batch_upsert
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L481)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L560)
 
 ```python
 def batch_upsert(
-    data_table: DataTable[DynamoRecord],
+    data_table: DataTable[_R],
     set_if_not_exists_keys: Iterable[str] = (),
-) -> DataTable[DynamoRecord]:
+) -> DataTable[_R]:
 ```
 
 Upsert multuple records as a DataTable to DB.
@@ -289,13 +280,13 @@ A DataTable with upserted results.
 
 ### DynamoTable().batch_upsert_records
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L607)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L681)
 
 ```python
 def batch_upsert_records(
-    records: Iterable[DynamoRecord],
+    records: Iterable[_R],
     set_if_not_exists_keys: Iterable[str] = (),
-) -> Iterator[DynamoRecord]:
+) -> Iterator[_R]:
 ```
 
 Upsert records to DB.
@@ -313,7 +304,7 @@ Created, updated or not found record data.
 
 ### DynamoTable().clear_table
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L309)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L391)
 
 ```python
 def clear_table(
@@ -347,7 +338,7 @@ If `partition_key` and `partition_key_prefix` are None - deletes all records.
 
 ### DynamoTable().client
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L150)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L159)
 
 ```python
 @property
@@ -360,10 +351,10 @@ def client() -> DynamoDBClient:
 
 ### DynamoTable().create_table
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L198)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L257)
 
 ```python
-def create_table() -> CreateTableOutputTypeDef:
+def create_table() -> Optional[CreateTableOutputTypeDef]:
 ```
 
 Create a table in DynamoDB.
@@ -378,19 +369,15 @@ user_table = UserTable()
 UserTable.create_table()
 ```
 
-#### See also
-
-- [CreateTableOutputTypeDef](dynamo_query_types.md#createtableoutputtypedef)
-
 ### DynamoTable().delete_record
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L756)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L829)
 
 ```python
 def delete_record(
-    record: DynamoRecord,
+    record: _R,
     condition_expression: Optional[ConditionExpression] = None,
-) -> Optional[DynamoRecord]:
+) -> Optional[_R]:
 ```
 
 Delete Record from DB.
@@ -425,19 +412,18 @@ else:
 
 A dict with record data or None.
 
-#### See also
-
-- [DynamoRecord](#dynamorecord)
-
 ### DynamoTable().delete_table
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L182)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L219)
 
 ```python
 def delete_table() -> None:
 ```
 
 Delete the table from DynamoDB.
+
+If table is creating, wait until it is created, then deletes it.
+If table is deleting or does not exist, does nothing.
 
 #### Examples
 
@@ -447,29 +433,27 @@ user_table = UserTable()
 
 # delete table
 UserTable.delete_table()
+
+# make sure that it is deleted
+user_table.wait_until_not_exists()
 ```
 
 ### DynamoTable().get_partition_key
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L158)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L167)
 
 ```python
-@abstractmethod
-def get_partition_key(record: DynamoRecord) -> Any:
+def get_partition_key(record: _R) -> Any:
 ```
 
 Override this method to get PK from a record.
 
-#### See also
-
-- [DynamoRecord](#dynamorecord)
-
 ### DynamoTable().get_record
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L632)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L706)
 
 ```python
-def get_record(record: DynamoRecord) -> Optional[DynamoRecord]:
+def get_record(record: _R) -> Optional[_R]:
 ```
 
 Get Record from DB.
@@ -504,28 +488,33 @@ else:
 
 A dict with record data or None.
 
-#### See also
-
-- [DynamoRecord](#dynamorecord)
-
 ### DynamoTable().get_sort_key
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L164)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L176)
 
 ```python
-@abstractmethod
-def get_sort_key(record: DynamoRecord) -> Any:
+def get_sort_key(record: _R) -> Any:
 ```
 
 Override this method to get SK from a record.
 
-#### See also
+### DynamoTable().get_table_status
 
-- [DynamoRecord](#dynamorecord)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L205)
+
+```python
+def get_table_status() -> Optional[str]:
+```
+
+Get table status from Dynamo.
+
+#### Returns
+
+Status string or None.
 
 ### DynamoTable().max_batch_size
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L154)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L163)
 
 ```python
 @property
@@ -534,10 +523,10 @@ def max_batch_size() -> int:
 
 ### DynamoTable().normalize_record
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L256)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L338)
 
 ```python
-def normalize_record(record: DynamoRecord) -> DynamoRecord:
+def normalize_record(record: _R) -> _R:
 ```
 
 Modify record before upsert.
@@ -550,26 +539,22 @@ Modify record before upsert.
 
 Normalized record.
 
-#### See also
-
-- [DynamoRecord](#dynamorecord)
-
 ### DynamoTable().query
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L860)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L931)
 
 ```python
 def query(
-    partition_key: str,
+    partition_key: Any,
     index: DynamoTableIndex = primary_index,
-    sort_key: Optional[str] = None,
+    sort_key: Optional[Any] = None,
     sort_key_prefix: Optional[str] = None,
     filter_expression: Optional[ConditionExpressionType] = None,
     scan_index_forward: bool = True,
     projection: Iterable[str] = tuple(),
     data: Optional[Dict[str, Any]] = None,
     limit: Optional[int] = None,
-) -> Iterator[DynamoRecord]:
+) -> Iterator[_R]:
 ```
 
 Query table records by index.
@@ -629,7 +614,7 @@ Matching record.
 
 ### DynamoTable().scan
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L803)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L874)
 
 ```python
 def scan(
@@ -637,7 +622,7 @@ def scan(
     projection: Iterable[str] = tuple(),
     data: Optional[Dict[str, Any]] = None,
     limit: Optional[int] = None,
-) -> Iterator[DynamoRecord]:
+) -> Iterator[_R]:
 ```
 
 List table records.
@@ -676,10 +661,11 @@ for user_record in user_records:
 
 ### DynamoTable().table
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L144)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L152)
 
 ```python
-@abstractproperty
+@property
+@abstractmethod
 def table() -> Table:
 ```
 
@@ -691,15 +677,15 @@ Override this method to get DynamoDB Table resource.
 
 ### DynamoTable().upsert_record
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L678)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L751)
 
 ```python
 def upsert_record(
-    record: DynamoRecord,
+    record: _R,
     condition_expression: Optional[ConditionExpression] = None,
     set_if_not_exists_keys: Iterable[str] = (),
     extra_data: Dict[str, Any] = None,
-) -> DynamoRecord:
+) -> _R:
 ```
 
 Upsert Record to DB.
@@ -741,16 +727,12 @@ print(user_record)
 
 A dict with updated record data.
 
-#### See also
-
-- [DynamoRecord](#dynamorecord)
-
 ### DynamoTable().validate_record_attributes
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L268)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L350)
 
 ```python
-def validate_record_attributes(record: DynamoRecord) -> None:
+def validate_record_attributes(record: _R) -> None:
 ```
 
 Check that all index keys are set correctly in record.
@@ -763,13 +745,9 @@ Check that all index keys are set correctly in record.
 
 - `DynamoTableError` - If index key is missing.
 
-#### See also
-
-- [DynamoRecord](#dynamorecord)
-
 ### DynamoTable().wait_until_exists
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L960)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L1029)
 
 ```python
 def wait_until_exists() -> None:
@@ -779,7 +757,7 @@ Proxy method for `resource.Table.wait_until_exists`.
 
 ### DynamoTable().wait_until_not_exists
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L966)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L1035)
 
 ```python
 def wait_until_not_exists() -> None:
@@ -789,7 +767,7 @@ Proxy method for `resource.Table.wait_until_not_exists`.
 
 ## DynamoTableError
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L41)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table.py#L42)
 
 ```python
 class DynamoTableError(BaseException):

@@ -1,24 +1,23 @@
-from collections import defaultdict
+from collections import UserDict, defaultdict
 from copy import copy, deepcopy
-
 from typing import (
     Any,
     DefaultDict,
     Dict,
-    Iterator,
-    Iterable,
-    List,
-    Optional,
-    TypeVar,
     Generic,
-    cast,
+    Iterable,
+    Iterator,
+    List,
     Mapping,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
 )
 
 from dynamo_query.sentinel import SentinelValue
 
-DictRecord = Dict[str, Any]
-RecordType = TypeVar("RecordType", bound=Mapping[str, Any])
+_RecordType = TypeVar("_RecordType", bound=Mapping[str, Any])
 
 
 __all__ = (
@@ -33,7 +32,7 @@ class DataTableError(BaseException):
     """
 
 
-class DataTable(dict, Generic[RecordType]):
+class DataTable(Generic[_RecordType], UserDict):
     """
     Dictionary that has lists as values
 
@@ -82,8 +81,13 @@ class DataTable(dict, Generic[RecordType]):
     NOT_SET = SentinelValue("NOT_SET")
     NOT_SET_RESOLVED_VALUE: Any = None
 
-    def __init__(self, base_dict: Optional[Dict[str, List[Any]]] = None) -> None:
+    def __init__(
+        self,
+        base_dict: Optional[Dict[str, List[Any]]] = None,
+        record_class: Optional[Type[UserDict]] = None,
+    ) -> None:
         super(DataTable, self).__init__()
+        self.record_class = record_class
         if base_dict:
             if not isinstance(base_dict, dict):
                 raise DataTableError(
@@ -95,7 +99,7 @@ class DataTable(dict, Generic[RecordType]):
     @classmethod
     def create(
         cls, base_dict: Optional[Dict[str, List[Any]]] = None
-    ) -> "DataTable[DictRecord]":
+    ) -> "DataTable[Dict[str, Any]]":
         """
         Create a DataTable with untyped dicts as records.
 
@@ -107,28 +111,26 @@ class DataTable(dict, Generic[RecordType]):
         Returns:
             A new DataTable instance.
         """
-        return DataTable[DictRecord](base_dict)
+        return DataTable(base_dict)
 
-    def __copy__(self) -> "DataTable[RecordType]":
-        return DataTable(copy(self.as_defaultdict()))
+    def __copy__(self) -> "DataTable[_RecordType]":
+        return DataTable(copy(self.as_defaultdict()), record_class=self.record_class)
 
-    def __deepcopy__(self, memo: Any) -> "DataTable[RecordType]":
-        return DataTable(deepcopy(self.as_defaultdict()))
+    def __deepcopy__(self, memo: Any) -> "DataTable[_RecordType]":
+        return DataTable(deepcopy(self.as_defaultdict()), record_class=self.record_class)
 
     def __bool__(self) -> bool:
         return self.max_length > 0
 
     def _extend_key(self, key: str, values: List) -> None:
         if not isinstance(values, list):
-            raise DataTableError(
-                f"DataTable values can only be lists, got {values} instead"
-            )
+            raise DataTableError(f"DataTable values can only be lists, got {values} instead")
 
         if not key in self:
             self[key] = list()
         self[key].extend(values)
 
-    def extend(self, *extra_dicts: Dict[str, List[Any]]) -> "DataTable[RecordType]":
+    def extend(self, *extra_dicts: Dict[str, List[Any]]) -> "DataTable[_RecordType]":
         """
         Extend values lists with values from `extra_dicts`
         If some keys are missing from this dict, they will be created.
@@ -158,7 +160,7 @@ class DataTable(dict, Generic[RecordType]):
 
         return self
 
-    def append(self, key: str, values: List) -> "DataTable[RecordType]":
+    def append(self, key: str, values: List) -> "DataTable[_RecordType]":
         """
         Append `values` to specified `key` value
 
@@ -276,7 +278,7 @@ class DataTable(dict, Generic[RecordType]):
 
         return self
 
-    def filter_keys(self, keys: Iterable[str]) -> "DataTable[DictRecord]":
+    def filter_keys(self, keys: Iterable[str]) -> "DataTable[Dict[str, Any]]":
         """
         Create a new `DataTable` instance only with keys listed it `keys`
 
@@ -318,7 +320,7 @@ class DataTable(dict, Generic[RecordType]):
 
         return new_item
 
-    def get_records(self) -> Iterator[RecordType]:
+    def get_records(self) -> Iterator[_RecordType]:
         """
         Generator for all records with keys in DataTable.
 
@@ -334,7 +336,7 @@ class DataTable(dict, Generic[RecordType]):
         for record_index in range(self.max_length):
             yield self.get_record(record_index)
 
-    def get_record(self, record_index: int) -> RecordType:
+    def get_record(self, record_index: int) -> _RecordType:
         """
         Get one record of DataTable by `record_index` as dict of `{key: value}`.
         Not set values are resolved to `NOT_SET_RESOLVED_VALUE` by
@@ -372,9 +374,9 @@ class DataTable(dict, Generic[RecordType]):
                 )
             result[key] = record_value
 
-        return cast(RecordType, result)
+        return self._convert_record(result)
 
-    def filter_records(self, query: Dict[str, Any]) -> "DataTable[RecordType]":
+    def filter_records(self, query: Dict[str, Any]) -> "DataTable[_RecordType]":
         """
         Create a new `DataTable` instance with records that match `query`
 
@@ -393,11 +395,11 @@ class DataTable(dict, Generic[RecordType]):
             A copy of original `DataTable` with matching records
         """
         if not self.is_normalized():
-            raise DataTableError(
-                "Cannot filter not normalized table. Use `normalize` method."
-            )
+            raise DataTableError("Cannot filter not normalized table. Use `normalize` method.")
 
-        result: DataTable[RecordType] = DataTable({key: [] for key in self.keys()})
+        result: DataTable[_RecordType] = DataTable(
+            {key: [] for key in self.keys()}, record_class=self.record_class
+        )
         for record in self.get_records():
             record_match = True
             for lookup_key, lookup_value in query.items():
@@ -410,7 +412,15 @@ class DataTable(dict, Generic[RecordType]):
 
         return result
 
-    def add_record(self, *records: RecordType) -> "DataTable[RecordType]":
+    def _convert_record(self, record: Union[_RecordType, Dict]) -> _RecordType:
+        # pylint: disable=isinstance-second-argument-not-valid-type
+        if self.record_class and not isinstance(record, self.record_class):
+            # pylint: disable=not-callable
+            return self.record_class(record)  # type: ignore
+
+        return record  # type: ignore
+
+    def add_record(self, *records: Union[Dict, _RecordType]) -> "DataTable[_RecordType]":
         """
         Add a new record to existing data and normalizes it after each record add.
 
@@ -432,6 +442,8 @@ class DataTable(dict, Generic[RecordType]):
             )
 
         for record in records:
+            record = self._convert_record(record)
+
             row_length = self.max_length
             for key, value in record.items():
                 if key not in self:
@@ -474,9 +486,7 @@ class DataTable(dict, Generic[RecordType]):
         if not self.has_column(column_name):
             for record_index in range(self.max_length):
                 result.append(
-                    self.resolve_not_set_value(
-                        column_name=column_name, record_index=record_index
-                    )
+                    self.resolve_not_set_value(column_name=column_name, record_index=record_index)
                 )
             return result
         column_values = self.get(column_name) or []
@@ -568,9 +578,7 @@ class DataTable(dict, Generic[RecordType]):
 
         for data_table in data_tables:
             if not data_table.is_normalized():
-                raise DataTableError(
-                    "Cannot add not normalized table. Use `normalize` method."
-                )
+                raise DataTableError("Cannot add not normalized table. Use `normalize` method.")
 
         for data_table in data_tables:
             for record in data_table.get_records():
@@ -613,9 +621,7 @@ class DataTable(dict, Generic[RecordType]):
 
         return result
 
-    def set(
-        self, column_name: str, record_index: int, value: Any
-    ) -> "DataTable[RecordType]":
+    def set(self, column_name: str, record_index: int, value: Any) -> "DataTable[_RecordType]":
         """
         Set `value` in-place for `column_name` and `record_index`.
 
@@ -640,8 +646,6 @@ class DataTable(dict, Generic[RecordType]):
         try:
             self[column_name][record_index] = value
         except IndexError:
-            raise DataTableError(
-                f"Column {column_name} does not have index {record_index}"
-            )
+            raise DataTableError(f"Column {column_name} does not have index {record_index}")
 
         return self

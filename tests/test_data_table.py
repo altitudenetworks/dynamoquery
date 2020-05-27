@@ -1,9 +1,16 @@
 from copy import copy, deepcopy
+from typing import Optional
 
-from typing_extensions import TypedDict
 import pytest
+from typing_extensions import TypedDict
 
 from dynamo_query.data_table import DataTable, DataTableError
+from dynamo_query.dynamo_record import DynamoRecord
+
+
+class UserRecord(DynamoRecord):
+    name: str
+    age: Optional[int] = None
 
 
 class TestDataTable:
@@ -213,9 +220,10 @@ class TestDataTable:
             "a": [1, 2, 5],
             "b": [3, 4, 6],
         }
-        assert DataTable({"a": [1, 2], "b": [3, 4]}).add_table(
-            data_table, data_table
-        ) == {"a": [1, 2, 5, 5], "b": [3, 4, 6, 6],}
+        assert DataTable({"a": [1, 2], "b": [3, 4]}).add_table(data_table, data_table) == {
+            "a": [1, 2, 5, 5],
+            "b": [3, 4, 6, 6],
+        }
 
         with pytest.raises(DataTableError):
             DataTable.create({"a": [1, 2], "b": [3, 4]}).add_table(
@@ -259,3 +267,22 @@ class TestDataTable:
         data_table.add_record({"key": "value"})
         data_table.add_record({"wrong_key": "value"})
         assert data_table
+
+    def test_custom_record(self):
+        data_table = DataTable[UserRecord](record_class=UserRecord)
+        data_table.add_record({"name": "Jon"})
+        data_table.add_record(UserRecord(name="test", age=12))
+        assert isinstance(data_table.get_record(0), UserRecord)
+        assert list(data_table.get_records()) == [
+            UserRecord(name="Jon"),
+            UserRecord(name="test", age=12),
+        ]
+
+        with pytest.raises(ValueError):
+            data_table.add_record({"unknown": "Jon"})
+
+        with pytest.raises(ValueError):
+            data_table.add_record({})
+
+        with pytest.raises(ValueError):
+            data_table.add_record({"name": 12})

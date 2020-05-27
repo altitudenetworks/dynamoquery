@@ -1,35 +1,30 @@
 """
 Helper for building Boto3 DynamoDB queries.
 """
-from typing import Optional, Dict, Any, Set, List, cast
 import logging
+from typing import Any, Dict, List, Optional, Set, cast
 
-from dynamo_query.utils import chunkify
 from dynamo_query.data_table import DataTable
 from dynamo_query.dynamo_query_types import (
-    ExpressionMap,
-    FormatDict,
-    TableKeys,
-    ExclusiveStartKey,
-    Table,
-    DynamoDBClient,
-    GetItemOutputTypeDef,
-    UpdateItemOutputTypeDef,
-    DeleteItemOutputTypeDef,
-    QueryOutputTypeDef,
-    ScanOutputTypeDef,
     BatchGetItemOutputTypeDef,
     BatchWriteItemOutputTypeDef,
+    DeleteItemOutputTypeDef,
+    DynamoDBClient,
+    ExclusiveStartKey,
+    ExpressionMap,
+    FormatDict,
+    GetItemOutputTypeDef,
+    QueryOutputTypeDef,
+    ScanOutputTypeDef,
+    Table,
+    TableKeys,
+    UpdateItemOutputTypeDef,
 )
 from dynamo_query.enums import QueryType
-from dynamo_query.expressions import (
-    BaseExpression,
-    Operator,
-    ExpressionError,
-)
-from dynamo_query.utils import ascii_string_generator
+from dynamo_query.expressions import BaseExpression, ExpressionError, Operator
 from dynamo_query.json_tools import dumps
 from dynamo_query.lazy_logger import LazyLogger
+from dynamo_query.utils import ascii_string_generator, chunkify
 
 
 class DynamoQueryError(Exception):
@@ -209,9 +204,7 @@ class BaseDynamoQuery(LazyLogger):
                 expand_lists = expression_name in cls._expand_lists_expression_names
 
                 if expand_lists and cls._is_set_like_value(value):
-                    key_value = ", ".join(
-                        [f":{safe_key}___{index}" for index in range(len(value))]
-                    )
+                    key_value = ", ".join([f":{safe_key}___{index}" for index in range(len(value))])
                 result[result_key] = key_value
 
         return result
@@ -258,8 +251,7 @@ class BaseDynamoQuery(LazyLogger):
         keys_set = set(self._last_evaluated_key.keys())
         if not self.table_keys.issubset(keys_set):
             raise DynamoQueryError(
-                f"Expected ExclusiveStartKey to have {self.table_keys}"
-                f" keys, got {keys_set}"
+                f"Expected ExclusiveStartKey to have {self.table_keys}" f" keys, got {keys_set}"
             )
 
     def _validate_required_value_keys(self, data_table: DataTable) -> None:
@@ -284,9 +276,7 @@ class BaseDynamoQuery(LazyLogger):
         self._validate_last_evaluated_key()
         self._validate_required_value_keys(data_table)
 
-        for operator in self._expressions[
-            self.KEY_CONDITION_EXPRESSION
-        ].get_operators():
+        for operator in self._expressions[self.KEY_CONDITION_EXPRESSION].get_operators():
             if operator not in (
                 Operator.EQ.value,
                 Operator.LT.value,
@@ -297,8 +287,7 @@ class BaseDynamoQuery(LazyLogger):
                 Operator.BEGINS_WITH.value,
             ):
                 raise DynamoQueryError(
-                    f"{self.KEY_CONDITION_EXPRESSION} does not support operator"
-                    f' "{operator}".'
+                    f"{self.KEY_CONDITION_EXPRESSION} does not support operator" f' "{operator}".'
                 )
 
         result = DataTable.create()
@@ -320,9 +309,7 @@ class BaseDynamoQuery(LazyLogger):
         result = DataTable.create()
         for record in data_table.get_records():
             key_data = {k: v for k, v in record.items() if k in self.table_keys}
-            result_record = self._execute_item_query(
-                key_data=key_data, item_data=record
-            )
+            result_record = self._execute_item_query(key_data=key_data, item_data=record)
             if result_record is not None:
                 record.update(result_record)
             result.add_record(record)
@@ -355,9 +342,7 @@ class BaseDynamoQuery(LazyLogger):
                     f"{self} must have {self.UPDATE_EXPRESSION} or `update` method."
                 )
             key_data = {k: v for k, v in record.items() if k in self.table_keys}
-            result_record = self._execute_item_query(
-                key_data=key_data, item_data=record,
-            )
+            result_record = self._execute_item_query(key_data=key_data, item_data=record,)
             if result_record is not None:
                 result.add_record(result_record)
         return result
@@ -369,14 +354,12 @@ class BaseDynamoQuery(LazyLogger):
         result = DataTable.create()
         for record in data_table.get_records():
             key_data = {k: v for k, v in record.items() if k in self.table_keys}
-            result_record = self._execute_item_query(
-                key_data=key_data, item_data=record
-            )
+            result_record = self._execute_item_query(key_data=key_data, item_data=record)
             if result_record is not None:
                 result.add_record(result_record)
         return result
 
-    def _execute_method_batch_get_item(self, data_table: DataTable,) -> DataTable:
+    def _execute_method_batch_get_item(self, data_table: DataTable) -> DataTable:
         self._validate_data_table_has_table_keys(data_table)
 
         record_chunks = chunkify(data_table.get_records(), self.MAX_BATCH_SIZE)
@@ -388,9 +371,7 @@ class BaseDynamoQuery(LazyLogger):
                 key_data = {k: v for k, v in record.items() if k in self.table_keys}
                 key_data_list.append(key_data)
             request_items = {table_name: {"Keys": key_data_list}}
-            response = self._batch_get_item(
-                RequestItems=request_items, **self._extra_params,
-            )
+            response = self._batch_get_item(RequestItems=request_items, **self._extra_params,)
             if response.get("Responses", {}).get(table_name):
                 response_table.add_record(*response["Responses"][table_name])
 
@@ -412,7 +393,7 @@ class BaseDynamoQuery(LazyLogger):
         for record_chunk in record_chunks:
             request_list = []
             for record in record_chunk:
-                request_list.append({"PutRequest": {"Item": record,}})
+                request_list.append({"PutRequest": {"Item": dict(record)}})
             request_items = {table_name: request_list}
             self._batch_write_item(
                 RequestItems=request_items, **self._extra_params,
@@ -429,7 +410,7 @@ class BaseDynamoQuery(LazyLogger):
             request_list = []
             for record in record_chunk:
                 key_data = {k: v for k, v in record.items() if k in self.table_keys}
-                request_list.append({"DeleteRequest": {"Key": key_data,}})
+                request_list.append({"DeleteRequest": {"Key": key_data}})
             request_items = {table_name: request_list}
             self._batch_write_item(
                 RequestItems=request_items, **self._extra_params,
@@ -482,9 +463,7 @@ class BaseDynamoQuery(LazyLogger):
             projection_dict=projection_dict, data_dict=data_dict,
         )
         for name, expression in expression_map.items():
-            self._logger.debug(
-                f'Using {name} = "{expression.render().format(**repr_format_dict)}"'
-            )
+            self._logger.debug(f'Using {name} = "{expression.render().format(**repr_format_dict)}"')
 
     def _execute_item_query(
         self, key_data: Dict[str, Any], item_data: Dict[str, Any],
@@ -492,9 +471,7 @@ class BaseDynamoQuery(LazyLogger):
         self._logger.debug(f"{self._query_type.value}_key_data = {dumps(key_data)}")
         expression_map = self._expressions
         if item_data:
-            self._logger.debug(
-                f"{self._query_type.value}_item_data = {dumps(item_data)}"
-            )
+            self._logger.debug(f"{self._query_type.value}_item_data = {dumps(item_data)}")
             for expression in self._expressions.values():
                 try:
                     expression.validate_input_data(item_data)
@@ -507,14 +484,10 @@ class BaseDynamoQuery(LazyLogger):
             **item_data,
         }
         format_dict = self._get_format_dict(
-            projection_dict=projection_dict,
-            expression_map=expression_map,
-            data_dict=full_data,
+            projection_dict=projection_dict, expression_map=expression_map, data_dict=full_data,
         )
         self._log_expressions(
-            projection_dict=projection_dict,
-            expression_map=expression_map,
-            data_dict=full_data,
+            projection_dict=projection_dict, expression_map=expression_map, data_dict=full_data,
         )
 
         formatted_expressions = self._get_formatted_expressions(
@@ -560,14 +533,10 @@ class BaseDynamoQuery(LazyLogger):
 
         projection_dict = self._get_projection_dict(expression_map)
         format_dict = self._get_format_dict(
-            projection_dict=projection_dict,
-            expression_map=expression_map,
-            data_dict=data,
+            projection_dict=projection_dict, expression_map=expression_map, data_dict=data,
         )
         self._log_expressions(
-            projection_dict=projection_dict,
-            expression_map=expression_map,
-            data_dict=data,
+            projection_dict=projection_dict, expression_map=expression_map, data_dict=data,
         )
 
         last_page = False

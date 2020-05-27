@@ -92,7 +92,7 @@ A string with serialized JSON.
 
 ## loads
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/json_tools.py#L94)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/json_tools.py#L91)
 
 ```python
 def loads(data: str, **kwargs: Any) -> Any:

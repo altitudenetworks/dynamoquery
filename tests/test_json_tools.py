@@ -1,5 +1,5 @@
-import decimal
 import datetime
+import decimal
 
 from dynamo_query.json_tools import dumps, loads
 

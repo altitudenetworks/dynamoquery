@@ -3,16 +3,15 @@ Helper that handles registration and deregistration of auto scaling for DynamoDB
 tables and indexes.
 """
 import logging
-from typing import Optional, Iterable
+from typing import Iterable, Optional
 
-from dynamo_query.dynamo_table_index import DynamoTableIndex
-from dynamo_query.types import (
-    MetricType,
-    ScalableDimension,
+from dynamo_query.dynamo_query_types import (
     ApplicationAutoScalingClient,
-    ClientPutScalingPolicyTargetTrackingScalingPolicyConfigurationTypeDef,
+    MetricTypeTypeDef,
+    ScalableDimensionTypeDef,
     TargetTrackingScalingPolicyConfigurationTypeDef,
 )
+from dynamo_query.dynamo_table_index import DynamoTableIndex
 
 
 class DynamoAutoscaler:
@@ -32,13 +31,8 @@ class DynamoAutoscaler:
     SCALE_MIN_CAPACITY = 50
     SCALE_MAX_CAPACITY = 40000
 
-    METRIC_TYPE_READ = "read"
-    METRIC_TYPE_WRITE = "write"
-
     def __init__(
-        self,
-        client: ApplicationAutoScalingClient,
-        logger: Optional[logging.Logger] = None,
+        self, client: ApplicationAutoScalingClient, logger: Optional[logging.Logger] = None,
     ) -> None:
         self.client: ApplicationAutoScalingClient = client
         self._lazy_logger = logger
@@ -51,9 +45,7 @@ class DynamoAutoscaler:
         return self._lazy_logger
 
     def deregister_auto_scaling(
-        self,
-        table_name: str,
-        global_secondary_indexes: Iterable[DynamoTableIndex] = (),
+        self, table_name: str, global_secondary_indexes: Iterable[DynamoTableIndex] = (),
     ) -> None:
         """
         Deregister auto scaling for table.
@@ -75,12 +67,10 @@ class DynamoAutoscaler:
             )
 
         self.deregister_scalable_target(
-            table_name=table_name,
-            scalable_dimension="dynamodb:table:ReadCapacityUnits",
+            table_name=table_name, scalable_dimension="dynamodb:table:ReadCapacityUnits",
         )
         self.deregister_scalable_target(
-            table_name=table_name,
-            scalable_dimension="dynamodb:table:WriteCapacityUnits",
+            table_name=table_name, scalable_dimension="dynamodb:table:WriteCapacityUnits",
         )
 
     def register_auto_scaling(
@@ -172,7 +162,7 @@ class DynamoAutoscaler:
     def deregister_scalable_target(
         self,
         table_name: str,
-        scalable_dimension: ScalableDimension,
+        scalable_dimension: ScalableDimensionTypeDef,
         index_name: Optional[str] = None,
     ) -> None:
         """
@@ -196,7 +186,7 @@ class DynamoAutoscaler:
     def register_scalable_target(
         self,
         table_name: str,
-        scalable_dimension: ScalableDimension,
+        scalable_dimension: ScalableDimensionTypeDef,
         index_name: Optional[str] = None,
         min_capacity: int = SCALE_MIN_CAPACITY,
         max_capacity: int = SCALE_MAX_CAPACITY,
@@ -225,7 +215,7 @@ class DynamoAutoscaler:
 
     @staticmethod
     def create_scaling_policy_configs(
-        metric_type: MetricType,
+        metric_type: MetricTypeTypeDef,
         target_value: float = SCALE_TARGET_VALUE,
         scale_out_cooldown: int = SCALE_OUT_COOLDOWN,
         scale_in_cooldown: int = SCALE_IN_COOLDOWN,
@@ -234,8 +224,8 @@ class DynamoAutoscaler:
         Create auto scaling policy dict.
 
         Arguments:
-            metric_type -- METRIC_TYPE_READ or METRIC_TYPE_WRITE
-            target_value -- percent of use to aim for
+            metric_type -- DynamoDB Metric type
+            target_value -- Percent of use to aim for
             scale_out_cooldown -- Scale out cooldown in seconds
             scale_in_cooldown -- Scale in cooldown in seconds
 
@@ -252,7 +242,7 @@ class DynamoAutoscaler:
     def put_scaling_policy(
         self,
         table_name: str,
-        scalable_dimension: ScalableDimension,
+        scalable_dimension: ScalableDimensionTypeDef,
         scaling_policy_configs: TargetTrackingScalingPolicyConfigurationTypeDef,
         index_name: Optional[str] = None,
     ) -> None:

@@ -71,15 +71,16 @@ for record in result_data_table.get_records():
 ### DynamoTable
 
 ```python
-from typing_extensions import TypedDict
-from dynamo_query import DynamoTable
+from typing import Optional
+from dynamo_query import DynamoTable, DynamoRecord
 
 # first, define your record
-class UserRecord(TypedDict, total=False):
+@dataclass
+class UserRecord(DynamoRecord):
     pk: str
     email: str
     name: str
-    points: int
+    points: Optional[int] = None
 
 
 # Create your dynamo table manager with your record class
@@ -94,7 +95,7 @@ class UserTable(DynamoTable[UserRecord]):
 
     # define how to get PK from a record
     def get_partition_key(self, record: UserRecord) -> str:
-        return record["email"]
+        return record.email
 
     # we do not have a sort key in our table
     def get_sort_key(self, record: UserRecord) -> None:
@@ -104,11 +105,13 @@ class UserTable(DynamoTable[UserRecord]):
 user_table = UserTable()
 
 # add a new record to your table
-user_table.upsert_record({
-    "email": "user@gmail.com",
-    "name": "John User",
-    "age": 12,
-})
+user_table.upsert_record(
+    UserRecord(
+        email="user@gmail.com",
+        name="John User",
+        age=12,
+    )
+)
 
 # and output all the records
 for user_record in user_table.scan():
@@ -138,7 +141,7 @@ Run unit tests and linting.
 Add false-positive unused entities to `vulture` whitelist
 
 ```bash
-vulture dynamo_query --make-whitelist > vulture_whitelist.txt
+vulture dynamo_query --make-whitelist > vulture_whitelist.py
 ```
 
 ### VSCode

@@ -1,10 +1,8 @@
 """
 DynamoDB related enums.
 """
-from typing import Set
-
 import enum
-
+from typing import Set
 
 __all__ = (
     "QueryType",

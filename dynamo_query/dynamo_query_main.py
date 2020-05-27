@@ -2,27 +2,22 @@
 Helper for building Boto3 DynamoDB queries.
 """
 import logging
-from typing import Optional, Dict, Any, List, Iterable, TypeVar, Type
+from typing import Any, Dict, Iterable, List, Optional, Type, TypeVar
 
+from dynamo_query.base_dynamo_query import BaseDynamoQuery, DynamoQueryError
 from dynamo_query.data_table import DataTable
-from dynamo_query.expressions import (
-    UpdateExpression,
-    ProjectionExpression,
-    ConditionExpressionType,
-)
-from dynamo_query.enums import QueryType
 from dynamo_query.dynamo_query_types import (
     ExclusiveStartKey,
-    Table,
-    TableKeys,
-    QueryMethod,
     ExpressionMap,
+    QueryMethod,
     ReturnConsumedCapacity,
     ReturnItemCollectionMetrics,
     ReturnValues,
+    Table,
+    TableKeys,
 )
-from dynamo_query.base_dynamo_query import BaseDynamoQuery, DynamoQueryError
-
+from dynamo_query.enums import QueryType
+from dynamo_query.expressions import ConditionExpressionType, ProjectionExpression, UpdateExpression
 
 __all__ = (
     "DynamoQuery",
@@ -30,7 +25,7 @@ __all__ = (
 )
 
 
-DynamoQueryType = TypeVar("DynamoQueryType", bound="DynamoQuery")
+_R = TypeVar("_R", bound="DynamoQuery")
 
 
 class DynamoQuery(BaseDynamoQuery):
@@ -81,7 +76,7 @@ class DynamoQuery(BaseDynamoQuery):
 
     @classmethod
     def build_query(
-        cls: Type[DynamoQueryType],
+        cls: Type[_R],
         key_condition_expression: ConditionExpressionType,
         index_name: Optional[str] = None,
         projection_expression: Optional[ProjectionExpression] = None,
@@ -91,7 +86,7 @@ class DynamoQuery(BaseDynamoQuery):
         consistent_read: bool = False,
         scan_index_forward: bool = True,
         logger: Optional[logging.Logger] = None,
-    ) -> DynamoQueryType:
+    ) -> _R:
         """
         Build query for `table.query`.
 
@@ -134,9 +129,7 @@ class DynamoQuery(BaseDynamoQuery):
         Returns:
             `DynamoQuery` instance to execute.
         """
-        expressions: ExpressionMap = {
-            cls.KEY_CONDITION_EXPRESSION: key_condition_expression
-        }
+        expressions: ExpressionMap = {cls.KEY_CONDITION_EXPRESSION: key_condition_expression}
         if filter_expression:
             expressions[cls.FILTER_EXPRESSION] = filter_expression
         if projection_expression:
@@ -159,13 +152,13 @@ class DynamoQuery(BaseDynamoQuery):
 
     @classmethod
     def build_scan(
-        cls: Type[DynamoQueryType],
+        cls: Type[_R],
         filter_expression: Optional[ConditionExpressionType] = None,
         projection_expression: Optional[ProjectionExpression] = None,
         limit: int = MAX_LIMIT,
         exclusive_start_key: Optional[ExclusiveStartKey] = None,
         logger: Optional[logging.Logger] = None,
-    ) -> DynamoQueryType:
+    ) -> _R:
         """
         Build query for `table.scan`.
 
@@ -224,12 +217,12 @@ class DynamoQuery(BaseDynamoQuery):
 
     @classmethod
     def build_get_item(
-        cls: Type[DynamoQueryType],
+        cls: Type[_R],
         projection_expression: Optional[ProjectionExpression] = None,
         consistent_read: bool = False,
         return_consumed_capacity: ReturnConsumedCapacity = "NONE",
         logger: Optional[logging.Logger] = None,
-    ) -> DynamoQueryType:
+    ) -> _R:
         """
         Build query for `table.get_item`.
 
@@ -265,8 +258,7 @@ class DynamoQuery(BaseDynamoQuery):
             expressions[cls.PROJECTION_EXPRESSION] = projection_expression
 
         extra_params: Dict[str, Any] = dict(
-            ConsistentRead=consistent_read,
-            ReturnConsumedCapacity=return_consumed_capacity,
+            ConsistentRead=consistent_read, ReturnConsumedCapacity=return_consumed_capacity,
         )
 
         return cls(
@@ -278,14 +270,14 @@ class DynamoQuery(BaseDynamoQuery):
 
     @classmethod
     def build_update_item(
-        cls: Type[DynamoQueryType],
+        cls: Type[_R],
         condition_expression: Optional[ConditionExpressionType] = None,
         update_expression: Optional[UpdateExpression] = None,
         return_consumed_capacity: ReturnConsumedCapacity = "NONE",
         return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
         return_values: ReturnValues = "ALL_NEW",
         logger: Optional[logging.Logger] = None,
-    ) -> DynamoQueryType:
+    ) -> _R:
         """
         Build query for `table.update_item`.
 
@@ -347,13 +339,13 @@ class DynamoQuery(BaseDynamoQuery):
 
     @classmethod
     def build_delete_item(
-        cls: Type[DynamoQueryType],
+        cls: Type[_R],
         condition_expression: Optional[ConditionExpressionType] = None,
         return_consumed_capacity: ReturnConsumedCapacity = "NONE",
         return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
         return_values: ReturnValues = "ALL_OLD",
         logger: Optional[logging.Logger] = None,
-    ) -> DynamoQueryType:
+    ) -> _R:
         """
         Build query for `table.delete_item`.
 
@@ -406,10 +398,10 @@ class DynamoQuery(BaseDynamoQuery):
 
     @classmethod
     def build_batch_get_item(
-        cls: Type[DynamoQueryType],
+        cls: Type[_R],
         return_consumed_capacity: ReturnConsumedCapacity = "NONE",
         logger: Optional[logging.Logger] = None,
-    ) -> DynamoQueryType:
+    ) -> _R:
         """
         Build query for `table.meta.client.batch_get_item`.
 
@@ -445,11 +437,11 @@ class DynamoQuery(BaseDynamoQuery):
 
     @classmethod
     def build_batch_update_item(
-        cls: Type[DynamoQueryType],
+        cls: Type[_R],
         return_consumed_capacity: ReturnConsumedCapacity = "NONE",
         return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
         logger: Optional[logging.Logger] = None,
-    ) -> DynamoQueryType:
+    ) -> _R:
         """
         Build update query for `table.meta.client.batch_write_item`.
 
@@ -491,11 +483,11 @@ class DynamoQuery(BaseDynamoQuery):
 
     @classmethod
     def build_batch_delete_item(
-        cls: Type[DynamoQueryType],
+        cls: Type[_R],
         return_consumed_capacity: ReturnConsumedCapacity = "NONE",
         return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
         logger: Optional[logging.Logger] = None,
-    ) -> DynamoQueryType:
+    ) -> _R:
         """
         Build delete query for `table.meta.client.batch_write_item`.
 
@@ -534,10 +526,8 @@ class DynamoQuery(BaseDynamoQuery):
         )
 
     def table(
-        self: DynamoQueryType,
-        table: Optional[Table],
-        table_keys: Optional[TableKeys] = TABLE_KEYS,
-    ) -> DynamoQueryType:
+        self: _R, table: Optional[Table], table_keys: Optional[TableKeys] = TABLE_KEYS,
+    ) -> _R:
         """
         Set table resource and table keys.
 
@@ -592,13 +582,10 @@ class DynamoQuery(BaseDynamoQuery):
             raise DynamoQueryError("Input DataTable is not normalized.")
 
         self.table(
-            table=table or self.table_resource,
-            table_keys=table_keys or self._table_keys,
+            table=table or self.table_resource, table_keys=table_keys or self._table_keys,
         )
 
-        self._logger.debug(
-            f"Execute {self._query_type.value} on {self.table_resource.name}"
-        )
+        self._logger.debug(f"Execute {self._query_type.value} on {self.table_resource.name}")
 
         if self._table_keys is None:
             self._logger.warning(
@@ -653,8 +640,7 @@ class DynamoQuery(BaseDynamoQuery):
         """
         data_table = DataTable.create().add_record(data or {"dummy": True})
         self.table(
-            table=table or self.table_resource,
-            table_keys=table_keys or self._table_keys,
+            table=table or self.table_resource, table_keys=table_keys or self._table_keys,
         )
         return self.execute(data_table=data_table)
 
@@ -687,7 +673,7 @@ class DynamoQuery(BaseDynamoQuery):
         """
         return self._last_evaluated_key
 
-    def reset_start_key(self: DynamoQueryType) -> DynamoQueryType:
+    def reset_start_key(self: _R) -> _R:
         """
         Set paginated query to the start.
         """
@@ -730,7 +716,7 @@ class DynamoQuery(BaseDynamoQuery):
 
         return result
 
-    def projection(self: DynamoQueryType, *fields: str) -> DynamoQueryType:
+    def projection(self: _R, *fields: str) -> _R:
         """
         Django ORM-like shortcut for adding `ProjectionExpression`
 
@@ -751,16 +737,12 @@ class DynamoQuery(BaseDynamoQuery):
         Returns:
             Itself, so this method can be chained.
         """
-        if self._query_type not in (
-            QueryType.QUERY,
-            QueryType.SCAN,
-            QueryType.GET_ITEM,
-        ):
+        if self._query_type not in (QueryType.QUERY, QueryType.SCAN, QueryType.GET_ITEM,):
             raise DynamoQueryError(f"{self} does not support ProjectionExpression")
         self._expressions[self.PROJECTION_EXPRESSION] = ProjectionExpression(*fields)
         return self
 
-    def limit(self: DynamoQueryType, limit: int) -> DynamoQueryType:
+    def limit(self: _R, limit: int) -> _R:
         """
         Limit results for `scan` or `query` method.
 
@@ -782,14 +764,14 @@ class DynamoQuery(BaseDynamoQuery):
         return self
 
     def update(
-        self: DynamoQueryType,
+        self: _R,
         *args: str,
         update: Iterable[str] = tuple(),
         set_if_not_exists: Iterable[str] = tuple(),
         add: Iterable[str] = tuple(),
         delete: Iterable[str] = tuple(),
         remove: Iterable[str] = tuple(),
-    ) -> DynamoQueryType:
+    ) -> _R:
         """
         Shortcut for adding `UpdateExpression`.
 
