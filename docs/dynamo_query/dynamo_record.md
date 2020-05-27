@@ -21,14 +21,13 @@ Dict-based wrapper for DynamoDB records.
 #### Examples
 
 ```python
-@dataclass
 class UserRecord(DynamoRecord):
     # required fields
     name: str
 
     # optional fields
     company: str = "Amazon"
-    age: Optional[int] = DynamoRecord.NOT_SET
+    age: Optional[int] = None
 
     def __post_init__(self):
         # do any post-init operations here
@@ -44,7 +43,7 @@ record.asdict() # {"name": "Jon", "company": "Amazon", "age": 30}
 
 ### DynamoRecord().\_\_post\_init\_\_
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L59)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L58)
 
 ```python
 def __post_init__() -> None:
@@ -54,7 +53,7 @@ Override this method for post-init operations
 
 ## NullableDynamoRecord
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L245)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L244)
 
 ```python
 class NullableDynamoRecord(UserDict):

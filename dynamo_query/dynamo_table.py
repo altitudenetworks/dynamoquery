@@ -68,17 +68,14 @@ class DynamoTable(Generic[_R], LazyLogger, ABC):
 
     Example:
         ```python
-        from dataclasses import dataclass
         from dynamo_query import DynamoTable, DynamoRecord
         from typing import Optional
 
-        @dataclass
         class UserRecord(DynamoRecord):
             pk: str
             email: str
             name: str
             points: Optional[int] = None
-
 
         # Create your dynamo table manager with your record class
         class UserTable(DynamoTable[UserRecord]):
@@ -484,7 +481,7 @@ class DynamoTable(Generic[_R], LazyLogger, ABC):
 
         if not data_table:
             return DataTable[_R](record_class=self.record_class)
-        get_data_table = DataTable[_R]()
+        get_data_table = DataTable[_R](record_class=self.record_class)
         for record in data_table.get_records():
             record = self._convert_record(record)
             get_data_table.add_record(
@@ -495,9 +492,12 @@ class DynamoTable(Generic[_R], LazyLogger, ABC):
                 }
             )
 
-        results: DataTable[_R] = DynamoQuery.build_batch_get_item(logger=self._logger).table(
-            table_keys=self.table_keys, table=self.table
-        ).execute(data_table=get_data_table)
+        results = (
+            DynamoQuery.build_batch_get_item(logger=self._logger)
+            .table(table_keys=self.table_keys, table=self.table)
+            .execute(data_table=get_data_table)
+        )
+        results.record_class = self.record_class
         return results
 
     def batch_delete(self, data_table: DataTable[_R]) -> DataTable[_R]:
@@ -538,9 +538,9 @@ class DynamoTable(Generic[_R], LazyLogger, ABC):
             DataTable with deleted records.
         """
         if not data_table:
-            return DataTable[_R]()
+            return DataTable[_R](record_class=self.record_class)
 
-        delete_data_table = DataTable[_R]()
+        delete_data_table = DataTable[_R](record_class=self.record_class)
         for record in data_table.get_records():
             partition_key = self._get_partition_key(record)
             sort_key = self._get_sort_key(record)
@@ -549,9 +549,12 @@ class DynamoTable(Generic[_R], LazyLogger, ABC):
             )
             delete_data_table.add_record(new_record)
 
-        results: DataTable[_R] = DynamoQuery.build_batch_delete_item(logger=self._logger,).table(
-            table_keys=self.table_keys, table=self.table,
-        ).execute(delete_data_table)
+        results = (
+            DynamoQuery.build_batch_delete_item(logger=self._logger,)
+            .table(table_keys=self.table_keys, table=self.table,)
+            .execute(delete_data_table)
+        )
+        results.record_class = self.record_class
         return results
 
     def batch_upsert(
@@ -600,7 +603,7 @@ class DynamoTable(Generic[_R], LazyLogger, ABC):
             A DataTable with upserted results.
         """
         if not data_table:
-            return DataTable[_R]()
+            return DataTable[_R](record_class=self.record_class)
 
         set_if_not_exists = set(set_if_not_exists_keys)
         existing_records = self.batch_get(data_table)
@@ -629,9 +632,12 @@ class DynamoTable(Generic[_R], LazyLogger, ABC):
             self.validate_record_attributes(normalized_record)
             update_data_table.add_record(dict(normalized_record))
 
-        results: DataTable[_R] = DynamoQuery.build_batch_update_item(logger=self._logger).table(
-            table_keys=self.table_keys, table=self.table,
-        ).execute(update_data_table)
+        results = (
+            DynamoQuery.build_batch_update_item(logger=self._logger)
+            .table(table_keys=self.table_keys, table=self.table,)
+            .execute(update_data_table)
+        )
+        results.record_class = self.record_class
         return results
 
     def batch_get_records(self, records: Iterable[_R]) -> Iterator[_R]:
@@ -670,7 +676,6 @@ class DynamoTable(Generic[_R], LazyLogger, ABC):
             )
             result = self.batch_delete(delete_data_table)
             for record in result.get_records():
-                print(record)
                 yield self._convert_record(record)
 
     def batch_upsert_records(

@@ -13,14 +13,13 @@ class DynamoRecord(UserDict):
     Examples:
 
         ```python
-        @dataclass
         class UserRecord(DynamoRecord):
             # required fields
             name: str
 
             # optional fields
             company: str = "Amazon"
-            age: Optional[int] = DynamoRecord.NOT_SET
+            age: Optional[int] = None
 
             def __post_init__(self):
                 # do any post-init operations here

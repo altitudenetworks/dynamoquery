@@ -393,7 +393,7 @@ class BaseDynamoQuery(LazyLogger):
         for record_chunk in record_chunks:
             request_list = []
             for record in record_chunk:
-                request_list.append({"PutRequest": {"Item": record,}})
+                request_list.append({"PutRequest": {"Item": dict(record)}})
             request_items = {table_name: request_list}
             self._batch_write_item(
                 RequestItems=request_items, **self._extra_params,
@@ -410,7 +410,7 @@ class BaseDynamoQuery(LazyLogger):
             request_list = []
             for record in record_chunk:
                 key_data = {k: v for k, v in record.items() if k in self.table_keys}
-                request_list.append({"DeleteRequest": {"Key": key_data,}})
+                request_list.append({"DeleteRequest": {"Key": key_data}})
             request_items = {table_name: request_list}
             self._batch_write_item(
                 RequestItems=request_items, **self._extra_params,
