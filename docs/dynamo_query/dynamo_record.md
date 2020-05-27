@@ -54,7 +54,7 @@ Override this method for post-init operations
 
 ## NullableDynamoRecord
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L246)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L245)
 
 ```python
 class NullableDynamoRecord(UserDict):
