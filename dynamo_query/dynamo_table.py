@@ -110,9 +110,6 @@ class DynamoTable(Generic[_R], LazyLogger, ABC):
         ```
     """
 
-    # DynamoDB table name
-    table_name: str = ""
-
     # PK column name
     partition_key_name: str = "pk"
 
