@@ -123,11 +123,8 @@ class DynamoRecord(UserDict):
 
             result.append(key)
 
-        for key, member in self._local_members.items():
+        for key in self._local_members:
             if key.startswith("_"):
-                continue
-
-            if inspect.ismethod(member):
                 continue
 
             result.append(key)
@@ -150,6 +147,7 @@ class DynamoRecord(UserDict):
                 if key not in self._field_names:
                     if not self.SKIP_UNKNOWN_KEYS:
                         raise KeyError(f"{self._class_name}.{key} does not exist, got {value}.")
+
                     continue
 
                 value = self._fix_decimal(key, value)
@@ -191,6 +189,7 @@ class DynamoRecord(UserDict):
         if value is self.NOT_SET:
             if key in self.data:
                 del self.data[key]
+                self._update_computed()
             return
 
         value = self._fix_decimal(key, value)

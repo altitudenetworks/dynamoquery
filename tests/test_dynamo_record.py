@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Any, Optional
 
 import pytest
@@ -6,22 +7,31 @@ from dynamo_query.dynamo_record import DynamoRecord
 
 
 class MyRecord(DynamoRecord):
+    _hidden_required: str
+    _hidden: str = "do not show"
     name: str
     age: Optional[int] = None
 
-    def age_next(self) -> int:
-        return (self.age or 0) + 1
+    def age_next(self) -> Optional[int]:
+        if self.age is None:
+            return None
+        return self.age + 1
 
 
 class NewRecord(MyRecord):
+    SKIP_UNKNOWN_KEYS = False
+
     last_name: str
     any_data: Any = "any_data"
+    percent: Optional[float] = None
 
     COMPUTED_FIELDS = ["age_next"]
 
     @property
-    def age_prop(self) -> int:
-        return (self.age or 0) + 1
+    def age_prop(self) -> Optional[int]:
+        if self.age is None:
+            return None
+        return self.age + 1
 
 
 class TestDynamoRecord:
@@ -29,7 +39,7 @@ class TestDynamoRecord:
         my_record = MyRecord(name="test")
         assert my_record.name == "test"
         assert my_record.age is None
-        assert my_record.age_next() == 1
+        assert my_record.age_next() is None
         assert dict(my_record) == {"name": "test"}
         assert str(my_record) == "MyRecord({'name': 'test'})"
         assert list(my_record.keys()) == ["name"]
@@ -51,6 +61,13 @@ class TestDynamoRecord:
         my_record2.update({"age": 13})
         assert dict(my_record2) == {"name": "test3", "age": 13}
 
+        assert MyRecord({"name": "test", "age": Decimal(12.2)}).age == 12
+        assert (
+            NewRecord({"name": "test", "last_name": "test", "percent": Decimal(12.2)}).percent
+            == 12.2
+        )
+        assert MyRecord({"name": "test", "unknown": 12, "unknown2": 12}) == {"name": "test"}
+
         with pytest.raises(KeyError):
             my_record2["unknown"] = "test"
 
@@ -68,7 +85,6 @@ class TestDynamoRecord:
         assert new_record == {
             "name": "test1",
             "last_name": "test",
-            "age_next": 1,
             "any_data": "any_data",
         }
 
@@ -91,3 +107,18 @@ class TestDynamoRecord:
 
         with pytest.raises(ValueError):
             NewRecord({"name": 12})
+
+        with pytest.raises(KeyError):
+            NewRecord({"name": "test", "unknown": 12})
+
+        with pytest.raises(KeyError):
+            new_record.age_next = 14
+
+        new_record["age_next"] = 14
+        assert new_record.age_next() is None
+        new_record["age"] = 15
+        assert new_record["age_next"] == 16
+        assert new_record.age_next() == 16
+        new_record["age"] = None
+        assert "age_next" not in new_record
+        assert new_record.age_next() is None
