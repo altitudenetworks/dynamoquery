@@ -21,7 +21,7 @@ class UserRecord(DynamoRecord):
 
 
 def main() -> None:
-    users_table = DataTable[UserRecord](record_type=UserRecord).add_record(
+    users_table = DataTable[UserRecord](record_class=UserRecord).add_record(
         {
             "pk": "john_student@gmail.com",
             "sk": "IBM",

@@ -359,7 +359,7 @@ class BaseDynamoQuery(LazyLogger):
                 result.add_record(result_record)
         return result
 
-    def _execute_method_batch_get_item(self, data_table: DataTable,) -> DataTable:
+    def _execute_method_batch_get_item(self, data_table: DataTable) -> DataTable:
         self._validate_data_table_has_table_keys(data_table)
 
         record_chunks = chunkify(data_table.get_records(), self.MAX_BATCH_SIZE)

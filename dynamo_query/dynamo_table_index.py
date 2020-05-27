@@ -1,12 +1,12 @@
 from typing import Dict, List, Optional
 
-from typing_extensions import Literal
-
 from dynamo_query.dynamo_query_types import (
     AttributeDefinitionTypeDef,
     GlobalSecondaryIndexTypeDef,
     KeySchemaElementTypeDef,
+    KeyTypeDef,
     LocalSecondaryIndexTypeDef,
+    ProvisionedThroughputTypeDef,
 )
 
 
@@ -45,8 +45,8 @@ class DynamoTableIndex:
         name: str,
         partition_key_name: str,
         sort_key_name: Optional[str],
-        partition_key_type: Literal["S", "N", "B"] = "S",
-        sort_key_type: Literal["S", "N", "B"] = "S",
+        partition_key_type: KeyTypeDef = "S",
+        sort_key_type: KeyTypeDef = "S",
     ):
         self._name = name
         self.partition_key_name = partition_key_name
@@ -64,7 +64,9 @@ class DynamoTableIndex:
 
         return self._name
 
-    def as_global_secondary_index(self) -> GlobalSecondaryIndexTypeDef:
+    def as_global_secondary_index(
+        self, provisioned_throughput: Optional[ProvisionedThroughputTypeDef] = None
+    ) -> GlobalSecondaryIndexTypeDef:
         """
         Output a dictionary to use in `dynamo_client.create_table` method.
 
@@ -78,11 +80,14 @@ class DynamoTableIndex:
         if self.sort_key_name:
             key_schema.append({"AttributeName": self.sort_key_name, "KeyType": "RANGE"})
 
-        return {
+        result: GlobalSecondaryIndexTypeDef = {
             "IndexName": self._name,
             "KeySchema": key_schema,
             "Projection": {"ProjectionType": "ALL"},
         }
+        if provisioned_throughput:
+            result["ProvisionedThroughput"] = provisioned_throughput
+        return result
 
     def as_local_secondary_index(self) -> LocalSecondaryIndexTypeDef:
         """
@@ -98,11 +103,12 @@ class DynamoTableIndex:
         if self.sort_key_name:
             key_schema.append({"AttributeName": self.sort_key_name, "KeyType": "RANGE"})
 
-        return {
+        result: LocalSecondaryIndexTypeDef = {
             "IndexName": self._name,
             "KeySchema": key_schema,
             "Projection": {"ProjectionType": "ALL"},
         }
+        return result
 
     def as_key_schema(self) -> List[KeySchemaElementTypeDef]:
         """

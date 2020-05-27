@@ -13,7 +13,6 @@ from typing import (
     Type,
     TypeVar,
     Union,
-    cast,
 )
 
 from dynamo_query.sentinel import SentinelValue
@@ -85,10 +84,10 @@ class DataTable(Generic[_RecordType], UserDict):
     def __init__(
         self,
         base_dict: Optional[Dict[str, List[Any]]] = None,
-        record_type: Optional[Type[UserDict]] = None,
+        record_class: Optional[Type[UserDict]] = None,
     ) -> None:
         super(DataTable, self).__init__()
-        self.record_type = record_type
+        self.record_class = record_class
         if base_dict:
             if not isinstance(base_dict, dict):
                 raise DataTableError(
@@ -115,10 +114,10 @@ class DataTable(Generic[_RecordType], UserDict):
         return DataTable(base_dict)
 
     def __copy__(self) -> "DataTable[_RecordType]":
-        return DataTable(copy(self.as_defaultdict()), record_type=self.record_type)
+        return DataTable(copy(self.as_defaultdict()), record_class=self.record_class)
 
     def __deepcopy__(self, memo: Any) -> "DataTable[_RecordType]":
-        return DataTable(deepcopy(self.as_defaultdict()), record_type=self.record_type)
+        return DataTable(deepcopy(self.as_defaultdict()), record_class=self.record_class)
 
     def __bool__(self) -> bool:
         return self.max_length > 0
@@ -375,10 +374,7 @@ class DataTable(Generic[_RecordType], UserDict):
                 )
             result[key] = record_value
 
-        if not self.record_type:
-            return cast(_RecordType, result)
-
-        return cast(_RecordType, self.record_type(**result))
+        return self._convert_record(result)
 
     def filter_records(self, query: Dict[str, Any]) -> "DataTable[_RecordType]":
         """
@@ -402,7 +398,7 @@ class DataTable(Generic[_RecordType], UserDict):
             raise DataTableError("Cannot filter not normalized table. Use `normalize` method.")
 
         result: DataTable[_RecordType] = DataTable(
-            {key: [] for key in self.keys()}, record_type=self.record_type
+            {key: [] for key in self.keys()}, record_class=self.record_class
         )
         for record in self.get_records():
             record_match = True
@@ -415,6 +411,14 @@ class DataTable(Generic[_RecordType], UserDict):
                 result.extend({key: [value] for key, value in record.items()})
 
         return result
+
+    def _convert_record(self, record: Union[_RecordType, Dict]) -> _RecordType:
+        # pylint: disable=isinstance-second-argument-not-valid-type
+        if self.record_class and not isinstance(record, self.record_class):
+            # pylint: disable=not-callable
+            return self.record_class(record)  # type: ignore
+
+        return record  # type: ignore
 
     def add_record(self, *records: Union[Dict, _RecordType]) -> "DataTable[_RecordType]":
         """
@@ -437,10 +441,8 @@ class DataTable(Generic[_RecordType], UserDict):
                 "Cannot add records to not normalized table. Use `normalize` method."
             )
 
-        for base_record in records:
-            record = base_record
-            if self.record_type:
-                record = self.record_type(**base_record)  # type: ignore
+        for record in records:
+            record = self._convert_record(record)
 
             row_length = self.max_length
             for key, value in record.items():

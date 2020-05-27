@@ -73,6 +73,8 @@ class TestDynamoTable:
         self.table_mock.delete.assert_called_once_with()
 
     def test_create_table(self):
+        self.result.get_table_status = MagicMock()
+        self.result.get_table_status.return_value = None
         self.result.create_table()
         self.client_mock.create_table.assert_called_once_with(
             AttributeDefinitions=[
@@ -90,6 +92,7 @@ class TestDynamoTable:
                         {"AttributeName": "gsi_sk", "KeyType": "RANGE"},
                     ],
                     "Projection": {"ProjectionType": "ALL"},
+                    "ProvisionedThroughput": {'ReadCapacityUnits': 50, 'WriteCapacityUnits': 10}
                 }
             ],
             KeySchema=[
@@ -107,6 +110,7 @@ class TestDynamoTable:
                 }
             ],
             TableName="my_table_name",
+            ProvisionedThroughput={"ReadCapacityUnits": 50, "WriteCapacityUnits": 10},
         )
 
     def test_clear_table(self):
