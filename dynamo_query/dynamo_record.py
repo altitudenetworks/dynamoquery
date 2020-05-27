@@ -3,7 +3,7 @@ from collections import UserDict
 from decimal import Decimal
 from typing import Any, Dict, List, Tuple
 
-__all__ = ("DynamoRecord",)
+__all__ = ("DynamoRecord", "NullableDynamoRecord")
 
 
 class DynamoRecord(UserDict):
@@ -22,6 +22,10 @@ class DynamoRecord(UserDict):
             company: str = "Amazon"
             age: Optional[int] = DynamoRecord.NOT_SET
 
+            def __post_init__(self):
+                # do any post-init operations here
+                self.age = self.age or 35
+
         record = UserRecord(name="Jon")
         record["age"] = 30
         record.age = 30
@@ -32,7 +36,7 @@ class DynamoRecord(UserDict):
     """
 
     # Marker for optional fields with no initial value, oerride to None if needed
-    NOT_SET: Any = object()
+    NOT_SET: Any = None
 
     # List of methods that should be updated on field change
     COMPUTED_FIELDS: List[str] = []
@@ -53,9 +57,12 @@ class DynamoRecord(UserDict):
         self.__post_init__()
 
     def __post_init__(self) -> None:
-        pass
+        """
+        Override this method for post-init operations
+        """
 
-    def _get_allowed_types(self, annotations: Dict[str, Any]) -> Dict[str, Tuple[Any, ...]]:
+    @staticmethod
+    def _get_allowed_types(annotations: Dict[str, Any]) -> Dict[str, Tuple[Any, ...]]:
         result: Dict[str, Tuple[Any, ...]] = {}
         for key, annotation in annotations.items():
             if inspect.isclass(annotation):
@@ -129,12 +136,11 @@ class DynamoRecord(UserDict):
 
     def _init_data(self, *mappings: Dict[str, Any]) -> None:
         for member_name, member in self._local_members.items():
-            if member_name not in self._field_names:
-                continue
-            if member is self.NOT_SET:
-                continue
-
-            if isinstance(member, property):
+            if (
+                member_name not in self._field_names
+                or member is self.NOT_SET
+                or isinstance(member, property)
+            ):
                 continue
 
             self.data[member_name] = member
@@ -235,3 +241,11 @@ class DynamoRecord(UserDict):
 
     def __str__(self) -> str:
         return f"{self._class_name}({self.data})"
+
+
+class NullableDynamoRecord(UserDict):
+    """
+    DynamoRecord that allows `None` values
+    """
+
+    NOT_SET: Any = object()

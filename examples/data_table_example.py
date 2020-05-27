@@ -1,28 +1,25 @@
 """
 Usage examples for `DataTable` class.
 """
-from typing_extensions import Literal, TypedDict
+from typing import Optional
 
 from dynamo_query.data_table import DataTable
+from dynamo_query.dynamo_record import DynamoRecord
 
 
-# define required keys of a record structure
-class UserRecordKeys(TypedDict):
+# define keys of a record structure
+class UserRecord(DynamoRecord):
     email: str
-    company: Literal["IBM", "CiscoSystems"]
-
-
-# define optional keys of a record structure
-class UserRecord(UserRecordKeys, total=False):
-    name: str
-    age: int
+    company: str = "IBM"
+    name: Optional[str] = None
+    age: Optional[int] = None
 
 
 def main() -> None:
-    users_table = DataTable[UserRecord]()
+    users_table = DataTable[UserRecord](record_class=UserRecord)
     users_table.add_record(
-        {"email": "john_student@gmail.com", "company": "IBM", "name": "John", "age": 34,},
-        {"email": "mary@gmail.com", "company": "CiscoSystems", "name": "Mary", "age": 34,},
+        {"email": "john_student@gmail.com", "name": "John", "age": 34},
+        {"email": "mary@gmail.com", "company": "CiscoSystems", "name": "Mary", "age": 34},
     )
 
     print("Get John's record:")

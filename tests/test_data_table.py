@@ -9,10 +9,8 @@ from dynamo_query.dynamo_record import DynamoRecord
 
 
 class UserRecord(DynamoRecord):
-    NOT_SET = None
-
     name: str
-    age: Optional[int] = NOT_SET
+    age: Optional[int] = None
 
 
 class TestDataTable:

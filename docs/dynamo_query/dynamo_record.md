@@ -4,16 +4,16 @@
 
 - [dynamo-query](../README.md#dynamoquery) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / DynamoRecord
     - [DynamoRecord](#dynamorecord)
-        - [DynamoRecord().asdict](#dynamorecordasdict)
-        - [DynamoRecord.fromdict](#dynamorecordfromdict)
+        - [DynamoRecord().\_\_post\_init\_\_](#dynamorecord__post_init__)
+    - [NullableDynamoRecord](#nullabledynamorecord)
 
 ## DynamoRecord
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L13)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L9)
 
 ```python
-dataclass
 class DynamoRecord(UserDict):
+    def __init__(*args: Dict[str, Any], **kwargs: Any) -> None:
 ```
 
 Dict-based wrapper for DynamoDB records.
@@ -27,59 +27,37 @@ class UserRecord(DynamoRecord):
     name: str
 
     # optional fields
-    age: Optional[int] = None
+    company: str = "Amazon"
+    age: Optional[int] = DynamoRecord.NOT_SET
+
+    def __post_init__(self):
+        # do any post-init operations here
+        self.age = self.age or 35
 
 record = UserRecord(name="Jon")
-record2 = UserRecord.fromdict({"name": "Jon", "age": 30})
-record2["age"] = 30
-record2.age = 30
-record2.update({"age": 30})
+record["age"] = 30
+record.age = 30
+record.update({"age": 30})
 
-record.asdict() # {"name": "Jon"}
-record2.asdict() # {"name": "Jon", "age": 30}
+record.asdict() # {"name": "Jon", "company": "Amazon", "age": 30}
 ```
 
-#### Attributes
+### DynamoRecord().\_\_post\_init\_\_
 
-- `NOT_SET` - Indicator that value is not set and should not appear in dict: `None`
-
-### DynamoRecord().asdict
-
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L54)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L59)
 
 ```python
-def asdict() -> Dict[str, Any]:
+def __post_init__() -> None:
 ```
 
-Get dictionary with set values.
+Override this method for post-init operations
 
-#### Examples
+## NullableDynamoRecord
+
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L246)
 
 ```python
-UserRecord(name="test").asdict() # {"name": "test"}
-UserRecord(name="test", "age": 12).asdict() # {"name": "test", "age": 12}
-UserRecord(name="test", age=None) # {"name": "test"}
+class NullableDynamoRecord(UserDict):
 ```
 
-#### Returns
-
-A dictionary.
-
-### DynamoRecord.fromdict
-
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L71)
-
-```python
-@classmethod
-def fromdict(*mappings: Dict[str, Any]) -> _R:
-```
-
-Equivalent of `DynamoRecord(**my_dict)`
-
-#### Arguments
-
-- `mappings` - One or more mappings to extract data.
-
-#### Returns
-
-A new instance.
+DynamoRecord that allows `None` values

@@ -13,24 +13,22 @@ from dynamo_query.dynamo_table_index import DynamoTableIndex
 
 
 class UserRecord(DynamoRecord):
-    NOT_SET = None
-
-    pk: Optional[str] = NOT_SET
-    sk: Optional[str] = NOT_SET
+    pk: Optional[str] = None
+    sk: Optional[str] = None
     project_id: str = "my_project"
     company: str = "Amazon"
-    email: Optional[str] = NOT_SET
-    name: Optional[str] = NOT_SET
-    age: Optional[int] = NOT_SET
-    dt_created: Optional[str] = NOT_SET
-    dt_modified: Optional[str] = NOT_SET
+    email: Optional[str] = None
+    name: Optional[str] = None
+    age: Optional[int] = None
+    dt_created: Optional[str] = None
+    dt_modified: Optional[str] = None
 
     def __post_init__(self) -> None:
         super().__post_init__()
         if not self.pk:
             self.pk = self.project_id
         if not self.sk:
-            self.pk = self.company
+            self.sk = self.company
 
 
 class UserDynamoTable(DynamoTable[UserRecord]):
@@ -42,12 +40,6 @@ class UserDynamoTable(DynamoTable[UserRecord]):
     def table(self) -> Table:
         resource: DynamoDBServiceResource = boto3.resource("dynamodb")
         return resource.Table("test_dq_users_table")  # pylint: disable=no-member
-
-    def get_partition_key(self, record: UserRecord) -> str:
-        return record.project_id
-
-    def get_sort_key(self, record: UserRecord) -> str:
-        return record.company
 
 
 def main() -> None:

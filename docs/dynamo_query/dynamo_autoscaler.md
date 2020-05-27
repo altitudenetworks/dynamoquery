@@ -34,17 +34,18 @@ tables and indexes.
 - `client` - Boto3 ApplicationAutoscaling client,
 - `logger` - `logging.Logger` instance.
 
+#### See also
+
+- [ApplicationAutoScalingClient](dynamo_query_types.md#applicationautoscalingclient)
+
 ### DynamoAutoscaler.create_scaling_policy_configs
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L226)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L216)
 
 ```python
 @staticmethod
 def create_scaling_policy_configs(
-    metric_type: Literal[
-        'DynamoDBReadCapacityUtilization',
-        'DynamoDBWriteCapacityUtilization',
-    ],
+    metric_type: MetricTypeTypeDef,
     target_value: float = SCALE_TARGET_VALUE,
     scale_out_cooldown: int = SCALE_OUT_COOLDOWN,
     scale_in_cooldown: int = SCALE_IN_COOLDOWN,
@@ -63,6 +64,11 @@ Create auto scaling policy dict.
 #### Returns
 
 Scaling policy configs to use in put_scaling_policy
+
+#### See also
+
+- [MetricTypeTypeDef](dynamo_query_types.md#metrictypetypedef)
+- [TargetTrackingScalingPolicyConfigurationTypeDef](dynamo_query_types.md#targettrackingscalingpolicyconfigurationtypedef)
 
 ### DynamoAutoscaler().deregister_auto_scaling
 
@@ -89,12 +95,7 @@ Deregister auto scaling for table.
 ```python
 def deregister_scalable_target(
     table_name: str,
-    scalable_dimension: Literal[
-        'dynamodb:index:ReadCapacityUnits',
-        'dynamodb:index:WriteCapacityUnits',
-        'dynamodb:table:ReadCapacityUnits',
-        'dynamodb:table:WriteCapacityUnits',
-    ],
+    scalable_dimension: ScalableDimensionTypeDef,
     index_name: Optional[str] = None,
 ) -> None:
 ```
@@ -107,19 +108,18 @@ Deregister scalable table or index.
 - `scalable_dimension` - scalable dimension name
 - `index_name` - the name of the index. If provided - deregiters policy for index
 
+#### See also
+
+- [ScalableDimensionTypeDef](dynamo_query_types.md#scalabledimensiontypedef)
+
 ### DynamoAutoscaler().put_scaling_policy
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L252)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L242)
 
 ```python
 def put_scaling_policy(
     table_name: str,
-    scalable_dimension: Literal[
-        'dynamodb:index:ReadCapacityUnits',
-        'dynamodb:index:WriteCapacityUnits',
-        'dynamodb:table:ReadCapacityUnits',
-        'dynamodb:table:WriteCapacityUnits',
-    ],
+    scalable_dimension: ScalableDimensionTypeDef,
     scaling_policy_configs: TargetTrackingScalingPolicyConfigurationTypeDef,
     index_name: Optional[str] = None,
 ) -> None:
@@ -133,6 +133,11 @@ Add scaling policy for table or for index.
 - `scalable_dimension` - Scalable dimension name
 - `scaling_policy_configs` - Scaling policy configs from AWS docs
 - `index_name` - Name of the index. If provided - adds policy for index
+
+#### See also
+
+- [ScalableDimensionTypeDef](dynamo_query_types.md#scalabledimensiontypedef)
+- [TargetTrackingScalingPolicyConfigurationTypeDef](dynamo_query_types.md#targettrackingscalingpolicyconfigurationtypedef)
 
 ### DynamoAutoscaler().register_auto_scaling
 
@@ -158,17 +163,12 @@ Register auto scaling for table.
 
 ### DynamoAutoscaler().register_scalable_target
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L191)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L186)
 
 ```python
 def register_scalable_target(
     table_name: str,
-    scalable_dimension: Literal[
-        'dynamodb:index:ReadCapacityUnits',
-        'dynamodb:index:WriteCapacityUnits',
-        'dynamodb:table:ReadCapacityUnits',
-        'dynamodb:table:WriteCapacityUnits',
-    ],
+    scalable_dimension: ScalableDimensionTypeDef,
     index_name: Optional[str] = None,
     min_capacity: int = SCALE_MIN_CAPACITY,
     max_capacity: int = SCALE_MAX_CAPACITY,
@@ -184,3 +184,7 @@ Register scalable table or index.
 - `index_name` - Name of the index. If provided - adds policy for index
 - `min_capacity` - MinCapacity
 - `max_capacity` - MaxCapacity
+
+#### See also
+
+- [ScalableDimensionTypeDef](dynamo_query_types.md#scalabledimensiontypedef)

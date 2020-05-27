@@ -1,6 +1,6 @@
 import datetime
 import logging
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from typing import (
     Any,
     Dict,
@@ -110,11 +110,14 @@ class DynamoTable(Generic[_R], LazyLogger, ABC):
         ```
     """
 
+    # DynamoDB table name
+    table_name: str = ""
+
     # PK column name
-    partition_key_name = "pk"
+    partition_key_name: str = "pk"
 
     # SK column name
-    sort_key_name = "sk"
+    sort_key_name: str = "sk"
 
     # Set of table keys
     table_keys: Set[str] = {partition_key_name, sort_key_name}
@@ -152,7 +155,8 @@ class DynamoTable(Generic[_R], LazyLogger, ABC):
         self._attribute_definitions = self._get_attribute_definitions()
         self._attribute_types = self._get_attribute_types()
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def table(self) -> Table:
         """
         Override this method to get DynamoDB Table resource.
@@ -166,17 +170,23 @@ class DynamoTable(Generic[_R], LazyLogger, ABC):
     def max_batch_size(self) -> int:
         return self.dynamo_query_class.MAX_BATCH_SIZE
 
-    @abstractmethod
     def get_partition_key(self, record: _R) -> Any:
         """
         Override this method to get PK from a record.
         """
+        raise NotImplementedError(
+            f"{self.__class__.__name__}.get_partition_key method is missing,"
+            f" cannot get {self.partition_key_name} for {record}"
+        )
 
-    @abstractmethod
     def get_sort_key(self, record: _R) -> Any:
         """
         Override this method to get SK from a record.
         """
+        raise NotImplementedError(
+            f"{self.__class__.__name__}.get_sort_key method is missing,"
+            f" cannot get {self.sort_key_name} for {record}"
+        )
 
     def _get_partition_key(self, record: _R) -> Any:
         if self.partition_key_name in record:

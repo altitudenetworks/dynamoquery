@@ -6,10 +6,8 @@ from dynamo_query.dynamo_record import DynamoRecord
 
 
 class MyRecord(DynamoRecord):
-    NOT_SET = None
-
     name: str
-    age: Optional[int] = NOT_SET
+    age: Optional[int] = None
 
     def age_next(self) -> int:
         return (self.age or 0) + 1

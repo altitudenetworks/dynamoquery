@@ -92,7 +92,7 @@ class TestDynamoTable:
                         {"AttributeName": "gsi_sk", "KeyType": "RANGE"},
                     ],
                     "Projection": {"ProjectionType": "ALL"},
-                    "ProvisionedThroughput": {'ReadCapacityUnits': 50, 'WriteCapacityUnits': 10}
+                    "ProvisionedThroughput": {"ReadCapacityUnits": 50, "WriteCapacityUnits": 10},
                 }
             ],
             KeySchema=[
