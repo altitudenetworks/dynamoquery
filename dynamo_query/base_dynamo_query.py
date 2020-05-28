@@ -290,7 +290,7 @@ class BaseDynamoQuery(LazyLogger):
                     f"{self.KEY_CONDITION_EXPRESSION} does not support operator" f' "{operator}".'
                 )
 
-        result: DataTable[Dict[str, Any]] = DataTable.create()
+        result = DataTable[Dict[str, Any]]()
         for record in data_table.get_records():
             result.add_table(self._execute_paginated_query(data=record))
         return result

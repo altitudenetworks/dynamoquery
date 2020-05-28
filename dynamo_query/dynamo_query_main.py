@@ -579,7 +579,7 @@ class DynamoQuery(BaseDynamoQuery):
             A `DataTable` with query results.
         """
         if not isinstance(data_table, DataTable):
-            data_table = DataTable.create().add_record(*data_table)
+            data_table = DataTable().add_record(*data_table)
 
         if not data_table.is_normalized():
             raise DynamoQueryError("Input DataTable is not normalized.")

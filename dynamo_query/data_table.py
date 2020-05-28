@@ -41,7 +41,7 @@ class DataTable(Generic[_RecordType], UserDict):
     Examples:
 
         ```python
-        data_table = DataTable.create({'a': [1, 2, 3], 'b': [1]})
+        data_table = DataTable({'a': [1, 2, 3], 'b': [1]})
         data_table.max_length # 3
         data_table.min_length # 1
         data_table.get_lengths() # [3, 1]
