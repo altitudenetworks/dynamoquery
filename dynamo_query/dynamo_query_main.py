@@ -2,7 +2,7 @@
 Helper for building Boto3 DynamoDB queries.
 """
 import logging
-from typing import Any, Dict, Iterable, List, Optional, Type, TypeVar
+from typing import Any, Dict, Iterable, List, Optional, Type, TypeVar, Union
 
 from dynamo_query.base_dynamo_query import BaseDynamoQuery, DynamoQueryError
 from dynamo_query.data_table import DataTable
@@ -10,6 +10,7 @@ from dynamo_query.dynamo_query_types import (
     ExclusiveStartKey,
     ExpressionMap,
     QueryMethod,
+    RecordsType,
     ReturnConsumedCapacity,
     ReturnItemCollectionMetrics,
     ReturnValues,
@@ -541,7 +542,7 @@ class DynamoQuery(BaseDynamoQuery):
 
     def execute(
         self,
-        data_table: DataTable,
+        data_table: Union[DataTable, RecordsType],
         table: Optional[Table] = None,
         table_keys: Optional[TableKeys] = TABLE_KEYS,
     ) -> DataTable:
@@ -577,6 +578,8 @@ class DynamoQuery(BaseDynamoQuery):
         Returns:
             A `DataTable` with query results.
         """
+        if not isinstance(data_table, DataTable):
+            data_table = DataTable.create().add_record(*data_table)
 
         if not data_table.is_normalized():
             raise DynamoQueryError("Input DataTable is not normalized.")
@@ -610,7 +613,7 @@ class DynamoQuery(BaseDynamoQuery):
 
     def execute_dict(
         self,
-        data: Dict[str, Any],
+        data: Optional[Dict[str, Any]] = None,
         table: Optional[Table] = None,
         table_keys: Optional[TableKeys] = TABLE_KEYS,
     ) -> DataTable:
@@ -638,11 +641,10 @@ class DynamoQuery(BaseDynamoQuery):
         Returns:
             A `DataTable` with query results.
         """
-        data_table = DataTable.create().add_record(data or {"dummy": True})
         self.table(
             table=table or self.table_resource, table_keys=table_keys or self._table_keys,
         )
-        return self.execute(data_table=data_table)
+        return self.execute(data_table=[data or {"dummy": True}])
 
     def get_last_evaluated_key(self) -> Optional[ExclusiveStartKey]:
         """

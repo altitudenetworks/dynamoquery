@@ -18,6 +18,14 @@ class TestDataTable:
     def test_init() -> None:
         base_dict = {"a": [1, 2, 3], "b": [1, 2]}
         data_table = DataTable.create(base_dict)
+        assert list(data_table.copy().normalize()) == [
+            {"a": 1, "b": 1},
+            {"a": 2, "b": 2},
+            {"a": 3, "b": None},
+        ]
+        assert list(data_table.keys()) == ["a", "b"]
+        assert list(data_table.values()) == [[1, 2, 3], [1, 2]]
+        assert list(data_table.items()) == [("a", [1, 2, 3]), ("b", [1, 2])]
         assert data_table["a"] is not base_dict["a"]
         assert data_table["a"] == [1, 2, 3]
         assert data_table["b"] == [1, 2]
