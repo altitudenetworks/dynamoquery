@@ -212,14 +212,16 @@ class DynamoRecord(UserDict):
     def _set_item(
         self, key: str, value: Any, is_initial: bool, sanitize_kwargs: Dict[str, Any]
     ) -> None:
+        sanitized_value = self.sanitize_key(key, value, **sanitize_kwargs)
+
         if not is_initial:
-            if value is self.NOT_SET:
+            if sanitized_value is self.NOT_SET:
                 if key in self.data:
                     del self.data[key]
                     self._update_computed()
                 return
 
-        self.data[key] = self.sanitize_key(key, value, **sanitize_kwargs)
+        self.data[key] = sanitized_value
 
         if not is_initial:
             self._update_computed()
@@ -305,8 +307,9 @@ class DynamoRecord(UserDict):
             kwargs -- Arguments for sanitize_key_{key}
         """
         for key in self._sanitized_field_names:
-            if key in self.data:
-                self._set_item(key, self[key], is_initial=False, sanitize_kwargs=kwargs)
+            self._set_item(
+                key, self.get(key, self.NOT_SET), is_initial=False, sanitize_kwargs=kwargs
+            )
 
 
 class NullableDynamoRecord(UserDict):
