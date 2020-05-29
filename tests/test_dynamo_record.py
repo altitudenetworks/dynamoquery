@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 import pytest
 
@@ -9,23 +9,28 @@ from dynamo_query.dynamo_record import DynamoRecord
 class MyRecord(DynamoRecord):
     _hidden_required: str
     _hidden: str = "do not show"
+
+    ATTRIBUTE = "my_string"
+
     name: str
     age: Optional[int] = None
 
-    def age_next(self) -> Optional[int]:
-        if self.age is None:
-            return None
-        return self.age + 1
-
 
 class NewRecord(MyRecord):
-    SKIP_UNKNOWN_KEYS = False
-
     last_name: str
     any_data: Any = "any_data"
     percent: Optional[float] = None
 
-    COMPUTED_FIELDS = ["age_next"]
+    def sanitize_key_age(self, value: int, min_age: int = 10) -> int:
+        if value is None:
+            return None
+
+        return max(value, min_age)
+
+    def get_key_age_next(self) -> Optional[int]:
+        if self.age is None:
+            return None
+        return self.age + 1
 
     @property
     def age_prop(self) -> Optional[int]:
@@ -34,12 +39,18 @@ class NewRecord(MyRecord):
         return self.age + 1
 
 
+class ImmutableRecord(DynamoRecord):
+    SKIP_UNKNOWN_KEYS = False
+
+    my_list: List[str] = []
+    my_dict: Dict[str, List[str]] = {}
+
+
 class TestDynamoRecord:
     def test_init(self):
         my_record = MyRecord(name="test")
         assert my_record.name == "test"
         assert my_record.age is None
-        assert my_record.age_next() is None
         assert dict(my_record) == {"name": "test"}
         assert str(my_record) == "MyRecord({'name': 'test'})"
         assert list(my_record.keys()) == ["name"]
@@ -48,7 +59,6 @@ class TestDynamoRecord:
 
         my_record.name = "test2"
         my_record.age = 42
-        assert my_record.age_next() == 43
         assert dict(my_record) == {"name": "test2", "age": 42}
 
         my_record["age"] = 12
@@ -81,7 +91,7 @@ class TestDynamoRecord:
             MyRecord({"name": 12})
 
     def test_inherited(self):
-        new_record = NewRecord(name="test1", last_name="test")
+        new_record = NewRecord(name="test1", last_name="test", age_next=13)
         assert new_record == {
             "name": "test1",
             "last_name": "test",
@@ -97,7 +107,14 @@ class TestDynamoRecord:
             "age_next": 13,
             "any_data": 14,
         }
+
+        new_record.age = 8
+        assert new_record.age == 10
+        assert new_record["age_next"] == 11
+        assert NewRecord(name="test1", last_name="test", age=6).age == 10
+
         new_record.age = None
+        assert new_record.age is None
 
         with pytest.raises(ValueError):
             NewRecord(last_name="test")
@@ -106,19 +123,51 @@ class TestDynamoRecord:
             NewRecord(name="test")
 
         with pytest.raises(ValueError):
-            NewRecord({"name": 12})
-
-        with pytest.raises(KeyError):
-            NewRecord({"name": "test", "unknown": 12})
+            NewRecord({"name": 12, "last_name": "test"})
 
         with pytest.raises(KeyError):
             new_record.age_next = 14
 
         new_record["age_next"] = 14
-        assert new_record.age_next() is None
+        assert new_record.get_key_age_next() is None
         new_record["age"] = 15
         assert new_record["age_next"] == 16
-        assert new_record.age_next() == 16
+        assert new_record.get_key_age_next() == 16
         new_record["age"] = None
         assert "age_next" not in new_record
-        assert new_record.age_next() is None
+        assert new_record.get_key_age_next() is None
+
+        new_record = NewRecord(name="test1", last_name="test", age_next=13)
+        new_record.update({"age": 66})
+        assert new_record["age"] == 66
+        assert new_record["age_next"] == 67
+
+    def test_immutability(self):
+        record1 = ImmutableRecord(my_dict={"test": ["value"]})
+        record2 = ImmutableRecord()
+        record1.my_list.extend([1, 2])
+        assert record1.my_list == [1, 2]
+        assert record2.my_list == []
+        assert record1.my_dict == {"test": ["value"]}
+        assert record2.my_dict == {}
+
+        with pytest.raises(ValueError):
+            ImmutableRecord(my_dict=[1, 2, 3])
+
+        with pytest.raises(ValueError):
+            ImmutableRecord(my_list={1, 2, 3})
+
+        with pytest.raises(KeyError):
+            ImmutableRecord(unknown=12)
+
+    def test_sanitize(self):
+        record = NewRecord(name="test", last_name="test")
+        assert record.age is None
+        record.sanitize()
+        assert record.age is None
+        record.age = 6
+        assert record.age == 10
+        record.sanitize(min_age=18)
+        assert record.age == 18
+        record.age = 6
+        assert record.age == 10
