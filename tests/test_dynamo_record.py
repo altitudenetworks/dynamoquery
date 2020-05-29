@@ -14,8 +14,6 @@ class MyRecord(DynamoRecord):
 
 
 class NewRecord(MyRecord):
-    SKIP_UNKNOWN_KEYS = False
-
     last_name: str
     any_data: Any = "any_data"
     percent: Optional[float] = None
@@ -33,6 +31,8 @@ class NewRecord(MyRecord):
 
 
 class ImmutableRecord(DynamoRecord):
+    SKIP_UNKNOWN_KEYS = False
+
     my_list: List[str] = []
     my_dict: Dict[str, List[str]] = {}
 
@@ -82,7 +82,7 @@ class TestDynamoRecord:
             MyRecord({"name": 12})
 
     def test_inherited(self):
-        new_record = NewRecord(name="test1", last_name="test")
+        new_record = NewRecord(name="test1", last_name="test", age_next=13)
         assert new_record == {
             "name": "test1",
             "last_name": "test",
@@ -107,10 +107,7 @@ class TestDynamoRecord:
             NewRecord(name="test")
 
         with pytest.raises(ValueError):
-            NewRecord({"name": 12})
-
-        with pytest.raises(KeyError):
-            NewRecord({"name": "test", "unknown": 12})
+            NewRecord({"name": 12, "last_name": "test"})
 
         with pytest.raises(KeyError):
             new_record.age_next = 14
@@ -138,3 +135,6 @@ class TestDynamoRecord:
 
         with pytest.raises(ValueError):
             ImmutableRecord(my_list={1, 2, 3})
+
+        with pytest.raises(KeyError):
+            ImmutableRecord(unknown=12)
