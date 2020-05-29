@@ -1,5 +1,6 @@
 import inspect
 from collections import UserDict
+from copy import deepcopy
 from decimal import Decimal
 from typing import Any, Dict, List, Tuple
 
@@ -68,13 +69,22 @@ class DynamoRecord(UserDict):
                 result[key] = (annotation,)
                 continue
 
-            if not hasattr(annotation, "__args__"):
-                result[key] = tuple()
-                continue
+            child_types: Tuple[Any, ...] = tuple()
 
-            child_types = tuple([i for i in annotation.__args__ if inspect.isclass(i)])
-            if child_types:
+            if hasattr(annotation, "__args__"):
+                child_types = tuple([i for i in annotation.__args__ if inspect.isclass(i)])
+
+            annotation_str = str(annotation)
+            if annotation_str.startswith("typing.Dict"):
+                result[key] = (dict,)
+            if annotation_str.startswith("typing.List"):
+                result[key] = (list,)
+            if annotation_str.startswith("typing.Set"):
+                result[key] = (set,)
+            if annotation_str.startswith("typing.Union"):
                 result[key] = child_types
+            if annotation_str.startswith("typing.Optional"):
+                result[key] = (*child_types, None)
 
         return result
 
@@ -139,7 +149,7 @@ class DynamoRecord(UserDict):
             ):
                 continue
 
-            self.data[member_name] = member
+            self.data[member_name] = deepcopy(member)
 
         for mapping in mappings:
             for key, value in mapping.items():

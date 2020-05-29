@@ -9,7 +9,7 @@
 
 ## DynamoRecord
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L9)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L10)
 
 ```python
 class DynamoRecord(UserDict):
@@ -43,7 +43,7 @@ record.asdict() # {"name": "Jon", "company": "Amazon", "age": 30}
 
 ### DynamoRecord().\_\_post\_init\_\_
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L58)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L59)
 
 ```python
 def __post_init__() -> None:
@@ -53,7 +53,7 @@ Override this method for post-init operations
 
 ## NullableDynamoRecord
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L244)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L254)
 
 ```python
 class NullableDynamoRecord(UserDict):

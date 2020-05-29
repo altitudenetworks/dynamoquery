@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 import pytest
 
@@ -32,6 +32,11 @@ class NewRecord(MyRecord):
         if self.age is None:
             return None
         return self.age + 1
+
+
+class ImmutableRecord(DynamoRecord):
+    my_list: List[str] = []
+    my_dict: Dict[str, List[str]] = {}
 
 
 class TestDynamoRecord:
@@ -122,3 +127,18 @@ class TestDynamoRecord:
         new_record["age"] = None
         assert "age_next" not in new_record
         assert new_record.age_next() is None
+
+    def test_immutability(self):
+        record1 = ImmutableRecord(my_dict={"test": ["value"]})
+        record2 = ImmutableRecord()
+        record1.my_list.extend([1, 2])
+        assert record1.my_list == [1, 2]
+        assert record2.my_list == []
+        assert record1.my_dict == {"test": ["value"]}
+        assert record2.my_dict == {}
+
+        with pytest.raises(ValueError):
+            ImmutableRecord(my_dict=[1, 2, 3])
+
+        with pytest.raises(ValueError):
+            ImmutableRecord(my_list={1, 2, 3})
