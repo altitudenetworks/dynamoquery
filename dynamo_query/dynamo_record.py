@@ -209,7 +209,9 @@ class DynamoRecord(UserDict):
     def _class_name(self) -> str:
         return self.__class__.__name__
 
-    def _set_item(self, key: str, value: Any, is_initial: bool) -> None:
+    def _set_item(
+        self, key: str, value: Any, is_initial: bool, sanitize_kwargs: Dict[str, Any]
+    ) -> None:
         if not is_initial:
             if value is self.NOT_SET:
                 if key in self.data:
@@ -217,7 +219,7 @@ class DynamoRecord(UserDict):
                     self._update_computed()
                 return
 
-        self.data[key] = self.sanitize_key(key, value)
+        self.data[key] = self.sanitize_key(key, value, **sanitize_kwargs)
 
         if not is_initial:
             self._update_computed()
@@ -238,7 +240,7 @@ class DynamoRecord(UserDict):
         if key not in self._field_names:
             raise KeyError(f"Key {self._class_name}.{key} is incorrect")
 
-        self._set_item(key, value, is_initial=False)
+        self._set_item(key, value, is_initial=False, sanitize_kwargs={})
 
     def __setattr__(self, name: str, value: Any) -> None:
         if hasattr(self, "_computed_field_names") and name in self._computed_field_names:
@@ -248,7 +250,7 @@ class DynamoRecord(UserDict):
             super().__setattr__(name, value)
             return
 
-        self._set_item(name, value, is_initial=False)
+        self._set_item(name, value, is_initial=False, sanitize_kwargs={})
 
     def __getattribute__(self, name: str) -> Any:
         if name.startswith("_"):
@@ -261,7 +263,7 @@ class DynamoRecord(UserDict):
     def __str__(self) -> str:
         return f"{self._class_name}({self.data})"
 
-    def sanitize_key(self, key: str, value: Any) -> Any:
+    def sanitize_key(self, key: str, value: Any, **kwargs: Any) -> Any:
         """
         Sanitize value before putting it to dict.
 
@@ -286,7 +288,7 @@ class DynamoRecord(UserDict):
 
         if key in self._sanitized_field_names:
             sanitize_method = getattr(self, f"{self.SANITIZE_KEY_PREFIX}{key}")
-            value = sanitize_method(value)
+            value = sanitize_method(value, **kwargs)
 
         if allowed_types and not isinstance(value, allowed_types):
             raise ValueError(
@@ -295,13 +297,16 @@ class DynamoRecord(UserDict):
 
         return value
 
-    def sanitize(self) -> None:
+    def sanitize(self, **kwargs: Any) -> None:
         """
         Sanitize all set fields.
+
+        Arguments:
+            kwargs -- Arguments for sanitize_key_{key}
         """
         for key in self._sanitized_field_names:
             if key in self.data:
-                self._set_item(key, self[key], is_initial=False)
+                self._set_item(key, self[key], is_initial=False, sanitize_kwargs=kwargs)
 
 
 class NullableDynamoRecord(UserDict):

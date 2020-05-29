@@ -21,8 +21,8 @@ class NewRecord(MyRecord):
     any_data: Any = "any_data"
     percent: Optional[float] = None
 
-    def sanitize_key_age(self, value: int) -> int:
-        return max(value, 10)
+    def sanitize_key_age(self, value: int, min_age: int = 10) -> int:
+        return max(value, min_age)
 
     def get_key_age_next(self) -> Optional[int]:
         if self.age is None:
@@ -158,4 +158,13 @@ class TestDynamoRecord:
             ImmutableRecord(unknown=12)
 
     def test_sanitize(self):
-        MyRecord(name="test").sanitize()
+        record = NewRecord(name="test", last_name="test")
+        assert record.age is None
+        record.sanitize(data="test")
+        assert record.age is None
+        record.age = 6
+        assert record.age == 10
+        record.sanitize(min_age=18)
+        assert record.age == 18
+        record.age = 6
+        assert record.age == 10
