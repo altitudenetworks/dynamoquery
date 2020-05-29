@@ -18,6 +18,9 @@ class NewRecord(MyRecord):
     any_data: Any = "any_data"
     percent: Optional[float] = None
 
+    def sanitize_key_age(self, value: int) -> int:
+        return max(value, 10)
+
     def get_key_age_next(self) -> Optional[int]:
         if self.age is None:
             return None
@@ -98,7 +101,13 @@ class TestDynamoRecord:
             "age_next": 13,
             "any_data": 14,
         }
+
+        new_record.age = 8
+        assert new_record.age == 10
+        assert new_record["age_next"] == 11
+
         new_record.age = None
+        assert new_record.age is None
 
         with pytest.raises(ValueError):
             NewRecord(last_name="test")
