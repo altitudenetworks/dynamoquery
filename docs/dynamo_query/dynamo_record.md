@@ -38,12 +38,12 @@ record["age"] = 30
 record.age = 30
 record.update({"age": 30})
 
-record.asdict() # {"name": "Jon", "company": "Amazon", "age": 30}
+dict(record) # {"name": "Jon", "company": "Amazon", "age": 30}
 ```
 
 ### DynamoRecord().\_\_post\_init\_\_
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L59)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L60)
 
 ```python
 def __post_init__() -> None:
@@ -53,7 +53,7 @@ Override this method for post-init operations
 
 ## NullableDynamoRecord
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L254)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L264)
 
 ```python
 class NullableDynamoRecord(UserDict):
