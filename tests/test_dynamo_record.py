@@ -105,6 +105,7 @@ class TestDynamoRecord:
         new_record.age = 8
         assert new_record.age == 10
         assert new_record["age_next"] == 11
+        assert NewRecord(name="test1", last_name="test", age=6).age == 10
 
         new_record.age = None
         assert new_record.age is None
