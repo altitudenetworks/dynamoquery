@@ -1,9 +1,10 @@
 black==19.10b0
-boto3_stubs[dynamodb,application-autoscaling]==1.13.10.0
+boto3_stubs[dynamodb,application-autoscaling]==1.13.19.0
 codecov
 handsdown
 mypy
 pylint
 pytest
 pytest-cov
+typing_extensions
 vulture

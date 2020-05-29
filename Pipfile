@@ -13,6 +13,7 @@ black = "==19.10b0"
 mypy = "*"
 vulture = "*"
 handsdown = "*"
+typing_extensions = "*"
 "boto3_stubs[dynamodb,application-autoscaling]" = "*"
 
 [packages]
