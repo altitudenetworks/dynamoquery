@@ -9,7 +9,7 @@ black **/*.py
 isort **/*.py
 pylint dynamo_query
 mypy dynamo_query
-vulture dynamo_query vulture_whitelist.py || true
+vulture dynamo_query vulture_whitelist.py
 pytest
 # pytest --cov-report html --cov dynamo_query
 
