@@ -121,6 +121,11 @@ class TestDynamoRecord:
         assert "age_next" not in new_record
         assert new_record.get_key_age_next() is None
 
+        new_record = NewRecord(name="test1", last_name="test", age_next=13)
+        new_record.update({"age": 66})
+        assert new_record["age"] == 66
+        assert new_record["age_next"] == 67
+
     def test_immutability(self):
         record1 = ImmutableRecord(my_dict={"test": ["value"]})
         record2 = ImmutableRecord()
