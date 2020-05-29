@@ -295,6 +295,14 @@ class DynamoRecord(UserDict):
 
         return value
 
+    def sanitize(self) -> None:
+        """
+        Sanitize all set fields.
+        """
+        for key in self._sanitized_field_names:
+            if key in self.data:
+                self._set_item(key, self[key], is_initial=False)
+
 
 class NullableDynamoRecord(UserDict):
     """

@@ -5,6 +5,7 @@
 - [dynamo-query](../README.md#dynamoquery) / [Modules](../MODULES.md#dynamo-query-modules) / [Dynamo Query](index.md#dynamo-query) / DynamoRecord
     - [DynamoRecord](#dynamorecord)
         - [DynamoRecord().\_\_post\_init\_\_](#dynamorecord__post_init__)
+        - [DynamoRecord().sanitize](#dynamorecordsanitize)
         - [DynamoRecord().sanitize_key](#dynamorecordsanitize_key)
     - [NullableDynamoRecord](#nullabledynamorecord)
 
@@ -60,6 +61,16 @@ def __post_init__() -> None:
 
 Override this method for post-init operations
 
+### DynamoRecord().sanitize
+
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L298)
+
+```python
+def sanitize() -> None:
+```
+
+Sanitize all set fields.
+
 ### DynamoRecord().sanitize_key
 
 [[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L264)
@@ -85,7 +96,7 @@ A sanitized value
 
 ## NullableDynamoRecord
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L299)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L307)
 
 ```python
 class NullableDynamoRecord(UserDict):

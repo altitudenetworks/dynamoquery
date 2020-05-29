@@ -156,3 +156,6 @@ class TestDynamoRecord:
 
         with pytest.raises(KeyError):
             ImmutableRecord(unknown=12)
+
+    def test_sanitize(self):
+        MyRecord(name="test").sanitize()
