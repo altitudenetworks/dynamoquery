@@ -63,20 +63,24 @@ Override this method for post-init operations
 
 ### DynamoRecord().sanitize
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L298)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L302)
 
 ```python
-def sanitize() -> None:
+def sanitize(**kwargs: Any) -> None:
 ```
 
 Sanitize all set fields.
 
+#### Arguments
+
+- `kwargs` - Arguments for sanitize_key_{key}
+
 ### DynamoRecord().sanitize_key
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L264)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L268)
 
 ```python
-def sanitize_key(key: str, value: Any) -> Any:
+def sanitize_key(key: str, value: Any, **kwargs: Any) -> Any:
 ```
 
 Sanitize value before putting it to dict.
@@ -96,7 +100,7 @@ A sanitized value
 
 ## NullableDynamoRecord
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L307)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_record.py#L315)
 
 ```python
 class NullableDynamoRecord(UserDict):
