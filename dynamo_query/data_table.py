@@ -10,6 +10,7 @@ from typing import (
     List,
     Mapping,
     Optional,
+    Tuple,
     Type,
     TypeVar,
     Union,
@@ -18,6 +19,7 @@ from typing import (
 from dynamo_query.sentinel import SentinelValue
 
 _RecordType = TypeVar("_RecordType", bound=Mapping[str, Any])
+_R = TypeVar("_R", bound="DataTable")
 
 
 __all__ = (
@@ -39,7 +41,7 @@ class DataTable(Generic[_RecordType], UserDict):
     Examples:
 
         ```python
-        data_table = DataTable.create({'a': [1, 2, 3], 'b': [1]})
+        data_table = DataTable({'a': [1, 2, 3], 'b': [1]})
         data_table.max_length # 3
         data_table.min_length # 1
         data_table.get_lengths() # [3, 1]
@@ -97,9 +99,7 @@ class DataTable(Generic[_RecordType], UserDict):
                 self._extend_key(key, value)
 
     @classmethod
-    def create(
-        cls, base_dict: Optional[Dict[str, List[Any]]] = None
-    ) -> "DataTable[Dict[str, Any]]":
+    def create(cls: Type[_R], base_dict: Optional[Dict[str, List[Any]]] = None) -> _R:
         """
         Create a DataTable with untyped dicts as records.
 
@@ -111,13 +111,13 @@ class DataTable(Generic[_RecordType], UserDict):
         Returns:
             A new DataTable instance.
         """
-        return DataTable(base_dict)
+        return cls(base_dict)
 
-    def __copy__(self) -> "DataTable[_RecordType]":
-        return DataTable(copy(self.as_defaultdict()), record_class=self.record_class)
+    def __copy__(self: _R) -> _R:
+        return self.__class__(copy(self.as_defaultdict()), record_class=self.record_class)
 
-    def __deepcopy__(self, memo: Any) -> "DataTable[_RecordType]":
-        return DataTable(deepcopy(self.as_defaultdict()), record_class=self.record_class)
+    def __deepcopy__(self: _R, memo: Any) -> _R:
+        return self.__class__(deepcopy(self.as_defaultdict()), record_class=self.record_class)
 
     def __bool__(self) -> bool:
         return self.max_length > 0
@@ -130,7 +130,7 @@ class DataTable(Generic[_RecordType], UserDict):
             self[key] = list()
         self[key].extend(values)
 
-    def extend(self, *extra_dicts: Dict[str, List[Any]]) -> "DataTable[_RecordType]":
+    def extend(self: _R, *extra_dicts: Dict[str, List[Any]]) -> _R:
         """
         Extend values lists with values from `extra_dicts`
         If some keys are missing from this dict, they will be created.
@@ -160,7 +160,7 @@ class DataTable(Generic[_RecordType], UserDict):
 
         return self
 
-    def append(self, key: str, values: List) -> "DataTable[_RecordType]":
+    def append(self: _R, key: str, values: List) -> _R:
         """
         Append `values` to specified `key` value
 
@@ -256,7 +256,7 @@ class DataTable(Generic[_RecordType], UserDict):
         """
         return self.NOT_SET_RESOLVED_VALUE
 
-    def normalize(self) -> "DataTable":
+    def normalize(self: _R) -> _R:
         """
         Normalize all items to `max_length` using default value.
 
@@ -376,7 +376,7 @@ class DataTable(Generic[_RecordType], UserDict):
 
         return self._convert_record(result)
 
-    def filter_records(self, query: Dict[str, Any]) -> "DataTable[_RecordType]":
+    def filter_records(self: _R, query: Dict[str, Any]) -> _R:
         """
         Create a new `DataTable` instance with records that match `query`
 
@@ -397,9 +397,7 @@ class DataTable(Generic[_RecordType], UserDict):
         if not self.is_normalized():
             raise DataTableError("Cannot filter not normalized table. Use `normalize` method.")
 
-        result: DataTable[_RecordType] = DataTable(
-            {key: [] for key in self.keys()}, record_class=self.record_class
-        )
+        result = self.__class__({key: [] for key in self.keys()}, record_class=self.record_class)
         for record in self.get_records():
             record_match = True
             for lookup_key, lookup_value in query.items():
@@ -420,7 +418,7 @@ class DataTable(Generic[_RecordType], UserDict):
 
         return record  # type: ignore
 
-    def add_record(self, *records: Union[Dict, _RecordType]) -> "DataTable[_RecordType]":
+    def add_record(self: _R, *records: Union[Dict, _RecordType]) -> _R:
         """
         Add a new record to existing data and normalizes it after each record add.
 
@@ -446,7 +444,7 @@ class DataTable(Generic[_RecordType], UserDict):
 
             row_length = self.max_length
             for key, value in record.items():
-                if key not in self:
+                if key not in self.get_column_names():
                     self[key] = [self.NOT_SET] * row_length
                 self.append(key, [value])
             self.normalize()
@@ -518,7 +516,7 @@ class DataTable(Generic[_RecordType], UserDict):
             True if check is successful.
         """
         for column_name in column_names:
-            if column_name not in self:
+            if column_name not in self.get_column_names():
                 return False
 
         return True
@@ -550,7 +548,7 @@ class DataTable(Generic[_RecordType], UserDict):
 
         return True
 
-    def add_table(self, *data_tables: "DataTable") -> "DataTable":
+    def add_table(self: _R, *data_tables: _R) -> _R:
         """
         Add all records from another `DataTable` to existing one.
         All tables have to be normalized.
@@ -621,7 +619,7 @@ class DataTable(Generic[_RecordType], UserDict):
 
         return result
 
-    def set(self, column_name: str, record_index: int, value: Any) -> "DataTable[_RecordType]":
+    def set(self: _R, column_name: str, record_index: int, value: Any) -> _R:
         """
         Set `value` in-place for `column_name` and `record_index`.
 
@@ -649,3 +647,68 @@ class DataTable(Generic[_RecordType], UserDict):
             raise DataTableError(f"Column {column_name} does not have index {record_index}")
 
         return self
+
+    def __iter__(self) -> Iterator[_RecordType]:
+        return self.get_records()
+
+    def keys(self) -> Iterator[str]:  # type: ignore
+        """
+        Iterate over keys of a base dict.
+
+        Example:
+
+            ```python
+            d = DataTable({"a": [1, 2], "b": [3, 4]})
+            for item in d.keys():
+                print(item) # "a", then "b"
+            ```
+
+        Returns:
+            An iterator over base dict keys.
+        """
+        return super().__iter__()
+
+    def values(self) -> Iterator[List[Any]]:  # type: ignore
+        """
+        Iterate over values of a base dict.
+
+        Example:
+
+            ```python
+            d = DataTable({"a": [1, 2], "b": [3, 4]})
+            for item in d.values():
+                print(item) # [1, 2], then [3, 4]
+            ```
+
+        Returns:
+            An iterator over base dict values.
+        """
+        for key in super().__iter__():
+            yield self[key]
+
+    def items(self) -> Iterator[Tuple[str, List[Any]]]:  # type: ignore
+        """
+        Iterate over items of a base dict.
+
+        Example:
+
+            ```python
+            d = DataTable({"a": [1, 2], "b": [3, 4]})
+            for item in d.items():
+                print(item) # ("a", [1, 2]), then ("b", [3, 4])
+            ```
+
+        Returns:
+            An iterator over base dict items.
+        """
+        for key in super().__iter__():
+            yield (key, self[key])
+
+    def copy(self: _R) -> _R:
+        """
+        Equivalent of `copy`
+
+        Returns:
+            A new instance.
+        """
+        return self.__copy__()

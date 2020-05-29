@@ -8,6 +8,7 @@
         - [DataTable().add_table](#datatableadd_table)
         - [DataTable().append](#datatableappend)
         - [DataTable().as_defaultdict](#datatableas_defaultdict)
+        - [DataTable().copy](#datatablecopy)
         - [DataTable.create](#datatablecreate)
         - [DataTable().extend](#datatableextend)
         - [DataTable().filter_keys](#datatablefilter_keys)
@@ -21,16 +22,19 @@
         - [DataTable().has_column](#datatablehas_column)
         - [DataTable().has_set_column](#datatablehas_set_column)
         - [DataTable().is_normalized](#datatableis_normalized)
+        - [DataTable().items](#datatableitems)
+        - [DataTable().keys](#datatablekeys)
         - [DataTable().max_length](#datatablemax_length)
         - [DataTable().min_length](#datatablemin_length)
         - [DataTable().normalize](#datatablenormalize)
         - [DataTable().resolve_not_set_value](#datatableresolve_not_set_value)
         - [DataTable().set](#datatableset)
+        - [DataTable().values](#datatablevalues)
     - [DataTableError](#datatableerror)
 
 ## DataTable
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L35)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L37)
 
 ```python
 class DataTable(Generic[_RecordType], UserDict):
@@ -45,7 +49,7 @@ Dictionary that has lists as values
 #### Examples
 
 ```python
-data_table = DataTable.create({'a': [1, 2, 3], 'b': [1]})
+data_table = DataTable({'a': [1, 2, 3], 'b': [1]})
 data_table.max_length # 3
 data_table.min_length # 1
 data_table.get_lengths() # [3, 1]
@@ -87,12 +91,10 @@ typed_data_table.add_record({"key": "value"})
 
 ### DataTable().add_record
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L423)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L421)
 
 ```python
-def add_record(
-    *records: Union[Dict, _RecordType],
-) -> 'DataTable[_RecordType]':
+def add_record(*records: Union[Dict, _RecordType]) -> _R:
 ```
 
 Add a new record to existing data and normalizes it after each record add.
@@ -113,10 +115,10 @@ Itself, so this method can be chained to another.
 
 ### DataTable().add_table
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L553)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L551)
 
 ```python
-def add_table(*data_tables: 'DataTable') -> 'DataTable':
+def add_table(*data_tables: _R) -> _R:
 ```
 
 Add all records from another [DataTable](#datatable) to existing one.
@@ -146,10 +148,10 @@ Itself, so this method can be chained to another.
 [[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L163)
 
 ```python
-def append(key: str, values: List) -> 'DataTable[_RecordType]':
+def append(key: str, values: List) -> _R:
 ```
 
-Append `values` to specified `key` value
+Append [DataTable().values](#datatablevalues) to specified `key` value
 
 ```python
 base_dict = {'a': [1, 2], 'b': [3]}
@@ -185,15 +187,27 @@ data_table.as_defaultdict() # defaultdict(<class 'list'>, {'a': [1, 2], 'b': [3,
 
 `defaultdict(list)` with original [DataTable](#datatable) data.
 
+### DataTable().copy
+
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L707)
+
+```python
+def copy() -> _R:
+```
+
+Equivalent of `copy`
+
+#### Returns
+
+A new instance.
+
 ### DataTable.create
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L99)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L101)
 
 ```python
 @classmethod
-def create(
-    base_dict: Optional[Dict[str, List[Any]]] = None,
-) -> 'DataTable[Dict[str, Any]]':
+def create(base_dict: Optional[Dict[str, List[Any]]] = None) -> _R:
 ```
 
 Create a DataTable with untyped dicts as records.
@@ -213,7 +227,7 @@ A new DataTable instance.
 [[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L133)
 
 ```python
-def extend(*extra_dicts: Dict[str, List[Any]]) -> 'DataTable[_RecordType]':
+def extend(*extra_dicts: Dict[str, List[Any]]) -> _R:
 ```
 
 Extend values lists with values from `extra_dicts`
@@ -244,7 +258,7 @@ Itself, so this method can be chained to another.
 def filter_keys(keys: Iterable[str]) -> 'DataTable[Dict[str, Any]]':
 ```
 
-Create a new [DataTable](#datatable) instance only with keys listed it `keys`
+Create a new [DataTable](#datatable) instance only with keys listed it [DataTable().keys](#datatablekeys)
 
 ```python
 data_table = DataTable({'a': [1, 2], 'b': [3, 4]})
@@ -266,7 +280,7 @@ A copy of original [DataTable](#datatable) with matching keys
 [[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L379)
 
 ```python
-def filter_records(query: Dict[str, Any]) -> 'DataTable[_RecordType]':
+def filter_records(query: Dict[str, Any]) -> _R:
 ```
 
 Create a new [DataTable](#datatable) instance with records that match `query`
@@ -289,7 +303,7 @@ A copy of original [DataTable](#datatable) with matching records
 
 ### DataTable().get_column
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L456)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L454)
 
 ```python
 def get_column(column_name: str) -> List[Any]:
@@ -322,7 +336,7 @@ A list of column values.
 
 ### DataTable().get_column_names
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L589)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L587)
 
 ```python
 def get_column_names() -> List[str]:
@@ -409,7 +423,7 @@ Dict with original [DataTable](#datatable) keys and corresponding values.
 
 ### DataTable().get_set_column_names
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L603)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L601)
 
 ```python
 def get_set_column_names() -> List[str]:
@@ -430,7 +444,7 @@ A list of column names.
 
 ### DataTable().has_column
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L502)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L500)
 
 ```python
 def has_column(*column_names: str) -> bool:
@@ -456,7 +470,7 @@ True if check is successful.
 
 ### DataTable().has_set_column
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L526)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L524)
 
 ```python
 def has_set_column(*column_names: str) -> bool:
@@ -499,6 +513,50 @@ DataTable({}).is_normalized() # True
 #### Returns
 
 True if all rows have the same length
+
+### DataTable().items
+
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L689)
+
+```python
+def items() -> Iterator[Tuple[str, List[Any]]]:
+```
+
+Iterate over items of a base dict.
+
+#### Examples
+
+```python
+d = DataTable({"a": [1, 2], "b": [3, 4]})
+for item in d.items():
+    print(item) # ("a", [1, 2]), then ("b", [3, 4])
+```
+
+#### Returns
+
+An iterator over base dict items.
+
+### DataTable().keys
+
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L654)
+
+```python
+def keys() -> Iterator[str]:
+```
+
+Iterate over keys of a base dict.
+
+#### Examples
+
+```python
+d = DataTable({"a": [1, 2], "b": [3, 4]})
+for item in d.keys():
+    print(item) # "a", then "b"
+```
+
+#### Returns
+
+An iterator over base dict keys.
 
 ### DataTable().max_length
 
@@ -549,7 +607,7 @@ Lenght of the shortest row.
 [[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L259)
 
 ```python
-def normalize() -> 'DataTable':
+def normalize() -> _R:
 ```
 
 Normalize all items to [DataTable().max_length](#datatablemax_length) using default value.
@@ -584,14 +642,10 @@ Override this methd in a subclass to use a different behavior.
 
 ### DataTable().set
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L624)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L622)
 
 ```python
-def set(
-    column_name: str,
-    record_index: int,
-    value: Any,
-) -> 'DataTable[_RecordType]':
+def set(column_name: str, record_index: int, value: Any) -> _R:
 ```
 
 Set `value` in-place for `column_name` and `record_index`.
@@ -613,9 +667,31 @@ Itself, so this method can be chained to another.
 
 - `DataTableError` - If `column_name` does not exist or has no `record_index`.
 
+### DataTable().values
+
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L671)
+
+```python
+def values() -> Iterator[List[Any]]:
+```
+
+Iterate over values of a base dict.
+
+#### Examples
+
+```python
+d = DataTable({"a": [1, 2], "b": [3, 4]})
+for item in d.values():
+    print(item) # [1, 2], then [3, 4]
+```
+
+#### Returns
+
+An iterator over base dict values.
+
 ## DataTableError
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L29)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/data_table.py#L31)
 
 ```python
 class DataTableError(BaseException):

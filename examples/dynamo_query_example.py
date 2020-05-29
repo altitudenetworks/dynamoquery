@@ -4,14 +4,13 @@ Usage examples for `DynamoQuery` class.
 
 import boto3
 
-from dynamo_query.data_table import DataTable
 from dynamo_query.dynamo_query_main import DynamoQuery
 from dynamo_query.expressions import ConditionExpression
 
 
 def main() -> None:
     table = boto3.resource("dynamodb").Table("test_dq_users_table")
-    users_table = DataTable.create().add_record(
+    user_records = [
         {
             "pk": "john_student@gmail.com",
             "sk": "IBM",
@@ -28,24 +27,22 @@ def main() -> None:
             "name": "Mary",
             "age": 34,
         },
+    ]
+    DynamoQuery.build_batch_update_item().table(table, table_keys={"pk", "sk"}).execute(
+        user_records
     )
-    DynamoQuery.build_batch_update_item().table(table, table_keys={"pk", "sk"}).execute(users_table)
 
     print("Get all records:")
-    for record in (
-        DynamoQuery.build_scan()
-        .table(table, table_keys={"pk", "sk"})
-        .execute_dict({})
-        .get_records()
-    ):
+    for record in DynamoQuery.build_scan().table(table, table_keys={"pk", "sk"}).execute_dict():
         print(record)
 
     print("Get John's record:")
-    print(
+    for record in (
         DynamoQuery.build_get_item()
         .table(table, table_keys={"pk", "sk"})
-        .execute_dict({"pk": "john_student@gmail.com", "sk": "IBM",})
-    )
+        .execute_dict({"pk": "john_student@gmail.com", "sk": "IBM"})
+    ):
+        print(record)
 
     print("Query by a specific index:")
     for record in (
@@ -54,7 +51,6 @@ def main() -> None:
         )
         .table(table, table_keys={"pk", "sk"})
         .execute_dict({"name": "Mary", "age": 34})
-        .get_records()
     ):
         print(record)
 

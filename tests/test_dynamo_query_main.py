@@ -84,10 +84,10 @@ class TestDynamoQuery:
             query.execute_dict({"key1": "value"})
 
         with pytest.raises(DynamoQueryError):
-            query.execute(DataTable.create({"key": [1, 2], "b": [3]}))
+            query.execute(DataTable({"key": [1, 2], "b": [3]}))
 
         with pytest.raises(DynamoQueryError):
-            query.execute(DataTable.create({"key": [3, DataTable.NOT_SET]}))
+            query.execute(DataTable({"key": [3, DataTable.NOT_SET]}))
 
         with pytest.raises(DynamoQueryError):
             DynamoQuery.build_batch_get_item().table(
@@ -129,7 +129,7 @@ class TestDynamoQuery:
         )
         assert list(result.get_records()) == []
         query.reset_start_key().execute(
-            DataTable.create().add_record(
+            DataTable().add_record(
                 {"pk": "pk_value", "test": "data"}, {"pk": "pk_value2", "test": "data"}
             )
         )
