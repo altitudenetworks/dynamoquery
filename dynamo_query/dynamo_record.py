@@ -31,21 +31,22 @@ class DynamoRecord(UserDict):
         record.age = 30
         record.update({"age": 30})
 
-        record.asdict() # {"name": "Jon", "company": "Amazon", "age": 30}
+        dict(record) # {"name": "Jon", "company": "Amazon", "age": 30}
         ```
     """
 
     # Marker for optional fields with no initial value, oerride to None if needed
     NOT_SET: Any = None
 
-    # List of methods that should be updated on field change
-    COMPUTED_FIELDS: List[str] = []
-
     # KeyError is raised if unknown key provided
     SKIP_UNKNOWN_KEYS: bool = True
 
+    # Prefix for copluted key method names
+    COMPUTED_KEY_PREFIX: str = "get_key_"
+
     def __init__(self, *args: Dict[str, Any], **kwargs: Any) -> None:
         super().__init__()
+        self._computed_field_names = self._get_computed_field_names()
         self._local_members = self._get_local_members()
         self._allowed_types = self._get_allowed_types(self._local_members["__annotations__"])
         del self._local_members["__annotations__"]
@@ -85,6 +86,15 @@ class DynamoRecord(UserDict):
                 result[key] = child_types
             if annotation_str.startswith("typing.Optional"):
                 result[key] = (*child_types, None)
+
+        return result
+
+    @classmethod
+    def _get_computed_field_names(cls) -> List[str]:
+        result = []
+        for name, member in inspect.getmembers(cls):
+            if name.startswith(cls.COMPUTED_KEY_PREFIX) and inspect.isfunction(member):
+                result.append(name.replace(cls.COMPUTED_KEY_PREFIX, "", 1))
 
         return result
 
@@ -171,8 +181,8 @@ class DynamoRecord(UserDict):
             if key not in self.data:
                 raise ValueError(f"{self._class_name}.{key} must be set.")
 
-        for key in self.COMPUTED_FIELDS:
-            self.data[key] = getattr(self, key)()
+        for key in self._computed_field_names:
+            self.data[key] = getattr(self, f"{self.COMPUTED_KEY_PREFIX}{key}")()
 
         for key, value in list(self.data.items()):
             if value is self.NOT_SET:
@@ -212,16 +222,16 @@ class DynamoRecord(UserDict):
         self._update_computed()
 
     def _update_computed(self) -> None:
-        for field_name in self.COMPUTED_FIELDS:
-            value = getattr(self, field_name)()
+        for key in self._computed_field_names:
+            value = getattr(self, f"{self.COMPUTED_KEY_PREFIX}{key}")()
             if value is self.NOT_SET:
-                if field_name in self.data:
-                    del self.data[field_name]
+                if key in self.data:
+                    del self.data[key]
             else:
-                self.data[field_name] = value
+                self.data[key] = value
 
     def __setitem__(self, key: str, value: Any) -> None:
-        if key in self.COMPUTED_FIELDS:
+        if key in self._computed_field_names:
             return
 
         if key not in self._field_names:
@@ -230,7 +240,7 @@ class DynamoRecord(UserDict):
         self._set_item(key, value)
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if name in self.COMPUTED_FIELDS:
+        if hasattr(self, "_computed_field_names") and name in self._computed_field_names:
             raise KeyError(f"Key {self._class_name}.{name} is computed and cannot be set directly")
 
         if not hasattr(self, "_field_names") or name not in self._field_names:

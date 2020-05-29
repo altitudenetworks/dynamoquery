@@ -12,11 +12,6 @@ class MyRecord(DynamoRecord):
     name: str
     age: Optional[int] = None
 
-    def age_next(self) -> Optional[int]:
-        if self.age is None:
-            return None
-        return self.age + 1
-
 
 class NewRecord(MyRecord):
     SKIP_UNKNOWN_KEYS = False
@@ -25,7 +20,10 @@ class NewRecord(MyRecord):
     any_data: Any = "any_data"
     percent: Optional[float] = None
 
-    COMPUTED_FIELDS = ["age_next"]
+    def get_key_age_next(self) -> Optional[int]:
+        if self.age is None:
+            return None
+        return self.age + 1
 
     @property
     def age_prop(self) -> Optional[int]:
@@ -44,7 +42,6 @@ class TestDynamoRecord:
         my_record = MyRecord(name="test")
         assert my_record.name == "test"
         assert my_record.age is None
-        assert my_record.age_next() is None
         assert dict(my_record) == {"name": "test"}
         assert str(my_record) == "MyRecord({'name': 'test'})"
         assert list(my_record.keys()) == ["name"]
@@ -53,7 +50,6 @@ class TestDynamoRecord:
 
         my_record.name = "test2"
         my_record.age = 42
-        assert my_record.age_next() == 43
         assert dict(my_record) == {"name": "test2", "age": 42}
 
         my_record["age"] = 12
@@ -120,13 +116,13 @@ class TestDynamoRecord:
             new_record.age_next = 14
 
         new_record["age_next"] = 14
-        assert new_record.age_next() is None
+        assert new_record.get_key_age_next() is None
         new_record["age"] = 15
         assert new_record["age_next"] == 16
-        assert new_record.age_next() == 16
+        assert new_record.get_key_age_next() == 16
         new_record["age"] = None
         assert "age_next" not in new_record
-        assert new_record.age_next() is None
+        assert new_record.get_key_age_next() is None
 
     def test_immutability(self):
         record1 = ImmutableRecord(my_dict={"test": ["value"]})
