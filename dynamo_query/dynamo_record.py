@@ -2,9 +2,9 @@ import inspect
 from collections import UserDict
 from copy import deepcopy
 from decimal import Decimal
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 
-__all__ = ("DynamoRecord", "NullableDynamoRecord")
+__all__ = ("DynamoRecord", "NullableDynamoRecord", "DefaultDynamoRecord")
 
 
 class DynamoRecord(UserDict):
@@ -47,7 +47,7 @@ class DynamoRecord(UserDict):
     NOT_SET: Any = None
 
     # KeyError is raised if unknown key provided
-    SKIP_UNKNOWN_KEYS: bool = True
+    RAISE_ON_UNKNOWN_KEY: bool = False
 
     # Prefix for computed key method names
     GET_KEY_PREFIX: str = "get_key_"
@@ -64,7 +64,7 @@ class DynamoRecord(UserDict):
         del self._local_members["__annotations__"]
 
         self._required_field_names = self._get_required_field_names()
-        self._field_names = self._get_field_names()
+        self._field_names = self._get_field_names(*args, kwargs)
         self.data.clear()
         self._init_data(*args, kwargs)
         self.__post_init__()
@@ -155,7 +155,7 @@ class DynamoRecord(UserDict):
             result.append(key)
         return result
 
-    def _get_field_names(self) -> List[str]:
+    def _get_field_names(self, *_mappings: Iterable[str]) -> List[str]:
         result = []
         for key in self._allowed_types:
             if key in self._local_members or key.startswith("_"):
@@ -184,8 +184,11 @@ class DynamoRecord(UserDict):
 
         for mapping in mappings:
             for key, value in mapping.items():
+                if key in self._computed_field_names:
+                    continue
+
                 if key not in self._field_names:
-                    if not self.SKIP_UNKNOWN_KEYS:
+                    if self.RAISE_ON_UNKNOWN_KEY:
                         raise KeyError(f"{self._class_name}.{key} does not exist, got {value}.")
 
                     continue
@@ -237,7 +240,9 @@ class DynamoRecord(UserDict):
 
     def __setitem__(self, key: str, value: Any) -> None:
         if key in self._computed_field_names:
-            return
+            raise KeyError(
+                f"{self._class_name}.{key} is computed and cannot be set, got {repr(value)}."
+            )
 
         if key not in self._field_names:
             raise KeyError(f"Key {self._class_name}.{key} is incorrect")
@@ -255,6 +260,8 @@ class DynamoRecord(UserDict):
         self._set_item(name, value, is_initial=False, sanitize_kwargs={})
 
     def __getattribute__(self, name: str) -> Any:
+        if name == "data":
+            return super().__getattribute__("data")
         if name.startswith("_"):
             return super().__getattribute__(name)
         if not hasattr(self, "_field_names") or name not in self._field_names:
@@ -282,10 +289,10 @@ class DynamoRecord(UserDict):
         """
         original_value = value
         allowed_types = self._allowed_types.get(key)
-        if isinstance(value, Decimal):
-            if allowed_types and float in allowed_types:
+        if allowed_types and isinstance(value, Decimal):
+            if float in allowed_types:
                 value = float(value)
-            else:
+            if int in allowed_types:
                 value = int(value)
 
         if key in self._sanitized_field_names:
@@ -312,9 +319,35 @@ class DynamoRecord(UserDict):
             )
 
 
-class NullableDynamoRecord(UserDict):
+class NullableDynamoRecord(DynamoRecord):
     """
     DynamoRecord that allows `None` values
     """
 
     NOT_SET: Any = object()
+
+
+class DefaultDynamoRecord(NullableDynamoRecord):
+    """
+    DynamoRecord that allows all keys from initial data.
+    """
+
+    def _get_field_names(self, *mappings: Iterable[str]) -> List[str]:
+        result = super()._get_field_names(*mappings)
+        for mapping in mappings:
+            for key in mapping:
+                if key not in result:
+                    result.append(key)
+
+        return result
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        if key in self._computed_field_names:
+            raise KeyError(
+                f"{self._class_name}.{key} is computed and cannot be set, got {repr(value)}."
+            )
+
+        if key not in self._field_names:
+            self._field_names.append(key)
+
+        self._set_item(key, value, is_initial=False, sanitize_kwargs={})

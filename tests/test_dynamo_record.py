@@ -40,10 +40,13 @@ class NewRecord(MyRecord):
 
 
 class ImmutableRecord(DynamoRecord):
-    SKIP_UNKNOWN_KEYS = False
+    RAISE_ON_UNKNOWN_KEY = True
 
     my_list: List[str] = []
     my_dict: Dict[str, List[str]] = {}
+
+    def get_key_computed(self) -> Optional[str]:
+        return "test"
 
 
 class TestDynamoRecord:
@@ -91,12 +94,15 @@ class TestDynamoRecord:
             MyRecord({"name": 12})
 
     def test_inherited(self):
-        new_record = NewRecord(name="test1", last_name="test", age_next=13)
+        new_record = NewRecord(name="test1", last_name="test", age_next=13, unknown="test")
         assert new_record == {
             "name": "test1",
             "last_name": "test",
             "any_data": "any_data",
         }
+
+        with pytest.raises(KeyError):
+            new_record["age_next"]
 
         new_record.age = 12
         new_record.any_data = 14
@@ -116,6 +122,10 @@ class TestDynamoRecord:
         new_record.age = None
         assert new_record.age is None
 
+        # fail_record = NewRecord(name="test1", last_name="test", age=14)
+        # fail_record["age_next"] = 18
+        # raise ValueError(fail_record)
+
         with pytest.raises(ValueError):
             NewRecord(last_name="test")
 
@@ -128,7 +138,12 @@ class TestDynamoRecord:
         with pytest.raises(KeyError):
             new_record.age_next = 14
 
-        new_record["age_next"] = 14
+        with pytest.raises(KeyError):
+            new_record["age_next"] = 14
+
+        with pytest.raises(KeyError):
+            new_record.update({"age_next": 14})
+
         assert new_record.get_key_age_next() is None
         new_record["age"] = 15
         assert new_record["age_next"] == 16
@@ -150,6 +165,8 @@ class TestDynamoRecord:
         assert record2.my_list == []
         assert record1.my_dict == {"test": ["value"]}
         assert record2.my_dict == {}
+
+        ImmutableRecord(computed="new")["computed"] == "test"
 
         with pytest.raises(ValueError):
             ImmutableRecord(my_dict=[1, 2, 3])
