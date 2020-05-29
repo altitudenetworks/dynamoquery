@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # [Released]
 
+## [2.2.0] - 2020-05-29
+
+### Added
+
+- `DynamoRecord.sanitize` method for all values clean up
+- `DynamoRecord.sanitize_key` method for value clean up
+- `DynamoRecord.get_key_{key}` custom methods support
+- `DynamoRecord.sanitize_key_{key}` custom methods support [#34](https://github.com/altitudenetworks/dynamoquery/pull/34)
+
+### Fixed
+
+- `DynamoRecord` attribute default values are now immutable
+- `DynamoRecord` uppercased class attributes no longer affect fields [#34](https://github.com/altitudenetworks/dynamoquery/pull/34)
+
 ## [2.1.0] - 2020-05-29
 
 ### Added
