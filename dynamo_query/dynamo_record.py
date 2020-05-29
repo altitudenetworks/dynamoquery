@@ -78,7 +78,8 @@ class DynamoRecord(UserDict):
     def _get_allowed_types(annotations: Dict[str, Any]) -> Dict[str, Tuple[Any, ...]]:
         result: Dict[str, Tuple[Any, ...]] = {}
         for key, annotation in annotations.items():
-            if inspect.isclass(annotation):
+            annotation_str = str(annotation)
+            if not annotation_str.startswith("typing.") and inspect.isclass(annotation):
                 result[key] = (annotation,)
                 continue
 
@@ -87,7 +88,6 @@ class DynamoRecord(UserDict):
             if hasattr(annotation, "__args__"):
                 child_types = tuple([i for i in annotation.__args__ if inspect.isclass(i)])
 
-            annotation_str = str(annotation)
             if annotation_str.startswith("typing.Dict"):
                 result[key] = (dict,)
             if annotation_str.startswith("typing.List"):
