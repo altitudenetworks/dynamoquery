@@ -9,6 +9,9 @@ from dynamo_query.dynamo_record import DynamoRecord
 class MyRecord(DynamoRecord):
     _hidden_required: str
     _hidden: str = "do not show"
+
+    ATTRIBUTE = "my_string"
+
     name: str
     age: Optional[int] = None
 

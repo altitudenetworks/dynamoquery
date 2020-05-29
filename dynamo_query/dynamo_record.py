@@ -164,7 +164,7 @@ class DynamoRecord(UserDict):
             result.append(key)
 
         for key in self._local_members:
-            if key.startswith("_"):
+            if key.startswith("_") or key.upper() == key:
                 continue
 
             result.append(key)
