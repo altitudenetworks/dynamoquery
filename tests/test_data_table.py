@@ -5,10 +5,10 @@ import pytest
 from typing_extensions import TypedDict
 
 from dynamo_query.data_table import DataTable, DataTableError
-from dynamo_query.dynamo_record import DynamoRecord
+from dynamo_query.dictclasses.dynamo_dictclass import DynamoDictClass
 
 
-class UserRecord(DynamoRecord):
+class UserRecord(DynamoDictClass):
     name: str
     age: Optional[int] = None
 
@@ -275,7 +275,7 @@ class TestDataTable:
         assert data_table
 
     def test_custom_record(self):
-        data_table = DataTable[UserRecord](record_class=UserRecord)
+        data_table = DataTable(record_class=UserRecord)
         data_table.add_record({"name": "Jon"})
         data_table.add_record(UserRecord(name="test", age=12))
         assert isinstance(data_table.get_record(0), UserRecord)
@@ -289,6 +289,3 @@ class TestDataTable:
 
         with pytest.raises(ValueError):
             data_table.add_record({})
-
-        with pytest.raises(ValueError):
-            data_table.add_record({"name": 12})

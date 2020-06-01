@@ -8,17 +8,18 @@ from typing import (
     Iterable,
     Iterator,
     List,
-    Mapping,
     Optional,
     Tuple,
     Type,
     TypeVar,
     Union,
+    overload,
 )
 
+from dynamo_query.dynamo_query_types import RecordType
 from dynamo_query.sentinel import SentinelValue
 
-_RecordType = TypeVar("_RecordType", bound=Mapping[str, Any])
+_RecordType = TypeVar("_RecordType", bound=RecordType)
 _R = TypeVar("_R", bound="DataTable")
 
 
@@ -83,13 +84,29 @@ class DataTable(Generic[_RecordType], UserDict):
     NOT_SET = SentinelValue("NOT_SET")
     NOT_SET_RESOLVED_VALUE: Any = None
 
+    @overload
+    def __init__(
+        self: "DataTable[RecordType]",
+        base_dict: Optional[Dict[str, List[Any]]] = ...,
+        record_class: None = ...,
+    ) -> None:
+        ...
+
+    @overload
+    def __init__(
+        self: "DataTable[_RecordType]",
+        base_dict: Optional[Dict[str, List[Any]]] = ...,
+        record_class: Type[_RecordType] = ...,
+    ) -> None:
+        ...
+
     def __init__(
         self,
         base_dict: Optional[Dict[str, List[Any]]] = None,
-        record_class: Optional[Type[UserDict]] = None,
+        record_class: Optional[Type[_RecordType]] = None,
     ) -> None:
-        super(DataTable, self).__init__()
-        self.record_class = record_class
+        super().__init__()
+        self.record_class: Type[_RecordType] = record_class or dict  # type: ignore
         if base_dict:
             if not isinstance(base_dict, dict):
                 raise DataTableError(
@@ -278,7 +295,7 @@ class DataTable(Generic[_RecordType], UserDict):
 
         return self
 
-    def filter_keys(self, keys: Iterable[str]) -> "DataTable[Dict[str, Any]]":
+    def filter_keys(self: _R, keys: Iterable[str]) -> _R:
         """
         Create a new `DataTable` instance only with keys listed it `keys`
 
@@ -295,7 +312,7 @@ class DataTable(Generic[_RecordType], UserDict):
         Returns:
             A copy of original `DataTable` with matching keys
         """
-        result: DataTable[Dict[str, Any]] = DataTable()
+        result = self.__class__(record_class=self.record_class)
         for key, value in self.items():
             if key in keys:
                 result.append(key, value)

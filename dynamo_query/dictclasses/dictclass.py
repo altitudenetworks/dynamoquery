@@ -1,20 +1,24 @@
 import inspect
 from collections import UserDict
-from copy import deepcopy
-from decimal import Decimal
-from typing import Any, Dict, Iterable, List, Tuple
+from copy import copy
+from typing import Any, Dict, Iterable, List, Tuple, TypeVar
 
-__all__ = ("DynamoRecord", "NullableDynamoRecord", "DefaultDynamoRecord")
+from dynamo_query.dictclasses.decorators import KeyComputer, KeySanitizer
+
+__all__ = ("DictClass",)
 
 
-class DynamoRecord(UserDict):
+_R = TypeVar("_R", bound="DictClass")
+
+
+class DictClass(UserDict):
     """
-    Dict-based wrapper for DynamoDB records.
+    Dict-based dataclass.
 
     Examples:
 
         ```python
-        class UserRecord(DynamoRecord):
+        class UserRecord(DictClass):
             # required fields
             name: str
 
@@ -43,25 +47,18 @@ class DynamoRecord(UserDict):
         ```
     """
 
-    # Marker for optional fields with no initial value, oerride to None if needed
-    NOT_SET: Any = None
+    # Marker for optional fields with no initial value, set to None if needed
+    NOT_SET: Any = object()
 
     # KeyError is raised if unknown key provided
     RAISE_ON_UNKNOWN_KEY: bool = False
 
-    # Prefix for computed key method names
-    GET_KEY_PREFIX: str = "get_key_"
-
-    # Prefix for sanitize key method names
-    SANITIZE_KEY_PREFIX: str = "sanitize_key_"
-
     def __init__(self, *args: Dict[str, Any], **kwargs: Any) -> None:
         super().__init__()
-        self._computed_field_names = self._get_computed_field_names()
-        self._sanitized_field_names = self._get_sanitized_field_names()
         self._local_members = self._get_local_members()
-        self._allowed_types = self._get_allowed_types(self._local_members["__annotations__"])
-        del self._local_members["__annotations__"]
+        self._sanitizers: Dict[str, List[KeySanitizer]] = self._get_sanitizers()
+        self._computers: Dict[str, KeyComputer] = self._get_computers()
+        self.allowed_types = self._get_allowed_types()
 
         self._required_field_names = self._get_required_field_names()
         self._field_names = self._get_field_names(*args, kwargs)
@@ -74,9 +71,40 @@ class DynamoRecord(UserDict):
         Override this method for post-init operations
         """
 
+    def _get_sanitizers(self) -> Dict[str, List[KeySanitizer]]:
+        result: Dict[str, List[KeySanitizer]] = {}
+        for member in self._local_members.values():
+            if not isinstance(member, KeySanitizer):
+                continue
+
+            if member.key not in result:
+                result[member.key] = []
+
+            result[member.key].append(member)
+
+        return result
+
+    def _get_computers(self) -> Dict[str, KeyComputer]:
+        result: Dict[str, KeyComputer] = {}
+        for member in self._local_members.values():
+            if not isinstance(member, KeyComputer):
+                continue
+
+            result[member.key] = member
+
+        return result
+
     @staticmethod
-    def _get_allowed_types(annotations: Dict[str, Any]) -> Dict[str, Tuple[Any, ...]]:
+    def sanitize_key(key: str) -> KeySanitizer:
+        return KeySanitizer(key)
+
+    @staticmethod
+    def compute_key(key: str) -> KeyComputer:
+        return KeyComputer(key)
+
+    def _get_allowed_types(self) -> Dict[str, Tuple[Any, ...]]:
         result: Dict[str, Tuple[Any, ...]] = {}
+        annotations = self._local_members.get("__annotations__", {})
         for key, annotation in annotations.items():
             annotation_str = str(annotation)
             if not annotation_str.startswith("typing.") and inspect.isclass(annotation):
@@ -88,6 +116,7 @@ class DynamoRecord(UserDict):
             if hasattr(annotation, "__args__"):
                 child_types = tuple([i for i in annotation.__args__ if inspect.isclass(i)])
 
+            result[key] = tuple()
             if annotation_str.startswith("typing.Dict"):
                 result[key] = (dict,)
             if annotation_str.startswith("typing.List"):
@@ -102,26 +131,8 @@ class DynamoRecord(UserDict):
         return result
 
     @classmethod
-    def _get_computed_field_names(cls) -> List[str]:
-        result = []
-        for name, member in inspect.getmembers(cls):
-            if name.startswith(cls.GET_KEY_PREFIX) and inspect.isfunction(member):
-                result.append(name.replace(cls.GET_KEY_PREFIX, "", 1))
-
-        return result
-
-    @classmethod
-    def _get_sanitized_field_names(cls) -> List[str]:
-        result = []
-        for name, member in inspect.getmembers(cls):
-            if name.startswith(cls.SANITIZE_KEY_PREFIX) and inspect.isfunction(member):
-                result.append(name.replace(cls.SANITIZE_KEY_PREFIX, "", 1))
-
-        return result
-
-    @classmethod
     def _get_local_members(cls) -> Dict[str, Any]:
-        base_field_names = {i[0] for i in inspect.getmembers(DynamoRecord)}
+        base_field_names = {i[0] for i in inspect.getmembers(DictClass)}
         result: Dict[str, Any] = {
             "__annotations__": {},
         }
@@ -134,7 +145,7 @@ class DynamoRecord(UserDict):
             result[key] = value
 
         for base_class in cls.__bases__:
-            if base_class is DynamoRecord:
+            if base_class is DictClass:
                 return result
             for key, value in inspect.getmembers(base_class):
                 if key == "__annotations__":
@@ -148,8 +159,11 @@ class DynamoRecord(UserDict):
 
     def _get_required_field_names(self) -> List[str]:
         result = []
-        for key in self._allowed_types:
-            if key in self._local_members or key.startswith("_"):
+        for key in self.allowed_types:
+            if key in self._local_members:
+                continue
+
+            if key.startswith("_") or key.upper() == key:
                 continue
 
             result.append(key)
@@ -157,14 +171,20 @@ class DynamoRecord(UserDict):
 
     def _get_field_names(self, *_mappings: Iterable[str]) -> List[str]:
         result = []
-        for key in self._allowed_types:
-            if key in self._local_members or key.startswith("_"):
+        for key in self.allowed_types:
+            if key in self._local_members:
+                continue
+
+            if key.startswith("_") or key.upper() == key:
                 continue
 
             result.append(key)
 
-        for key in self._local_members:
+        for key, value in self._local_members.items():
             if key.startswith("_") or key.upper() == key:
+                continue
+
+            if isinstance(value, (KeySanitizer, KeyComputer)):
                 continue
 
             result.append(key)
@@ -172,35 +192,31 @@ class DynamoRecord(UserDict):
         return result
 
     def _init_data(self, *mappings: Dict[str, Any]) -> None:
-        for member_name, member in self._local_members.items():
-            if (
-                member_name not in self._field_names
-                or member is self.NOT_SET
-                or isinstance(member, property)
-            ):
+        for key, member in self._local_members.items():
+            if key not in self._field_names or isinstance(member, property):
                 continue
 
-            self.data[member_name] = deepcopy(member)
+            self.data[key] = copy(member)
 
         for mapping in mappings:
             for key, value in mapping.items():
-                if key in self._computed_field_names:
+                if key in self._computers:
                     continue
 
                 if key not in self._field_names:
                     if self.RAISE_ON_UNKNOWN_KEY:
-                        raise KeyError(f"{self._class_name}.{key} does not exist, got {value}.")
+                        raise KeyError(
+                            f"{self._class_name}.{key} does not exist, got value {repr(value)}."
+                        )
 
                     continue
 
-                self.data[key] = self.sanitize_key(key, value)
+                sanitized_value = self._sanitize_key(key, value)
+                self.data[key] = sanitized_value
 
         for key in self._required_field_names:
             if key not in self.data:
                 raise ValueError(f"{self._class_name}.{key} must be set.")
-
-        for key in self._computed_field_names:
-            self.data[key] = getattr(self, f"{self.GET_KEY_PREFIX}{key}")()
 
         for key, value in list(self.data.items()):
             if value is self.NOT_SET:
@@ -215,7 +231,7 @@ class DynamoRecord(UserDict):
     def _set_item(
         self, key: str, value: Any, is_initial: bool, sanitize_kwargs: Dict[str, Any]
     ) -> None:
-        sanitized_value = self.sanitize_key(key, value, **sanitize_kwargs)
+        sanitized_value = self._sanitize_key(key, value, **sanitize_kwargs)
 
         if not is_initial:
             if sanitized_value is self.NOT_SET:
@@ -230,8 +246,9 @@ class DynamoRecord(UserDict):
             self._update_computed()
 
     def _update_computed(self) -> None:
-        for key in self._computed_field_names:
-            value = getattr(self, f"{self.GET_KEY_PREFIX}{key}")()
+        for computer in self._computers.values():
+            key = computer.key
+            value = computer.compute(self)
             if value is self.NOT_SET:
                 if key in self.data:
                     del self.data[key]
@@ -239,7 +256,7 @@ class DynamoRecord(UserDict):
                 self.data[key] = value
 
     def __setitem__(self, key: str, value: Any) -> None:
-        if key in self._computed_field_names:
+        if key in self._computers:
             raise KeyError(
                 f"{self._class_name}.{key} is computed and cannot be set, got {repr(value)}."
             )
@@ -250,7 +267,7 @@ class DynamoRecord(UserDict):
         self._set_item(key, value, is_initial=False, sanitize_kwargs={})
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if hasattr(self, "_computed_field_names") and name in self._computed_field_names:
+        if hasattr(self, "_computers") and name in self._computers:
             raise KeyError(f"Key {self._class_name}.{name} is computed and cannot be set directly")
 
         if not hasattr(self, "_field_names") or name not in self._field_names:
@@ -272,13 +289,11 @@ class DynamoRecord(UserDict):
     def __str__(self) -> str:
         return f"{self._class_name}({self.data})"
 
-    def sanitize_key(self, key: str, value: Any, **kwargs: Any) -> Any:
+    def _sanitize_key(self, key: str, value: Any, **kwargs: Any) -> Any:
         """
         Sanitize value before putting it to dict.
 
-        - Converts decimals to int/float
-        - Calls `sanitize_key_{key}` method if it is defined
-        - Checks if sanitized value has a proper type
+        Calls `sanitize_key_{key}` method if it is defined
 
         Arguments:
             key -- Dictionary key
@@ -287,22 +302,8 @@ class DynamoRecord(UserDict):
         Returns:
             A sanitized value
         """
-        original_value = value
-        allowed_types = self._allowed_types.get(key)
-        if allowed_types and isinstance(value, Decimal):
-            if float in allowed_types:
-                value = float(value)
-            if int in allowed_types:
-                value = int(value)
-
-        if key in self._sanitized_field_names:
-            sanitize_method = getattr(self, f"{self.SANITIZE_KEY_PREFIX}{key}")
-            value = sanitize_method(value, **kwargs)
-
-        if allowed_types and not isinstance(value, allowed_types):
-            raise ValueError(
-                f"{self._class_name}.{key} has type {allowed_types}, got {repr(value)} (raw {repr(original_value)})."
-            )
+        for sanitizer in self._sanitizers.get(key, []):
+            value = sanitizer.sanitize(self, value, **kwargs)
 
         return value
 
@@ -313,41 +314,6 @@ class DynamoRecord(UserDict):
         Arguments:
             kwargs -- Arguments for sanitize_key_{key}
         """
-        for key in self._sanitized_field_names:
-            self._set_item(
-                key, self.get(key, self.NOT_SET), is_initial=False, sanitize_kwargs=kwargs
-            )
-
-
-class NullableDynamoRecord(DynamoRecord):
-    """
-    DynamoRecord that allows `None` values
-    """
-
-    NOT_SET: Any = object()
-
-
-class DefaultDynamoRecord(NullableDynamoRecord):
-    """
-    DynamoRecord that allows all keys from initial data.
-    """
-
-    def _get_field_names(self, *mappings: Iterable[str]) -> List[str]:
-        result = super()._get_field_names(*mappings)
-        for mapping in mappings:
-            for key in mapping:
-                if key not in result:
-                    result.append(key)
-
-        return result
-
-    def __setitem__(self, key: str, value: Any) -> None:
-        if key in self._computed_field_names:
-            raise KeyError(
-                f"{self._class_name}.{key} is computed and cannot be set, got {repr(value)}."
-            )
-
-        if key not in self._field_names:
-            self._field_names.append(key)
-
-        self._set_item(key, value, is_initial=False, sanitize_kwargs={})
+        for key in self._sanitizers:
+            value = self.get(key, self.NOT_SET)
+            self._set_item(key, value, is_initial=False, sanitize_kwargs=kwargs)
