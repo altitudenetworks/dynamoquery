@@ -281,9 +281,7 @@ class DictClass(UserDict):
 
     def __setitem__(self, key: str, value: Any) -> None:
         if key in self._computers:
-            raise KeyError(
-                f"{self._class_name}.{key} is computed and cannot be set, got {repr(value)}."
-            )
+            return
 
         if key not in self._field_names:
             raise KeyError(f"Key {self._class_name}.{key} is incorrect")

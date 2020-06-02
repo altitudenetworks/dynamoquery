@@ -14,7 +14,6 @@ from typing import (
     TypeVar,
     Union,
     cast,
-    overload,
 )
 
 from dynamo_query import json_tools
@@ -143,28 +142,9 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         "WriteCapacityUnits": 10,
     }
 
-    @overload
-    def __init__(
-        self: "DynamoTable[LooseDictClass]",
-        record_class: None = ...,
-        logger: Optional[logging.Logger] = ...,
-    ) -> None:
-        ...
+    record_class: Type[_RecordType] = LooseDictClass  # type: ignore
 
-    @overload
-    def __init__(
-        self: "DynamoTable[_RecordType]",
-        record_class: Type[_RecordType] = ...,
-        logger: Optional[logging.Logger] = ...,
-    ) -> None:
-        ...
-
-    def __init__(
-        self,
-        record_class: Optional[Type[_RecordType]] = None,
-        logger: Optional[logging.Logger] = None,
-    ) -> None:
-        self.record_class: Type[_RecordType] = record_class or LooseDictClass  # type: ignore
+    def __init__(self, logger: Optional[logging.Logger] = None,) -> None:
         self._lazy_logger = logger
         self._attribute_definitions = self._get_attribute_definitions()
         self._attribute_types = self._get_attribute_types()

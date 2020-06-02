@@ -120,10 +120,6 @@ class TestDynamoDictClass:
         new_record.age = None
         assert new_record.age is None
 
-        # fail_record = NewRecord(name="test1", last_name="test", age=14)
-        # fail_record["age_next"] = 18
-        # raise ValueError(fail_record)
-
         with pytest.raises(ValueError):
             NewRecord(last_name="test")
 
@@ -133,11 +129,9 @@ class TestDynamoDictClass:
         with pytest.raises(KeyError):
             new_record.age_next = 14
 
-        with pytest.raises(KeyError):
-            new_record["age_next"] = 14
-
-        with pytest.raises(KeyError):
-            new_record.update({"age_next": 14})
+        new_record["age_next"] = 14
+        new_record.update({"age_next": 14})
+        assert "age_next" not in new_record
 
         new_record["age"] = 15
         assert new_record["age_next"] == 16
