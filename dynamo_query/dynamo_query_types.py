@@ -1,6 +1,4 @@
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Mapping, Set, TypeVar
-
-from dynamo_query.data_table import DataTable
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Mapping, Set, TypeVar
 
 if TYPE_CHECKING:
     from typing_extensions import Literal
@@ -32,7 +30,6 @@ if TYPE_CHECKING:
     TableKeys = Set[str]
     RecordType = Mapping[str, Any]
     RecordsType = Iterable[RecordType]
-    QueryMethod = Callable[[DataTable], DataTable]
     ExclusiveStartKey = Dict[str, Any]
     ConditionExpressionOperatorStr = Literal[
         "=",
@@ -98,7 +95,6 @@ else:
     ReturnConsumedCapacity = object
     RecordType = object
     RecordsType = object
-    QueryMethod = object
     KeyTypeDef = object
     SortKeyOperatorTypeDef = object
     ScalableDimensionTypeDef = object

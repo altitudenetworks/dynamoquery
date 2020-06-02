@@ -2,14 +2,13 @@
 Helper for building Boto3 DynamoDB queries.
 """
 import logging
-from typing import Any, Dict, Iterable, List, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Type, TypeVar, Union
 
 from dynamo_query.base_dynamo_query import BaseDynamoQuery, DynamoQueryError
 from dynamo_query.data_table import DataTable
 from dynamo_query.dynamo_query_types import (
     ExclusiveStartKey,
     ExpressionMap,
-    QueryMethod,
     RecordsType,
     ReturnConsumedCapacity,
     ReturnItemCollectionMetrics,
@@ -599,7 +598,7 @@ class DynamoQuery(BaseDynamoQuery):
 
         self._raw_responses = []
 
-        method_map: Dict[QueryType, QueryMethod] = {
+        method_map: Dict[QueryType, Callable[[DataTable], DataTable]] = {
             QueryType.QUERY: self._execute_method_query,
             QueryType.SCAN: self._execute_method_scan,
             QueryType.GET_ITEM: self._execute_method_get_item,

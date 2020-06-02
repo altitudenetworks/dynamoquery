@@ -410,7 +410,9 @@ class BaseDynamoQuery(LazyLogger):
             request_list = []
             for record in record_chunk:
                 key_data = {k: v for k, v in record.items() if k in self.table_keys}
-                request_list.append({"DeleteRequest": {"Key": key_data}})
+                request_item = {"DeleteRequest": {"Key": key_data}}
+                if request_item not in request_list:
+                    request_list.append(request_item)
             request_items = {table_name: request_list}
             self._batch_write_item(
                 RequestItems=request_items, **self._extra_params,

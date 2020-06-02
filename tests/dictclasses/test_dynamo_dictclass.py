@@ -3,10 +3,10 @@ from typing import Any, Dict, List, Optional
 
 import pytest
 
-from dynamo_query.dynamo_record import DynamoRecord
+from dynamo_query.dictclasses.dynamo_dictclass import DynamoDictClass
 
 
-class MyRecord(DynamoRecord):
+class MyRecord(DynamoDictClass):
     _hidden_required: str
     _hidden: str = "do not show"
 
@@ -21,12 +21,17 @@ class NewRecord(MyRecord):
     any_data: Any = "any_data"
     percent: Optional[float] = None
 
+    def my_method(self) -> str:
+        return "str"
+
+    @DynamoDictClass.sanitize_key("age")
     def sanitize_key_age(self, value: int, min_age: int = 10) -> int:
         if value is None:
             return None
 
         return max(value, min_age)
 
+    @DynamoDictClass.compute_key("age_next")
     def get_key_age_next(self) -> Optional[int]:
         if self.age is None:
             return None
@@ -39,14 +44,18 @@ class NewRecord(MyRecord):
         return self.age + 1
 
 
-class ImmutableRecord(DynamoRecord):
-    SKIP_UNKNOWN_KEYS = False
+class ImmutableRecord(DynamoDictClass):
+    RAISE_ON_UNKNOWN_KEY = True
 
     my_list: List[str] = []
     my_dict: Dict[str, List[str]] = {}
 
+    @DynamoDictClass.compute_key("computed")
+    def get_computed(self) -> str:
+        return "test"
 
-class TestDynamoRecord:
+
+class TestDynamoDictClass:
     def test_init(self):
         my_record = MyRecord(name="test")
         assert my_record.name == "test"
@@ -81,22 +90,17 @@ class TestDynamoRecord:
         with pytest.raises(KeyError):
             my_record2["unknown"] = "test"
 
-        with pytest.raises(ValueError):
-            my_record2["name"] = 13
-
-        with pytest.raises(ValueError):
-            my_record2.age = "test"
-
-        with pytest.raises(ValueError):
-            MyRecord({"name": 12})
-
     def test_inherited(self):
-        new_record = NewRecord(name="test1", last_name="test", age_next=13)
+        my_record = MyRecord(name="test1")
+        new_record = NewRecord(name="test1", last_name="test", age_next=13, unknown="test")
         assert new_record == {
             "name": "test1",
             "last_name": "test",
             "any_data": "any_data",
         }
+
+        with pytest.raises(KeyError):
+            new_record["age_next"]
 
         new_record.age = 12
         new_record.any_data = 14
@@ -122,20 +126,17 @@ class TestDynamoRecord:
         with pytest.raises(ValueError):
             NewRecord(name="test")
 
-        with pytest.raises(ValueError):
-            NewRecord({"name": 12, "last_name": "test"})
-
         with pytest.raises(KeyError):
             new_record.age_next = 14
 
         new_record["age_next"] = 14
-        assert new_record.get_key_age_next() is None
+        new_record.update({"age_next": 14})
+        assert "age_next" not in new_record
+
         new_record["age"] = 15
         assert new_record["age_next"] == 16
-        assert new_record.get_key_age_next() == 16
         new_record["age"] = None
         assert "age_next" not in new_record
-        assert new_record.get_key_age_next() is None
 
         new_record = NewRecord(name="test1", last_name="test", age_next=13)
         new_record.update({"age": 66})
@@ -151,11 +152,7 @@ class TestDynamoRecord:
         assert record1.my_dict == {"test": ["value"]}
         assert record2.my_dict == {}
 
-        with pytest.raises(ValueError):
-            ImmutableRecord(my_dict=[1, 2, 3])
-
-        with pytest.raises(ValueError):
-            ImmutableRecord(my_list={1, 2, 3})
+        ImmutableRecord(computed="new")["computed"] == "test"
 
         with pytest.raises(KeyError):
             ImmutableRecord(unknown=12)
