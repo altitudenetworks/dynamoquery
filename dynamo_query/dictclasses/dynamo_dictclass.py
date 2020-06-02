@@ -9,7 +9,7 @@ class DynamoDictClass(DictClass):
 
     def _sanitize_key(self, key: str, value: Any, **kwargs: Any) -> Any:
         sanitized_value = super()._sanitize_key(key, value, **kwargs)
-        allowed_types = self.allowed_types.get(key)
+        allowed_types = self._allowed_types.get(key)
         if allowed_types and isinstance(sanitized_value, Decimal):
             if float in allowed_types:
                 return float(sanitized_value)

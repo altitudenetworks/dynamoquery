@@ -4,11 +4,11 @@ Usage examples for `DataTable` class.
 from typing import Optional
 
 from dynamo_query.data_table import DataTable
-from dynamo_query.dynamo_record import DynamoRecord
+from dynamo_query.dictclasses.dynamo_dictclass import DynamoDictClass
 
 
 # define keys of a record structure
-class UserRecord(DynamoRecord):
+class UserRecord(DynamoDictClass):
     email: str
     company: str = "IBM"
     name: Optional[str] = None
@@ -16,7 +16,7 @@ class UserRecord(DynamoRecord):
 
 
 def main() -> None:
-    users_table = DataTable[UserRecord](record_class=UserRecord)
+    users_table = DataTable(record_class=UserRecord)
     users_table.add_record(
         {"email": "john_student@gmail.com", "name": "John", "age": 34},
         {"email": "mary@gmail.com", "company": "CiscoSystems", "name": "Mary", "age": 34},

@@ -21,6 +21,9 @@ class NewRecord(MyRecord):
     any_data: Any = "any_data"
     percent: Optional[float] = None
 
+    def my_method(self) -> str:
+        return "str"
+
     @DynamoDictClass.sanitize_key("age")
     def sanitize_key_age(self, value: int, min_age: int = 10) -> int:
         if value is None:
@@ -48,7 +51,7 @@ class ImmutableRecord(DynamoDictClass):
     my_dict: Dict[str, List[str]] = {}
 
     @DynamoDictClass.compute_key("computed")
-    def get_computed(self) -> Optional[str]:
+    def get_computed(self) -> str:
         return "test"
 
 
@@ -88,6 +91,7 @@ class TestDynamoDictClass:
             my_record2["unknown"] = "test"
 
     def test_inherited(self):
+        my_record = MyRecord(name="test1")
         new_record = NewRecord(name="test1", last_name="test", age_next=13, unknown="test")
         assert new_record == {
             "name": "test1",

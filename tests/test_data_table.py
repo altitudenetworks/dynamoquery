@@ -12,6 +12,10 @@ class UserRecord(DynamoDictClass):
     name: str
     age: Optional[int] = None
 
+    @DynamoDictClass.compute_key("test")
+    def get_test(self):
+        return "value"
+
 
 class TestDataTable:
     @staticmethod

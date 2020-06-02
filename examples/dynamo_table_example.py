@@ -7,12 +7,12 @@ import boto3
 from mypy_boto3.dynamodb.service_resource import DynamoDBServiceResource, Table
 
 from dynamo_query.data_table import DataTable
-from dynamo_query.dynamo_record import DynamoRecord
+from dynamo_query.dictclasses.dynamo_dictclass import DynamoDictClass
 from dynamo_query.dynamo_table import DynamoTable
 from dynamo_query.dynamo_table_index import DynamoTableIndex
 
 
-class UserRecord(DynamoRecord):
+class UserRecord(DynamoDictClass):
     pk: Optional[str] = None
     sk: Optional[str] = None
     project_id: str = "my_project"
@@ -23,12 +23,13 @@ class UserRecord(DynamoRecord):
     dt_created: Optional[str] = None
     dt_modified: Optional[str] = None
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-        if not self.pk:
-            self.pk = self.project_id
-        if not self.sk:
-            self.sk = self.company
+    @DynamoDictClass.compute_key("pk")
+    def get_pk(self) -> str:
+        return self.project_id
+
+    @DynamoDictClass.compute_key("sk")
+    def get_sk(self) -> str:
+        return self.company
 
 
 class UserDynamoTable(DynamoTable[UserRecord]):

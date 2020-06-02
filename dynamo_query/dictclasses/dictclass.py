@@ -1,7 +1,7 @@
 import inspect
 from collections import UserDict
 from copy import copy
-from typing import Any, Dict, Iterable, List, Tuple, TypeVar
+from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, TypeVar, cast
 
 from dynamo_query.dictclasses.decorators import KeyComputer, KeySanitizer
 
@@ -31,11 +31,13 @@ class DictClass(UserDict):
                 self.age = self.age or 35
 
             # add extra computed field
-            def get_key_min_age(self) -> int:
+            @DictClass.compute_key("min_age")
+            def _compute_min_age(self) -> int:
                 return 18
 
             # sanitize value on set
-            def sanitize_key_age(self, value: int) -> int:
+            @DictClass.sanitize_key("age")
+            def _sanitize_key_age(self, value: int) -> int:
                 return max(self.age, 18)
 
         record = UserRecord(name="Jon")
@@ -53,13 +55,26 @@ class DictClass(UserDict):
     # KeyError is raised if unknown key provided
     RAISE_ON_UNKNOWN_KEY: bool = False
 
+    _initialized_classes: List[int] = []
+    _local_members_cache: Dict[int, Dict[str, Any]] = {}
+    _local_members: Dict[str, Any] = {}
+    _sanitizers: Dict[str, List[Callable[..., Any]]] = {}
+    _computers: Dict[str, Callable[[Any], Any]] = {}
+    _allowed_types: Dict[str, Tuple[Any, ...]] = {}
+
+    def __new__(cls: Type[_R], *args: Dict[str, Any], **kwargs: Any) -> _R:
+        instance = super().__new__(cls)
+        if id(cls) not in cls._initialized_classes:
+            cls._local_members = cls._get_local_members()
+            cls._sanitizers = cls._get_sanitizers()
+            cls._computers = cls._get_computers()
+            cls._allowed_types = cls._get_allowed_types()
+            cls._initialized_classes.append(id(cls))
+        instance.__init__(*args, **kwargs)
+        return cast(_R, instance)
+
     def __init__(self, *args: Dict[str, Any], **kwargs: Any) -> None:
         super().__init__()
-        self._local_members = self._get_local_members()
-        self._sanitizers: Dict[str, List[KeySanitizer]] = self._get_sanitizers()
-        self._computers: Dict[str, KeyComputer] = self._get_computers()
-        self.allowed_types = self._get_allowed_types()
-
         self._required_field_names = self._get_required_field_names()
         self._field_names = self._get_field_names(*args, kwargs)
         self.data.clear()
@@ -71,26 +86,35 @@ class DictClass(UserDict):
         Override this method for post-init operations
         """
 
-    def _get_sanitizers(self) -> Dict[str, List[KeySanitizer]]:
-        result: Dict[str, List[KeySanitizer]] = {}
-        for member in self._local_members.values():
-            if not isinstance(member, KeySanitizer):
+    @classmethod
+    def _get_sanitizers(cls) -> Dict[str, List[Callable[..., Any]]]:
+        result: Dict[str, List[Callable[..., Any]]] = {}
+        for member in cls._local_members.values():
+            if not inspect.isfunction(member):
                 continue
 
-            if member.key not in result:
-                result[member.key] = []
+            sanitizer = getattr(member, "KeySanitizer", None)
+            if not sanitizer:
+                continue
 
-            result[member.key].append(member)
+            if sanitizer.key not in result:
+                result[sanitizer.key] = []
+
+            result[sanitizer.key].append(member)
 
         return result
 
-    def _get_computers(self) -> Dict[str, KeyComputer]:
-        result: Dict[str, KeyComputer] = {}
-        for member in self._local_members.values():
-            if not isinstance(member, KeyComputer):
+    @classmethod
+    def _get_computers(cls) -> Dict[str, Callable[[Any], Any]]:
+        result: Dict[str, Callable[[Any], Any]] = {}
+        for member in cls._local_members.values():
+            if not inspect.isfunction(member):
                 continue
 
-            result[member.key] = member
+            computer = getattr(member, "KeyComputer", None)
+            if not computer:
+                continue
+            result[computer.key] = member
 
         return result
 
@@ -102,9 +126,10 @@ class DictClass(UserDict):
     def compute_key(key: str) -> KeyComputer:
         return KeyComputer(key)
 
-    def _get_allowed_types(self) -> Dict[str, Tuple[Any, ...]]:
+    @classmethod
+    def _get_allowed_types(cls) -> Dict[str, Tuple[Any, ...]]:
         result: Dict[str, Tuple[Any, ...]] = {}
-        annotations = self._local_members.get("__annotations__", {})
+        annotations = cls._local_members.get("__annotations__", {})
         for key, annotation in annotations.items():
             annotation_str = str(annotation)
             if not annotation_str.startswith("typing.") and inspect.isclass(annotation):
@@ -140,7 +165,7 @@ class DictClass(UserDict):
             if key == "__annotations__":
                 result["__annotations__"].update(value)
                 continue
-            if key in base_field_names or inspect.isfunction(value):
+            if key in base_field_names:
                 continue
             result[key] = value
 
@@ -151,7 +176,7 @@ class DictClass(UserDict):
                 if key == "__annotations__":
                     result["__annotations__"].update(value)
                     continue
-                if key in base_field_names or key in result or inspect.isfunction(value):
+                if key in base_field_names or key in result:
                     continue
                 result[key] = value
 
@@ -159,7 +184,7 @@ class DictClass(UserDict):
 
     def _get_required_field_names(self) -> List[str]:
         result = []
-        for key in self.allowed_types:
+        for key in self._allowed_types:
             if key in self._local_members:
                 continue
 
@@ -171,7 +196,7 @@ class DictClass(UserDict):
 
     def _get_field_names(self, *_mappings: Iterable[str]) -> List[str]:
         result = []
-        for key in self.allowed_types:
+        for key in self._allowed_types:
             if key in self._local_members:
                 continue
 
@@ -184,7 +209,7 @@ class DictClass(UserDict):
             if key.startswith("_") or key.upper() == key:
                 continue
 
-            if isinstance(value, (KeySanitizer, KeyComputer)):
+            if inspect.isfunction(value):
                 continue
 
             result.append(key)
@@ -246,9 +271,8 @@ class DictClass(UserDict):
             self._update_computed()
 
     def _update_computed(self) -> None:
-        for computer in self._computers.values():
-            key = computer.key
-            value = computer.compute(self)
+        for key, computer in self._computers.items():
+            value = computer(self)
             if value is self.NOT_SET:
                 if key in self.data:
                     del self.data[key]
@@ -303,7 +327,7 @@ class DictClass(UserDict):
             A sanitized value
         """
         for sanitizer in self._sanitizers.get(key, []):
-            value = sanitizer.sanitize(self, value, **kwargs)
+            value = sanitizer(self, value, **kwargs)
 
         return value
 

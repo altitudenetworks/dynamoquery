@@ -1,47 +1,32 @@
-from decimal import Decimal
-from typing import Any, Callable, Optional, TypeVar
+from functools import wraps
+from typing import Any, Callable, TypeVar
 
-_S = TypeVar("_S", bound="KeySanitizer")
-_C = TypeVar("_C", bound="KeyComputer")
+_R = TypeVar("_R")
 
 
 class KeySanitizer:
     def __init__(self, key: str) -> None:
         self.key = key
-        self.method: Optional[Callable[..., Any]] = None
 
-    def __call__(self: _S, method: Callable[..., Any]) -> _S:
-        self.method = method
-        return self
+    def __call__(self, method: Callable[..., _R]) -> Callable[..., _R]:
+        @wraps(method)
+        def wrapper(instance: Any, value: Any, **kwargs: Any) -> _R:
+            return method(instance, value, **kwargs)
 
-    def sanitize(self, instance: Any, value: Any, **kwargs: Any) -> Any:
-        if not self.method:
-            raise ValueError(f"KeySanitizer for {self.key} is not initialized")
-        return self.method(instance, value=value, **kwargs)
+        setattr(wrapper, "KeySanitizer", self)
+
+        return wrapper
 
 
 class KeyComputer:
     def __init__(self, key: str) -> None:
         self.key = key
-        self.method: Optional[Callable[[Any], Any]] = None
 
-    def __call__(self: _C, method: Callable[[Any], Any]) -> _C:
-        self.method = method
-        return self
+    def __call__(self, method: Callable[..., _R]) -> Callable[..., _R]:
+        @wraps(method)
+        def wrapper(instance: Any) -> _R:
+            return method(instance)
 
-    def compute(self, instance: Any) -> Any:
-        if not self.method:
-            raise ValueError(f"KeyComputer for {self.key} is not initialized")
-        return self.method(instance)
+        setattr(wrapper, "KeyComputer", self)
 
-
-class DecimalSanitizer(KeySanitizer):
-    def sanitize(self, instance: Any, value: Any, **kwargs: Any) -> Any:
-        allowed_types = instance.allowed_types.get(self.key)
-        if allowed_types and isinstance(value, Decimal):
-            if float in allowed_types:
-                return float(value)
-            if int in allowed_types:
-                return int(value)
-
-        return value
+        return wrapper
