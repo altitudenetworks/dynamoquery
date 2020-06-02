@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # [Released]
 
+## [2.3.0] - 2020-06-02
+
+### Notes
+
+Important info:
+- release notes are managed automatically
+- do not add new sections, but all sections can be edited, including this one
+- always edit release notes before publishing
+- on publish all release notes are included to `CHANGELOG.md`
+
+### Added
+
+- `DictClass` record type
+- `LooseDictClass` record type
+- `DynamoDictClass` record type [#36](https://github.com/altitudenetworks/dynamoquery/pull/36)
+
+### Changed
+
+- Untyped `DynamoTable` uses `LooseDictClass`
+- `DataTable` with provided `record_class` does not need explicit typing [#36](https://github.com/altitudenetworks/dynamoquery/pull/36)
+
+### Fixed
+
+- Duplicate items detection in `DynamoTable.batch_delete` [#36](https://github.com/altitudenetworks/dynamoquery/pull/36)
+
 ## [2.2.0] - 2020-05-29
 
 ### Added
