@@ -72,34 +72,32 @@ for record in result_data_table.get_records():
 
 ```python
 from typing import Optional
-from dynamo_query import DynamoTable, DynamoRecord
+from dynamo_query import DynamoTable, DynamoDictClass
 
 # first, define your record
 @dataclass
-class UserRecord(DynamoRecord):
+class UserRecord(DynamoDictClass):
     pk: str
     email: str
     name: str
     points: Optional[int] = None
+
+    @DynamoDictClass.compute_key("pk")
+    def get_pk(self) -> str:
+        return self.email
 
 
 # Create your dynamo table manager with your record class
 class UserTable(DynamoTable[UserRecord]):
     # provide a set of your table keys
     table_keys = {'pk'}
+    record_class = UserRecord
 
-    # use this property to define your table name
+    # use this property to define your table resource
     @property
-    def table(self) -> str:
-        return "my_table"
+    def table(self) -> Any:
+        return boto3.resource("dynamodb").Table("user_table")
 
-    # define how to get PK from a record
-    def get_partition_key(self, record: UserRecord) -> str:
-        return record.email
-
-    # we do not have a sort key in our table
-    def get_sort_key(self, record: UserRecord) -> None:
-        return None
 
 # okay, let's start using our manager
 user_table = UserTable()
