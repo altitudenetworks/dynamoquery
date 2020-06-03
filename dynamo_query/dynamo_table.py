@@ -168,7 +168,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         """
         Override this method to get PK from a record.
         """
-        raise NotImplementedError(
+        raise DynamoTableError(
             f"{self.__class__.__name__}.get_partition_key method is missing,"
             f" cannot get {self.partition_key_name} for {record}"
         )
@@ -177,7 +177,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         """
         Override this method to get SK from a record.
         """
-        raise NotImplementedError(
+        raise DynamoTableError(
             f"{self.__class__.__name__}.get_sort_key method is missing,"
             f" cannot get {self.sort_key_name} for {record}"
         )
