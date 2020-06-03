@@ -482,6 +482,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         get_data_table = DataTable(record_class=data_table.record_class)
         for record in data_table.get_records():
             record = self._convert_record(record)
+            record = self.normalize_record(record)
             get_data_table.add_record(
                 {
                     **record,
@@ -539,6 +540,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
 
         delete_data_table = DataTable(record_class=self.record_class)
         for record in data_table.get_records():
+            record = self.normalize_record(self._convert_record(record))
             partition_key = self._get_partition_key(record)
             sort_key = self._get_sort_key(record)
             new_record = self._convert_record(
@@ -547,12 +549,11 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             delete_data_table.add_record(new_record)
 
         results = (
-            DynamoQuery.build_batch_delete_item(logger=self._logger,)
-            .table(table_keys=self.table_keys, table=self.table,)
+            DynamoQuery.build_batch_delete_item(logger=self._logger)
+            .table(table_keys=self.table_keys, table=self.table)
             .execute(delete_data_table)
         )
-        results.record_class = self.record_class
-        return results
+        return DataTable(record_class=self.record_class).add_table(results)
 
     def batch_upsert(
         self, data_table: DataTable[_RecordType], set_if_not_exists_keys: Iterable[str] = (),
@@ -730,7 +731,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         Returns:
             A dict with record data or None.
         """
-        record = self._convert_record(record)
+        record = self.normalize_record(self._convert_record(record))
         partition_key = self._get_partition_key(record)
         sort_key = self._get_sort_key(record)
         result = (
@@ -791,24 +792,20 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         set_if_not_exists = set(set_if_not_exists_keys)
         set_if_not_exists.add("dt_created")
 
-        partition_key = self._get_partition_key(record)
-        sort_key = self._get_sort_key(record)
-
         now = datetime.datetime.utcnow()
         now_str = now.isoformat()
 
         new_record = self._convert_record(
+            {**record, **(extra_data or {}), "dt_modified": now_str, "dt_created": now_str,}
+        )
+        new_record = self.normalize_record(new_record)
+        new_record.update(
             {
-                self.partition_key_name: partition_key,
-                self.sort_key_name: sort_key,
-                **record,
-                **(extra_data or {}),
-                "dt_modified": now_str,
-                "dt_created": now_str,
+                self.partition_key_name: self._get_partition_key(new_record),
+                self.sort_key_name: self._get_sort_key(new_record),
             }
         )
 
-        new_record = self.normalize_record(new_record)
         update_keys = set(new_record.keys()) - self.table_keys - set_if_not_exists
         update_keys.add("dt_modified")
         result: DataTable[_RecordType] = (
@@ -855,6 +852,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         Returns:
             A dict with record data or None.
         """
+        record = self.normalize_record(self._convert_record(record))
         partition_key = self._get_partition_key(record)
         sort_key = self._get_sort_key(record)
         result: DataTable[_RecordType] = DynamoQuery.build_delete_item(
