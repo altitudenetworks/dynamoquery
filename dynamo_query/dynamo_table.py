@@ -422,16 +422,33 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
                 limit=limit,
                 projection=self.table_keys,
             )
-        elif partition_key_prefix is not None:
-            records = self.scan(
-                filter_expression=ConditionExpression(
-                    self.partition_key_name, operator="begins_with"
-                ),
-                data={self.partition_key_name: partition_key_prefix},
-                projection=self.table_keys,
-            )
         else:
-            records = self.scan(projection=self.table_keys)
+            filter_expressions: List[ConditionExpression] = []
+            data = {}
+            if partition_key_prefix:
+                filter_expressions.append(
+                    ConditionExpression(self.partition_key_name, operator="begins_with")
+                )
+                data[self.partition_key_name] = partition_key_prefix
+            if sort_key:
+                filter_expressions.append(ConditionExpression(self.sort_key_name))
+                data[self.sort_key_name] = sort_key
+            if sort_key_prefix:
+                filter_expressions.append(
+                    ConditionExpression(self.sort_key_name, operator="begins_with")
+                )
+                data[self.sort_key_name] = sort_key_prefix
+
+            if not filter_expressions:
+                filter_expression = None
+            else:
+                filter_expression = filter_expressions[0]
+                for part in filter_expressions[1:]:
+                    filter_expression = filter_expression & part
+
+            records = self.scan(
+                filter_expression=filter_expression, data=data, projection=self.table_keys
+            )
 
         for records_chunk in chunkify(records, self.max_batch_size):
             existing_records = DataTable(record_class=self.record_class).add_record(*records_chunk)
@@ -1030,3 +1047,11 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         Proxy method for `resource.Table.wait_until_not_exists`.
         """
         self.table.wait_until_not_exists()
+
+    def clear_records(self) -> None:
+        """
+        Delete all records managed by current table manager.
+
+        Deletes only records with sort key starting with `sort_key_prefix`.
+        """
+        self.clear_table(sort_key_prefix=self.sort_key_prefix)
