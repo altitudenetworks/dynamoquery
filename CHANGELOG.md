@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # [Released]
 
+## [2.4.0] - 2020-06-04
+
+### Added
+
+- `DynamoTable.clear_records` method [#38](https://github.com/altitudenetworks/dynamoquery/pull/38)
+
+### Fixed
+
+- `DynamoTable` class is no longer abstract
+- `DictClass` sanitization of initial data happens in the end on all values, even non-set
+- `DynamoTable` normalizes records in singular methods
+- `DynamoTable.batch_delete` returns correct record type
+- `DynamoTable.clear_table` respects `sort_key`/`sort_key_prefix` arguments even if `partition_key` is None (full scan) [#38](https://github.com/altitudenetworks/dynamoquery/pull/38)
+
 ## [2.3.0] - 2020-06-02
 
 ### Notes
