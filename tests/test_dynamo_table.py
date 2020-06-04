@@ -2,7 +2,6 @@ import datetime
 from unittest.mock import MagicMock
 
 import pytest
-
 from dynamo_query.data_table import DataTable
 from dynamo_query.dynamo_table import DynamoTable, DynamoTableError
 from dynamo_query.dynamo_table_index import DynamoTableIndex
@@ -52,6 +51,7 @@ class TestDynamoTable:
         class MyDynamoTable(DynamoTable):
             global_secondary_indexes = [DynamoTableIndex("gsi", "gsi_pk", "gsi_sk")]
             local_secondary_indexes = [DynamoTableIndex("lsi", "lsi_pk", "sk")]
+            sort_key_prefix = "prefix_"
 
             @property
             def table(self):
@@ -172,6 +172,24 @@ class TestDynamoTable:
         self.result.clear_table(None, partition_key_prefix="prefix_")
         self.table_mock.scan.return_value = {"Items": []}
         self.table_mock.scan.assert_called()
+
+    def test_clear_records(self):
+        self.table_mock.scan.return_value = {"Items": [{"pk": "my_pk", "sk": "sk"}]}
+        self.result.clear_records()
+        self.table_mock.scan.assert_called_with(
+            FilterExpression="begins_with(#aab, :aaa)",
+            ProjectionExpression="#aaa, #aab",
+            ExpressionAttributeNames={"#aaa": "pk", "#aab": "sk"},
+            ExpressionAttributeValues={":aaa": "prefix_"},
+            Limit=1000,
+        )
+        self.client_mock.batch_write_item.assert_called_with(
+            RequestItems={
+                "my_table_name": [{"DeleteRequest": {"Key": {"pk": "my_pk", "sk": "sk"}}}]
+            },
+            ReturnConsumedCapacity="NONE",
+            ReturnItemCollectionMetrics="NONE",
+        )
 
     def test_batch_get(self):
         self.client_mock.batch_get_item.return_value = {

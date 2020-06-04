@@ -236,16 +236,18 @@ class DictClass(UserDict):
 
                     continue
 
-                sanitized_value = self._sanitize_key(key, value)
-                self.data[key] = sanitized_value
+                self.data[key] = value
 
-        for key in self._required_field_names:
-            if key not in self.data:
-                raise ValueError(f"{self._class_name}.{key} must be set.")
+        for key in self._field_names:
+            self.data[key] = self._sanitize_key(key, self.data.get(key, self.NOT_SET))
 
         for key, value in list(self.data.items()):
             if value is self.NOT_SET:
                 del self.data[key]
+
+        for key in self._required_field_names:
+            if key not in self.data:
+                raise ValueError(f"{self._class_name}.{key} must be set.")
 
         self._update_computed()
 
