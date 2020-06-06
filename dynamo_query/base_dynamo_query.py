@@ -305,7 +305,6 @@ class BaseDynamoQuery(LazyLogger):
         return result
 
     def _execute_method_get_item(self, data_table: DataTable) -> DataTable:
-        self._validate_data_table_has_table_keys(data_table)
         result = DataTable[Dict[str, Any]]()
         for record in data_table.get_records():
             key_data = {k: v for k, v in record.items() if k in self.table_keys}
@@ -315,24 +314,7 @@ class BaseDynamoQuery(LazyLogger):
             result.add_record(record)
         return result
 
-    def _validate_data_table_has_table_keys(self, data_table: DataTable) -> None:
-        for table_key in self.table_keys:
-            if data_table.has_set_column(table_key):
-                continue
-
-            if data_table.has_column(table_key):
-                raise DynamoQueryError(
-                    f'Column "{table_key}" has missing values in input data,'
-                    f" but present in table keys {self.table_keys}"
-                )
-
-            raise DynamoQueryError(
-                f'Column "{table_key}" is missing in input data,'
-                f" but present in table keys {self.table_keys}"
-            )
-
     def _execute_method_update_item(self, data_table: DataTable) -> DataTable:
-        self._validate_data_table_has_table_keys(data_table)
         self._validate_required_value_keys(data_table)
 
         result = DataTable[Dict[str, Any]]()
@@ -348,7 +330,6 @@ class BaseDynamoQuery(LazyLogger):
         return result
 
     def _execute_method_delete_item(self, data_table: DataTable,) -> DataTable:
-        self._validate_data_table_has_table_keys(data_table)
         self._validate_required_value_keys(data_table)
 
         result = DataTable[Dict[str, Any]]()
@@ -360,34 +341,30 @@ class BaseDynamoQuery(LazyLogger):
         return result
 
     def _execute_method_batch_get_item(self, data_table: DataTable) -> DataTable:
-        self._validate_data_table_has_table_keys(data_table)
-
         record_chunks = chunkify(data_table.get_records(), self.MAX_BATCH_SIZE)
         table_name = self.table_resource.name
-        response_table = DataTable[Dict[str, Any]]()
+        response_table = DataTable()
         for record_chunk in record_chunks:
             key_data_list = []
             for record in record_chunk:
                 key_data = {k: v for k, v in record.items() if k in self.table_keys}
                 key_data_list.append(key_data)
             request_items = {table_name: {"Keys": key_data_list}}
-            response = self._batch_get_item(RequestItems=request_items, **self._extra_params,)
+            response = self._batch_get_item(RequestItems=request_items, **self._extra_params)
             if response.get("Responses", {}).get(table_name):
                 response_table.add_record(*response["Responses"][table_name])
 
-        result = DataTable[Dict[str, Any]]()
+        result = DataTable()
         for record in data_table.get_records():
             key_data = {k: v for k, v in record.items() if k in self.table_keys}
             response_records = response_table.filter_records(key_data).get_records()
             for response_record in response_records:
                 record.update(response_record)
-            result.add_record(record)
+                result.add_record(record)
 
         return result
 
     def _execute_method_batch_update_item(self, data_table: DataTable) -> DataTable:
-        self._validate_data_table_has_table_keys(data_table)
-
         record_chunks = chunkify(data_table.get_records(), self.MAX_BATCH_SIZE)
         table_name = self.table_resource.name
         for record_chunk in record_chunks:
@@ -402,8 +379,6 @@ class BaseDynamoQuery(LazyLogger):
         return data_table
 
     def _execute_method_batch_delete_item(self, data_table: DataTable) -> DataTable:
-        self._validate_data_table_has_table_keys(data_table)
-
         record_chunks = chunkify(data_table.get_records(), self.MAX_BATCH_SIZE)
         table_name = self.table_resource.name
         for record_chunk in record_chunks:

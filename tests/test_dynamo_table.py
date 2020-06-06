@@ -2,6 +2,7 @@ import datetime
 from unittest.mock import MagicMock
 
 import pytest
+
 from dynamo_query.data_table import DataTable
 from dynamo_query.dynamo_table import DynamoTable, DynamoTableError
 from dynamo_query.dynamo_table_index import DynamoTableIndex
@@ -193,11 +194,11 @@ class TestDynamoTable:
 
     def test_batch_get(self):
         self.client_mock.batch_get_item.return_value = {
-            "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]}
+            "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "my_data": "value"}]}
         }
         data_table = DataTable().add_record({"pk": "my_pk", "sk": "my_sk"})
         assert list(self.result.batch_get(data_table).get_records()) == [
-            {"pk": "my_pk", "sk": "my_sk", "data": "value"}
+            {"pk": "my_pk", "sk": "my_sk", "my_data": "value"}
         ]
         self.client_mock.batch_get_item.assert_called_with(
             RequestItems={"my_table_name": {"Keys": [{"pk": "my_pk", "sk": "my_sk"}]}},
@@ -208,7 +209,7 @@ class TestDynamoTable:
 
     def test_batch_delete(self):
         self.client_mock.batch_write_item.return_value = {
-            "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]}
+            "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "my_data": "value"}]}
         }
         data_table = DataTable().add_record({"pk": "my_pk", "sk": "my_sk"})
         assert list(self.result.batch_delete(data_table).get_records()) == [
@@ -228,14 +229,14 @@ class TestDynamoTable:
         self.client_mock.batch_write_item.return_value = {
             "Responses": {
                 "my_table_name": [
-                    {"pk": "my_pk", "sk": "my_sk", "data": "value1", "preserve": "p1"}
+                    {"pk": "my_pk", "sk": "my_sk", "my_data": "value1", "preserve": "p1"}
                 ]
             }
         }
         self.client_mock.batch_get_item.return_value = {
             "Responses": {
                 "my_table_name": [
-                    {"pk": "my_pk", "sk": "my_sk", "data": "value1", "preserve": "p1"}
+                    {"pk": "my_pk", "sk": "my_sk", "my_data": "value1", "preserve": "p1"}
                 ]
             }
         }
@@ -243,7 +244,7 @@ class TestDynamoTable:
             {
                 "pk": "my_pk",
                 "sk": "my_sk",
-                "data": "value2",
+                "my_data": "value2",
                 "preserve": "p2",
                 "preserve2": "p3",
                 "gsi_pk": "gsi_pk",
@@ -260,7 +261,7 @@ class TestDynamoTable:
             {
                 "pk": "my_pk",
                 "sk": "my_sk",
-                "data": "value2",
+                "my_data": "value2",
                 "preserve": "p1",
                 "preserve2": "p3",
                 "gsi_pk": "gsi_pk",
@@ -278,7 +279,7 @@ class TestDynamoTable:
                             "Item": {
                                 "pk": "my_pk",
                                 "sk": "my_sk",
-                                "data": "value2",
+                                "my_data": "value2",
                                 "preserve": "p1",
                                 "preserve2": "p3",
                                 "gsi_pk": "gsi_pk",
@@ -296,36 +297,6 @@ class TestDynamoTable:
         )
 
         assert list(self.result.batch_upsert(DataTable()).get_records()) == []
-
-        with pytest.raises(DynamoTableError):
-            self.result.batch_upsert(
-                DataTable().add_record(
-                    {
-                        "pk": "my_pk",
-                        "sk": "my_sk",
-                        "data": "value2",
-                        "preserve": "p2",
-                        "preserve2": "p3",
-                        "gsi_pk": "gsi_pk",
-                        "gsi_sk": "gsi_sk",
-                    }
-                )
-            )
-        with pytest.raises(DynamoTableError):
-            self.result.batch_upsert(
-                DataTable().add_record(
-                    {
-                        "pk": "my_pk",
-                        "sk": "my_sk",
-                        "data": "value2",
-                        "preserve": "p2",
-                        "preserve2": "p3",
-                        "gsi_pk": "gsi_pk",
-                        "gsi_sk": "gsi_sk",
-                        "lsi_pk": 12,
-                    }
-                )
-            )
 
     def test_get_record(self):
         self.table_mock.get_item.return_value = {"Item": {"pk": "my_pk", "pk_column": "my_pk"}}
@@ -422,10 +393,10 @@ class TestDynamoTable:
 
     def test_batch_get_records(self):
         self.client_mock.batch_get_item.return_value = {
-            "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]}
+            "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "my_data": "value"}]}
         }
         assert list(self.result.batch_get_records([{"pk": "my_pk", "sk": "my_sk"}])) == [
-            {"pk": "my_pk", "sk": "my_sk", "data": "value"}
+            {"pk": "my_pk", "sk": "my_sk", "my_data": "value"}
         ]
         self.client_mock.batch_get_item.assert_called_with(
             RequestItems={"my_table_name": {"Keys": [{"pk": "my_pk", "sk": "my_sk"}]}},
@@ -438,14 +409,14 @@ class TestDynamoTable:
         self.client_mock.batch_write_item.return_value = {
             "Responses": {
                 "my_table_name": [
-                    {"pk": "my_pk", "sk": "my_sk", "data": "value1", "preserve": "p1"}
+                    {"pk": "my_pk", "sk": "my_sk", "my_data": "value1", "preserve": "p1"}
                 ]
             }
         }
         self.client_mock.batch_get_item.return_value = {
             "Responses": {
                 "my_table_name": [
-                    {"pk": "my_pk", "sk": "my_sk", "data": "value1", "preserve": "p1"}
+                    {"pk": "my_pk", "sk": "my_sk", "my_data": "value1", "preserve": "p1"}
                 ]
             }
         }
@@ -455,7 +426,7 @@ class TestDynamoTable:
                     {
                         "pk": "my_pk",
                         "sk": "my_sk",
-                        "data": "value2",
+                        "my_data": "value2",
                         "preserve": "p2",
                         "preserve2": "p3",
                         "gsi_pk": "gsi_pk",
@@ -470,7 +441,7 @@ class TestDynamoTable:
             {
                 "pk": "my_pk",
                 "sk": "my_sk",
-                "data": "value2",
+                "my_data": "value2",
                 "preserve": "p1",
                 "preserve2": "p3",
                 "gsi_pk": "gsi_pk",
@@ -483,7 +454,7 @@ class TestDynamoTable:
 
     def test_batch_delete_records(self):
         self.client_mock.batch_write_item.return_value = {
-            "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]}
+            "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "my_data": "value"}]}
         }
         records = (i for i in [{"pk": "my_pk", "sk": "my_sk"}])
         assert list(self.result.batch_delete_records(records)) == [{"pk": "my_pk", "sk": "my_sk"}]

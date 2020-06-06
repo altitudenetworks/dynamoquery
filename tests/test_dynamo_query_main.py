@@ -8,8 +8,14 @@ from dynamo_query.expressions import ConditionExpression, ProjectionExpression, 
 
 
 class TestDynamoQuery:
-    @staticmethod
-    def test_methods() -> None:
+    table_resource_mock: MagicMock
+
+    def setup_method(self):
+        self.table_name = "table_name"
+        self.table_resource_mock = MagicMock()
+        self.table_resource_mock.name = self.table_name
+
+    def test_methods(self):
         table_resource_mock = MagicMock()
         query = DynamoQuery.build_query(
             key_condition_expression=ConditionExpression("key"),
@@ -46,8 +52,7 @@ class TestDynamoQuery:
         with pytest.raises(DynamoQueryError):
             DynamoQuery.build_batch_get_item().limit(10)
 
-    @staticmethod
-    def test_expression_methods() -> None:
+    def test_expression_methods(self):
         query = DynamoQuery.build_batch_get_item()
 
         with pytest.raises(DynamoQueryError):
@@ -56,8 +61,7 @@ class TestDynamoQuery:
         with pytest.raises(DynamoQueryError):
             query.projection("key")
 
-    @staticmethod
-    def test_errors() -> None:
+    def test_errors(self):
         filter_expression_mock = MagicMock()
         projection_expression_mock = MagicMock()
         table_resource_mock = MagicMock()
@@ -89,18 +93,7 @@ class TestDynamoQuery:
         with pytest.raises(DynamoQueryError):
             query.execute(DataTable({"key": [3, DataTable.NOT_SET]}))
 
-        with pytest.raises(DynamoQueryError):
-            DynamoQuery.build_batch_get_item().table(
-                table=table_resource_mock, table_keys=("pk", "sk")
-            ).execute(DataTable({"pk": ["test"], "sk": [DataTable.NOT_SET]}))
-
-        with pytest.raises(DynamoQueryError):
-            DynamoQuery.build_batch_get_item().table(
-                table=table_resource_mock, table_keys=("pk", "sk")
-            ).execute(DataTable({"pk": ["test"]}))
-
-    @staticmethod
-    def test_query() -> None:
+    def test_query(self):
         table_resource_mock = MagicMock()
         query = (
             DynamoQuery.build_query(
@@ -159,8 +152,7 @@ class TestDynamoQuery:
                 .execute_dict({})
             )
 
-    @staticmethod
-    def test_scan() -> None:
+    def test_scan(self):
         table_resource_mock = MagicMock()
         query = (
             DynamoQuery.build_scan(
@@ -181,8 +173,7 @@ class TestDynamoQuery:
         )
         assert list(result.get_records()) == []
 
-    @staticmethod
-    def test_get_item() -> None:
+    def test_get_item(self):
         table_resource_mock = MagicMock()
         query = (
             DynamoQuery.build_get_item(projection_expression=ProjectionExpression("test2"),)
@@ -199,8 +190,7 @@ class TestDynamoQuery:
         )
         assert list(result.get_records()) == [{"pk": "value", "sk": "value"}]
 
-    @staticmethod
-    def test_update_item():
+    def test_update_item(self):
         table_resource_mock = MagicMock()
         query = (
             DynamoQuery.build_update_item(
@@ -233,8 +223,7 @@ class TestDynamoQuery:
                 table=table_resource_mock, table_keys=("pk", "sk")
             ).update(add=["test"],).execute_dict({"pk": "value", "sk": "value", "test": "data"})
 
-    @staticmethod
-    def test_delete_item() -> None:
+    def test_delete_item(self):
         table_resource_mock = MagicMock()
         query = DynamoQuery.build_delete_item(
             condition_expression=ConditionExpression("test"),
@@ -251,37 +240,44 @@ class TestDynamoQuery:
         )
         assert list(result.get_records()) == []
 
-    @staticmethod
-    def test_batch_get_item() -> None:
-        table_resource_mock = MagicMock()
+    def test_batch_get_item(self):
         query = DynamoQuery.build_batch_get_item().table(
-            table=table_resource_mock, table_keys=("pk", "sk")
+            table=self.table_resource_mock, table_keys=("pk", "sk")
         )
+        self.table_resource_mock.meta.client.batch_get_item.return_value = {
+            "Responses": {
+                "table_name": [
+                    {"pk": "value", "sk": "value", "other": "test"},
+                    {"pk": "value", "sk": "value2", "other": "test2"},
+                ]
+            }
+        }
         result = query.execute_dict({"pk": "value", "sk": "value"})
-        table_resource_mock.meta.client.batch_get_item.assert_called_with(
-            RequestItems={table_resource_mock.name: {"Keys": [{"pk": "value", "sk": "value"}]}},
+        self.table_resource_mock.meta.client.batch_get_item.assert_called_with(
+            RequestItems={"table_name": {"Keys": [{"pk": "value", "sk": "value"}]}},
             ReturnConsumedCapacity="NONE",
         )
-        assert list(result.get_records()) == [{"pk": "value", "sk": "value"}]
+        assert list(result.get_records()) == [{"pk": "value", "sk": "value", "other": "test"}]
 
-    @staticmethod
-    def test_batch_update_item() -> None:
-        table_resource_mock = MagicMock()
+    def test_batch_update_item(self):
         query = DynamoQuery.build_batch_update_item().table(
-            table=table_resource_mock, table_keys=("pk", "sk")
+            table=self.table_resource_mock, table_keys=("pk", "sk")
         )
-        result = query.execute_dict({"pk": "value", "sk": "value"})
-        table_resource_mock.meta.client.batch_write_item.assert_called_with(
+        result = query.execute_dict({"pk": "value", "sk": "value", "new_key": "new_value"})
+        self.table_resource_mock.meta.client.batch_write_item.assert_called_with(
             RequestItems={
-                table_resource_mock.name: [{"PutRequest": {"Item": {"pk": "value", "sk": "value"}}}]
+                "table_name": [
+                    {"PutRequest": {"Item": {"pk": "value", "sk": "value", "new_key": "new_value"}}}
+                ]
             },
             ReturnConsumedCapacity="NONE",
             ReturnItemCollectionMetrics="NONE",
         )
-        assert list(result.get_records()) == [{"pk": "value", "sk": "value"}]
+        assert list(result.get_records()) == [
+            {"pk": "value", "sk": "value", "new_key": "new_value"}
+        ]
 
-    @staticmethod
-    def test_batch_delete_item() -> None:
+    def test_batch_delete_item(self):
         table_resource_mock = MagicMock()
         query = DynamoQuery.build_batch_delete_item().table(
             table=table_resource_mock, table_keys=("pk", "sk")

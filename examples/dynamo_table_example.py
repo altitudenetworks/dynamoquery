@@ -16,7 +16,7 @@ class UserRecord(DynamoDictClass):
     pk: Optional[str] = None
     sk: Optional[str] = None
     project_id: str = "my_project"
-    company: str = "Amazon"
+    company: str
     email: Optional[str] = None
     name: Optional[str] = None
     age: Optional[int] = None

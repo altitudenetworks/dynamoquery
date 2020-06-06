@@ -55,28 +55,25 @@ class DictClass(UserDict):
     # KeyError is raised if unknown key provided
     RAISE_ON_UNKNOWN_KEY: bool = False
 
+    _protected_keys = ("data",)
+
     _initialized_classes: List[int] = []
     _local_members_cache: Dict[int, Dict[str, Any]] = {}
     _local_members: Dict[str, Any] = {}
     _sanitizers: Dict[str, List[Callable[..., Any]]] = {}
     _computers: Dict[str, Callable[[Any], Any]] = {}
     _allowed_types: Dict[str, Tuple[Any, ...]] = {}
+    _field_names: List[str] = []
+    _required_field_names: List[str] = []
 
     def __new__(cls: Type[_R], *args: Dict[str, Any], **kwargs: Any) -> _R:
         instance = super().__new__(cls)
-        if id(cls) not in cls._initialized_classes:
-            cls._local_members = cls._get_local_members()
-            cls._sanitizers = cls._get_sanitizers()
-            cls._computers = cls._get_computers()
-            cls._allowed_types = cls._get_allowed_types()
-            cls._initialized_classes.append(id(cls))
+        cls._init_class()
         instance.__init__(*args, **kwargs)
         return cast(_R, instance)
 
     def __init__(self, *args: Dict[str, Any], **kwargs: Any) -> None:
         super().__init__()
-        self._required_field_names = self._get_required_field_names()
-        self._field_names = self._get_field_names(*args, kwargs)
         self.data.clear()
         self._init_data(*args, kwargs)
         self.__post_init__()
@@ -85,6 +82,19 @@ class DictClass(UserDict):
         """
         Override this method for post-init operations
         """
+
+    @classmethod
+    def _init_class(cls) -> None:
+        if id(cls) in cls._initialized_classes:
+            return
+
+        cls._local_members = cls._get_local_members()
+        cls._sanitizers = cls._get_sanitizers()
+        cls._computers = cls._get_computers()
+        cls._allowed_types = cls._get_allowed_types()
+        cls._required_field_names = cls._get_required_field_names()
+        cls._field_names = cls._get_field_names()
+        cls._initialized_classes.append(id(cls))
 
     @classmethod
     def _get_sanitizers(cls) -> Dict[str, List[Callable[..., Any]]]:
@@ -182,10 +192,11 @@ class DictClass(UserDict):
 
         return result
 
-    def _get_required_field_names(self) -> List[str]:
+    @classmethod
+    def _get_required_field_names(cls) -> List[str]:
         result = []
-        for key in self._allowed_types:
-            if key in self._local_members:
+        for key in cls._allowed_types:
+            if key in cls._local_members:
                 continue
 
             if key.startswith("_") or key.upper() == key:
@@ -194,10 +205,14 @@ class DictClass(UserDict):
             result.append(key)
         return result
 
-    def _get_field_names(self, *_mappings: Iterable[str]) -> List[str]:
+    @classmethod
+    def _get_field_names(cls, *_mappings: Iterable[str]) -> List[str]:
         result = []
-        for key in self._allowed_types:
-            if key in self._local_members:
+        for key in cls._allowed_types:
+            if key in cls._protected_keys:
+                raise KeyError(f"{cls.__name__}.{key} is protected and cannot be used")
+
+            if key in cls._local_members:
                 continue
 
             if key.startswith("_") or key.upper() == key:
@@ -205,7 +220,10 @@ class DictClass(UserDict):
 
             result.append(key)
 
-        for key, value in self._local_members.items():
+        for key, value in cls._local_members.items():
+            if key in cls._protected_keys:
+                raise KeyError(f"{cls.__name__}.{key} is protected and cannot be used")
+
             if key.startswith("_") or key.upper() == key:
                 continue
 
@@ -215,6 +233,28 @@ class DictClass(UserDict):
             result.append(key)
 
         return result
+
+    @classmethod
+    def get_field_names(cls) -> Tuple[str, ...]:
+        """
+        Get a list of allowed field names.
+
+        Returns:
+            A list of field names.
+        """
+        cls._init_class()
+        return tuple(cls._field_names)
+
+    @classmethod
+    def get_required_field_names(cls) -> Tuple[str, ...]:
+        """
+        Get a list of field names that have to be set.
+
+        Returns:
+            A list of field names.
+        """
+        cls._init_class()
+        return tuple(cls._required_field_names)
 
     def _init_data(self, *mappings: Dict[str, Any]) -> None:
         for key, member in self._local_members.items():
@@ -294,7 +334,7 @@ class DictClass(UserDict):
         if hasattr(self, "_computers") and name in self._computers:
             raise KeyError(f"Key {self._class_name}.{name} is computed and cannot be set directly")
 
-        if not hasattr(self, "_field_names") or name not in self._field_names:
+        if name not in self._field_names:
             super().__setattr__(name, value)
             return
 

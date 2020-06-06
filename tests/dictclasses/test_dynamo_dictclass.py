@@ -2,7 +2,6 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 import pytest
-
 from dynamo_query.dictclasses.dynamo_dictclass import DynamoDictClass
 
 
@@ -93,6 +92,15 @@ class TestDynamoDictClass:
     def test_inherited(self):
         my_record = MyRecord(name="test1")
         new_record = NewRecord(name="test1", last_name="test", age_next=13, unknown="test")
+        assert NewRecord.get_required_field_names() == ("last_name", "name")
+        assert NewRecord.get_field_names() == (
+            "last_name",
+            "name",
+            "age",
+            "age_prop",
+            "any_data",
+            "percent",
+        )
         assert new_record == {
             "name": "test1",
             "last_name": "test",
