@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, Mapping, Set, TypeVar
 
 if TYPE_CHECKING:
     from typing_extensions import Literal
-    from mypy_boto3.dynamodb.service_resource import Table
-    from mypy_boto3.dynamodb.client import DynamoDBClient
-    from mypy_boto3.application_autoscaling.client import ApplicationAutoScalingClient
-    from mypy_boto3.application_autoscaling.type_defs import (
+    from mypy_boto3_dynamodb.service_resource import Table
+    from mypy_boto3_dynamodb.client import DynamoDBClient
+    from mypy_boto3_application_autoscaling.client import ApplicationAutoScalingClient
+    from mypy_boto3_application_autoscaling.type_defs import (
         TargetTrackingScalingPolicyConfigurationTypeDef,
     )
     from mypy_boto3.dynamodb.type_defs import (
@@ -21,7 +21,6 @@ if TYPE_CHECKING:
         GlobalSecondaryIndexTypeDef,
         KeySchemaElementTypeDef,
         AttributeDefinitionTypeDef,
-        ProvisionedThroughputTypeDef,
     )
 
     BaseExpression = TypeVar("BaseExpression")
@@ -81,7 +80,6 @@ else:
     GlobalSecondaryIndexTypeDef = object
     KeySchemaElementTypeDef = object
     AttributeDefinitionTypeDef = object
-    ProvisionedThroughputTypeDef = object
     ApplicationAutoScalingClient = object
     TargetTrackingScalingPolicyConfigurationTypeDef = object
     ExclusiveStartKey = object
