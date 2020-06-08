@@ -312,7 +312,6 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         attribute_definitions: List[AttributeDefinitionTypeDef] = []
         attribute_names: Set[str] = set()
         indexes = (
-            self.primary_index,
             *self.global_secondary_indexes,
             *self.local_secondary_indexes,
         )
