@@ -7,7 +7,9 @@ class TestDynamoTableIndex:
     primary: DynamoTableIndex
 
     def setup_method(self):
-        self.result = DynamoTableIndex("my_index", "pk", "sk")
+        self.result = DynamoTableIndex(
+            "my_index", "pk", "sk", read_capacity_units=40, write_capacity_units=20
+        )
         self.no_sort_key_index = DynamoTableIndex("no_sort_key_index", "pk", "")
         self.primary = DynamoTableIndex(DynamoTableIndex.PRIMARY, "pk", "sk")
 
@@ -26,6 +28,7 @@ class TestDynamoTableIndex:
                 {"AttributeName": "sk", "KeyType": "RANGE"},
             ],
             "Projection": {"ProjectionType": "ALL"},
+            "ProvisionedThroughput": {"ReadCapacityUnits": 40, "WriteCapacityUnits": 20},
         }
         assert self.no_sort_key_index.as_global_secondary_index() == {
             "IndexName": "no_sort_key_index",

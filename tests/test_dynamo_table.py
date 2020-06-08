@@ -2,6 +2,7 @@ import datetime
 from unittest.mock import MagicMock
 
 import pytest
+
 from dynamo_query.data_table import DataTable
 from dynamo_query.dynamo_table import DynamoTable, DynamoTableError
 from dynamo_query.dynamo_table_index import DynamoTableIndex
@@ -52,6 +53,9 @@ class TestDynamoTable:
             global_secondary_indexes = [DynamoTableIndex("gsi", "gsi_pk", "gsi_sk")]
             local_secondary_indexes = [DynamoTableIndex("lsi", "lsi_pk", "sk")]
             sort_key_prefix = "prefix_"
+
+            read_capacity_units = 50
+            write_capacity_units = 10
 
             @property
             def table(self):

@@ -6,7 +6,6 @@ from dynamo_query.dynamo_query_types import (
     KeySchemaElementTypeDef,
     KeyTypeDef,
     LocalSecondaryIndexTypeDef,
-    ProvisionedThroughputTypeDef,
 )
 
 
@@ -16,8 +15,12 @@ class DynamoTableIndex:
 
     Arguments:
         name -- Index name.
-        sort_key -- Sort key attribute name.
-        partition_key -- Partition key attribute name.
+        partition_key_name -- Partition key attribute name.
+        partition_key_type -- S(string)/N(number)/B(bytes).
+        sort_key_name -- Sort key attribute name.
+        sort_key_type -- S(string)/N(number)/B(bytes).
+        read_capacity_units -- Read provisioned throughput units.
+        write_capacity_units -- Write provisioned throughput units.
 
     Usage:
 
@@ -47,12 +50,16 @@ class DynamoTableIndex:
         sort_key_name: Optional[str],
         partition_key_type: KeyTypeDef = "S",
         sort_key_type: KeyTypeDef = "S",
+        read_capacity_units: Optional[int] = None,
+        write_capacity_units: Optional[int] = None,
     ):
         self._name = name
         self.partition_key_name = partition_key_name
         self.partition_key_type = partition_key_type
         self.sort_key_name = sort_key_name
         self.sort_key_type = sort_key_type
+        self.read_capacity_units = read_capacity_units
+        self.write_capacity_units = write_capacity_units
 
     @property
     def name(self) -> Optional[str]:
@@ -64,9 +71,7 @@ class DynamoTableIndex:
 
         return self._name
 
-    def as_global_secondary_index(
-        self, provisioned_throughput: Optional[ProvisionedThroughputTypeDef] = None
-    ) -> GlobalSecondaryIndexTypeDef:
+    def as_global_secondary_index(self) -> GlobalSecondaryIndexTypeDef:
         """
         Output a dictionary to use in `dynamo_client.create_table` method.
 
@@ -85,8 +90,11 @@ class DynamoTableIndex:
             "KeySchema": key_schema,
             "Projection": {"ProjectionType": "ALL"},
         }
-        if provisioned_throughput:
-            result["ProvisionedThroughput"] = provisioned_throughput
+        if self.read_capacity_units and self.write_capacity_units:
+            result["ProvisionedThroughput"] = {
+                "ReadCapacityUnits": self.read_capacity_units,
+                "WriteCapacityUnits": self.write_capacity_units,
+            }
         return result
 
     def as_local_secondary_index(self) -> LocalSecondaryIndexTypeDef:

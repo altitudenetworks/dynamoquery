@@ -26,7 +26,6 @@ from dynamo_query.dynamo_query_types import (
     CreateTableOutputTypeDef,
     DynamoDBClient,
     PartitionKeyOperatorTypeDef,
-    ProvisionedThroughputTypeDef,
     SortKeyOperatorTypeDef,
     Table,
 )
@@ -137,10 +136,8 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
     dynamo_query_class: Type[DynamoQuery] = DynamoQuery
 
     # ProvisionedThroughput parameters
-    provisioned_throughput: Optional[ProvisionedThroughputTypeDef] = {
-        "ReadCapacityUnits": 50,
-        "WriteCapacityUnits": 10,
-    }
+    read_capacity_units: Optional[int] = None
+    write_capacity_units: Optional[int] = None
 
     record_class: Type[_RecordType] = LooseDictClass  # type: ignore
 
@@ -148,6 +145,12 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         self._lazy_logger = logger
         self._attribute_definitions = self._get_attribute_definitions()
         self._attribute_types = self._get_attribute_types()
+
+        for global_secondary_index in self.global_secondary_indexes:
+            if not global_secondary_index.read_capacity_units and self.read_capacity_units:
+                global_secondary_index.read_capacity_units = self.read_capacity_units
+            if not global_secondary_index.write_capacity_units and self.write_capacity_units:
+                global_secondary_index.write_capacity_units = self.write_capacity_units
 
     @property
     @abstractmethod
@@ -284,8 +287,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             return None
 
         global_secondary_indexes = [
-            i.as_global_secondary_index(self.provisioned_throughput)
-            for i in self.global_secondary_indexes
+            i.as_global_secondary_index() for i in self.global_secondary_indexes
         ]
         local_secondary_indexes = [
             i.as_local_secondary_index() for i in self.local_secondary_indexes
@@ -298,8 +300,11 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         if local_secondary_indexes:
             extra_params["LocalSecondaryIndexes"] = local_secondary_indexes
 
-        if self.provisioned_throughput:
-            extra_params["ProvisionedThroughput"] = self.provisioned_throughput
+        if self.read_capacity_units and self.write_capacity_units:
+            extra_params["ProvisionedThroughput"] = {
+                "ReadCapacityUnits": self.read_capacity_units,
+                "WriteCapacityUnits": self.write_capacity_units,
+            }
 
         return self.client.create_table(
             AttributeDefinitions=self._attribute_definitions,

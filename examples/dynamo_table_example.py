@@ -37,6 +37,9 @@ class UserDynamoTable(DynamoTable[UserRecord]):
     global_secondary_indexes = [gsi_name_age]
     record_class = UserRecord
 
+    read_capacity_units = 50
+    write_capacity_units = 10
+
     @property
     def table(self) -> Table:
         resource: DynamoDBServiceResource = boto3.resource("dynamodb")
@@ -46,8 +49,8 @@ class UserDynamoTable(DynamoTable[UserRecord]):
 def main() -> None:
     user_dynamo_table = UserDynamoTable()
     user_dynamo_table.create_table()
-    user_dynamo_table.clear_table()
     user_dynamo_table.wait_until_exists()
+    user_dynamo_table.clear_table()
     users_table = DataTable[UserRecord](record_class=UserRecord).add_record(
         UserRecord(email="john_student@gmail.com", company="IBM", name="John", age=34),
         dict(email="mary@gmail.com", company="CiscoSystems", name="Mary", age=34),
