@@ -22,6 +22,7 @@ class DynamoTableIndex:
         sort_key_type -- S(string)/N(number)/B(bytes).
         read_capacity_units -- Read provisioned throughput units.
         write_capacity_units -- Write provisioned throughput units.
+        projection -- Projection keys to include to index.
 
     Usage:
 
