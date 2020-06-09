@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # [Released]
 
+## [2.5.0] - 2020-06-09
+
+### Added
+
+- `DynamoTable.read_capacity_units` argument
+- `DynamoTable.write_capacity_units` argument
+- `read_capacity_units` and `write_capacity_units` arguments to `DynamoTableIndex` [#41](https://github.com/altitudenetworks/dynamoquery/pull/41)
+- `projection` argument to `DynamoTableIndex` [#42](https://github.com/altitudenetworks/dynamoquery/pull/42)
+
+### Changed
+
+- `DynamoTable`  no longer has default provision throughput specified [#41](https://github.com/altitudenetworks/dynamoquery/pull/41)
+- `DynamoTable.batch_upsert_record` no longer works as a generator
+- `DynamoTable.batch_delete_record` no longer works as a generator [#42](https://github.com/altitudenetworks/dynamoquery/pull/42)
+
 ## [2.4.0] - 2020-06-04
 
 ### Added
