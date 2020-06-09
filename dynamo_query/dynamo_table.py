@@ -678,7 +678,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             for record in result_data_table.get_records():
                 yield self._convert_record(record)
 
-    def batch_delete_records(self, records: Iterable[_RecordType]) -> Iterator[_RecordType]:
+    def batch_delete_records(self, records: Iterable[_RecordType]) -> None:
         """
         Delete records from DB.
 
@@ -686,21 +686,16 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
 
         Arguments:
             records -- Full or partial records to delete.
-
-        Yields:
-            Deleted or not found record data.
         """
         for records_chunk in chunkify(records, self.max_batch_size):
             delete_data_table = DataTable[_RecordType](record_class=self.record_class).add_record(
                 *records_chunk
             )
-            result = self.batch_delete(delete_data_table)
-            for record in result.get_records():
-                yield self._convert_record(record)
+            self.batch_delete(delete_data_table)
 
     def batch_upsert_records(
         self, records: Iterable[_RecordType], set_if_not_exists_keys: Iterable[str] = (),
-    ) -> Iterator[_RecordType]:
+    ) -> None:
         """
         Upsert records to DB.
 
@@ -709,17 +704,10 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         Arguments:
             records -- Full or partial records data.
             set_if_not_exists_keys -- List of keys to set only if they no do exist in DB.
-
-        Yields:
-            Created, updated or not found record data.
         """
         for records_chunk in chunkify(records, self.max_batch_size):
             upsert_data_table = DataTable(record_class=self.record_class).add_record(*records_chunk)
-            result = self.batch_upsert(
-                upsert_data_table, set_if_not_exists_keys=set_if_not_exists_keys
-            )
-            for record in result.get_records():
-                yield self._convert_record(record)
+            self.batch_upsert(upsert_data_table, set_if_not_exists_keys=set_if_not_exists_keys)
 
     def get_record(self, record: _RecordType) -> Optional[_RecordType]:
         """

@@ -2,13 +2,13 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, Mapping, Set, TypeVar
 
 if TYPE_CHECKING:
     from typing_extensions import Literal
-    from mypy_boto3_dynamodb.service_resource import Table
-    from mypy_boto3_dynamodb.client import DynamoDBClient
     from mypy_boto3_application_autoscaling.client import ApplicationAutoScalingClient
     from mypy_boto3_application_autoscaling.type_defs import (
         TargetTrackingScalingPolicyConfigurationTypeDef,
     )
-    from mypy_boto3.dynamodb.type_defs import (
+    from mypy_boto3_dynamodb.service_resource import Table
+    from mypy_boto3_dynamodb.client import DynamoDBClient
+    from mypy_boto3_dynamodb.type_defs import (
         GetItemOutputTypeDef,
         UpdateItemOutputTypeDef,
         DeleteItemOutputTypeDef,
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
         BatchWriteItemOutputTypeDef,
         CreateTableOutputTypeDef,
         LocalSecondaryIndexTypeDef,
+        ProjectionTypeDef,
         GlobalSecondaryIndexTypeDef,
         KeySchemaElementTypeDef,
         AttributeDefinitionTypeDef,
@@ -98,3 +99,4 @@ else:
     ScalableDimensionTypeDef = object
     MetricTypeTypeDef = object
     PartitionKeyOperatorTypeDef = object
+    ProjectionTypeDef = object

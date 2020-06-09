@@ -123,9 +123,6 @@ Install dependencies with [pipenv](https://github.com/pypa/pipenv)
 ```bash
 python -m pip install pipenv
 pipenv install -d
-
-# generate boto3 stubs index
-python -m mypy_boto3
 ```
 
 Enable `pylint` and `mypy` checks in your IDE.

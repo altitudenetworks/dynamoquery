@@ -4,7 +4,7 @@ Usage examples for `DynamoTable` class.
 from typing import Optional
 
 import boto3
-from mypy_boto3.dynamodb.service_resource import DynamoDBServiceResource, Table
+from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 
 from dynamo_query.data_table import DataTable
 from dynamo_query.dictclasses.dynamo_dictclass import DynamoDictClass
@@ -82,11 +82,8 @@ def main() -> None:
     for full_record in user_dynamo_table.batch_get_records((i for i in [record])):
         print(full_record)
 
-    for updated_record in user_dynamo_table.batch_upsert_records([record]):
-        print(updated_record)
-
-    for deleted_record in user_dynamo_table.batch_delete_records((i for i in [record])):
-        print(deleted_record)
+    user_dynamo_table.batch_upsert_records([record])
+    user_dynamo_table.batch_delete_records((i for i in [record]))
 
 
 if __name__ == "__main__":

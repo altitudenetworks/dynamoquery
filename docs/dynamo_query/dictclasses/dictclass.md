@@ -78,7 +78,7 @@ def compute_key(key: str) -> KeyComputer:
 
 ### DictClass().sanitize
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L332)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L334)
 
 ```python
 def sanitize(**kwargs: Any) -> None:
