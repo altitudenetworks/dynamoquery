@@ -13,7 +13,7 @@
 
 ## DynamoTableIndex
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L13)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L12)
 
 ```python
 class DynamoTableIndex():
@@ -23,6 +23,8 @@ class DynamoTableIndex():
         sort_key_name: Optional[str],
         partition_key_type: KeyTypeDef = 'S',
         sort_key_type: KeyTypeDef = 'S',
+        read_capacity_units: Optional[int] = None,
+        write_capacity_units: Optional[int] = None,
     ):
 ```
 
@@ -31,8 +33,12 @@ Constructor for DynamoDB global and local secondary index structures.
 #### Arguments
 
 - `name` - Index name.
-- `sort_key` - Sort key attribute name.
-- `partition_key` - Partition key attribute name.
+- `partition_key_name` - Partition key attribute name.
+- `partition_key_type` - S(string)/N(number)/B(bytes).
+- `sort_key_name` - Sort key attribute name.
+- `sort_key_type` - S(string)/N(number)/B(bytes).
+- `read_capacity_units` - Read provisioned throughput units.
+- `write_capacity_units` - Write provisioned throughput units.
 
 Usage:
 
@@ -59,7 +65,7 @@ table_index.as_dynamodb_dict()
 
 ### DynamoTableIndex().as_attribute_definitions
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L128)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L136)
 
 ```python
 def as_attribute_definitions() -> List[AttributeDefinitionTypeDef]:
@@ -67,12 +73,10 @@ def as_attribute_definitions() -> List[AttributeDefinitionTypeDef]:
 
 ### DynamoTableIndex().as_global_secondary_index
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L67)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L74)
 
 ```python
-def as_global_secondary_index(
-    provisioned_throughput: Optional[ProvisionedThroughputTypeDef] = None,
-) -> GlobalSecondaryIndexTypeDef:
+def as_global_secondary_index() -> GlobalSecondaryIndexTypeDef:
 ```
 
 Output a dictionary to use in `dynamo_client.create_table` method.
@@ -87,7 +91,7 @@ A dict with index data.
 
 ### DynamoTableIndex().as_key_schema
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L113)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L121)
 
 ```python
 def as_key_schema() -> List[KeySchemaElementTypeDef]:
@@ -101,7 +105,7 @@ A dict with index data.
 
 ### DynamoTableIndex().as_local_secondary_index
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L92)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L100)
 
 ```python
 def as_local_secondary_index() -> LocalSecondaryIndexTypeDef:
@@ -119,7 +123,7 @@ A dict with index data.
 
 ### DynamoTableIndex().get_query_data
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L141)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L149)
 
 ```python
 def get_query_data(
@@ -141,7 +145,7 @@ Query-ready data.
 
 ### DynamoTableIndex().name
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L57)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L64)
 
 ```python
 @property

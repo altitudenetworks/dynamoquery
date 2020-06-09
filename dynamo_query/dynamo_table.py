@@ -707,9 +707,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         """
         for records_chunk in chunkify(records, self.max_batch_size):
             upsert_data_table = DataTable(record_class=self.record_class).add_record(*records_chunk)
-            self.batch_upsert(
-                upsert_data_table, set_if_not_exists_keys=set_if_not_exists_keys
-            )
+            self.batch_upsert(upsert_data_table, set_if_not_exists_keys=set_if_not_exists_keys)
 
     def get_record(self, record: _RecordType) -> Optional[_RecordType]:
         """
