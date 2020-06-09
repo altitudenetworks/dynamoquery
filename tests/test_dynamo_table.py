@@ -453,7 +453,7 @@ class TestDynamoTable:
                 ]
             }
         }
-        assert list(
+        assert (
             self.result.batch_upsert_records(
                 [
                     {
@@ -470,24 +470,12 @@ class TestDynamoTable:
                 ],
                 set_if_not_exists_keys=["preserve", "preserve2"],
             )
-        ) == [
-            {
-                "pk": "my_pk",
-                "sk": "my_sk",
-                "data": "value2",
-                "preserve": "p1",
-                "preserve2": "p3",
-                "gsi_pk": "gsi_pk",
-                "gsi_sk": "gsi_sk",
-                "lsi_pk": "lsi_pk",
-                "dt_created": "utcnow",
-                "dt_modified": "utcnow",
-            }
-        ]
+            is None
+        )
 
     def test_batch_delete_records(self):
         self.client_mock.batch_write_item.return_value = {
             "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]}
         }
         records = (i for i in [{"pk": "my_pk", "sk": "my_sk"}])
-        assert list(self.result.batch_delete_records(records)) == [{"pk": "my_pk", "sk": "my_sk"}]
+        assert self.result.batch_delete_records(records) is None
