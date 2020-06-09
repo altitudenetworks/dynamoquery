@@ -18,6 +18,7 @@ if TYPE_CHECKING:
         BatchWriteItemOutputTypeDef,
         CreateTableOutputTypeDef,
         LocalSecondaryIndexTypeDef,
+        ProjectionTypeDef,
         GlobalSecondaryIndexTypeDef,
         KeySchemaElementTypeDef,
         AttributeDefinitionTypeDef,
@@ -98,3 +99,4 @@ else:
     ScalableDimensionTypeDef = object
     MetricTypeTypeDef = object
     PartitionKeyOperatorTypeDef = object
+    ProjectionTypeDef = object

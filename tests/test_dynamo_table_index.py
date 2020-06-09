@@ -10,7 +10,9 @@ class TestDynamoTableIndex:
         self.result = DynamoTableIndex(
             "my_index", "pk", "sk", read_capacity_units=40, write_capacity_units=20
         )
-        self.no_sort_key_index = DynamoTableIndex("no_sort_key_index", "pk", "")
+        self.no_sort_key_index = DynamoTableIndex(
+            "no_sort_key_index", "pk", "", projection=["pk", "other"]
+        )
         self.primary = DynamoTableIndex(DynamoTableIndex.PRIMARY, "pk", "sk")
 
     def test_init(self) -> None:
@@ -33,7 +35,7 @@ class TestDynamoTableIndex:
         assert self.no_sort_key_index.as_global_secondary_index() == {
             "IndexName": "no_sort_key_index",
             "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}],
-            "Projection": {"ProjectionType": "ALL"},
+            "Projection": {"ProjectionType": "INCLUDE", "NonKeyAttributes": ["pk", "other"]},
         }
 
     def test_as_local_secondary_index(self) -> None:
@@ -48,7 +50,7 @@ class TestDynamoTableIndex:
         assert self.no_sort_key_index.as_local_secondary_index() == {
             "IndexName": "no_sort_key_index",
             "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}],
-            "Projection": {"ProjectionType": "ALL"},
+            "Projection": {"ProjectionType": "INCLUDE", "NonKeyAttributes": ["pk", "other"]},
         }
 
     def test_as_key_schema(self) -> None:

@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 from dynamo_query.dynamo_query_types import (
     AttributeDefinitionTypeDef,
@@ -6,6 +6,7 @@ from dynamo_query.dynamo_query_types import (
     KeySchemaElementTypeDef,
     KeyTypeDef,
     LocalSecondaryIndexTypeDef,
+    ProjectionTypeDef,
 )
 
 
@@ -52,6 +53,7 @@ class DynamoTableIndex:
         sort_key_type: KeyTypeDef = "S",
         read_capacity_units: Optional[int] = None,
         write_capacity_units: Optional[int] = None,
+        projection: Iterable[str] = tuple(),
     ):
         self._name = name
         self.partition_key_name = partition_key_name
@@ -60,6 +62,7 @@ class DynamoTableIndex:
         self.sort_key_type = sort_key_type
         self.read_capacity_units = read_capacity_units
         self.write_capacity_units = write_capacity_units
+        self.projection = projection
 
     @property
     def name(self) -> Optional[str]:
@@ -70,6 +73,15 @@ class DynamoTableIndex:
             return None
 
         return self._name
+
+    def _get_projection(self) -> ProjectionTypeDef:
+        if self.projection:
+            return {
+                "ProjectionType": "INCLUDE",
+                "NonKeyAttributes": list(self.projection),
+            }
+
+        return {"ProjectionType": "ALL"}
 
     def as_global_secondary_index(self) -> GlobalSecondaryIndexTypeDef:
         """
@@ -88,7 +100,7 @@ class DynamoTableIndex:
         result: GlobalSecondaryIndexTypeDef = {
             "IndexName": self._name,
             "KeySchema": key_schema,
-            "Projection": {"ProjectionType": "ALL"},
+            "Projection": self._get_projection(),
         }
         if self.read_capacity_units and self.write_capacity_units:
             result["ProvisionedThroughput"] = {
@@ -114,7 +126,7 @@ class DynamoTableIndex:
         result: LocalSecondaryIndexTypeDef = {
             "IndexName": self._name,
             "KeySchema": key_schema,
-            "Projection": {"ProjectionType": "ALL"},
+            "Projection": self._get_projection(),
         }
         return result
 
