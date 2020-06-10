@@ -55,7 +55,7 @@ dict(record) # {"name": "Jon", "company": "Amazon", "age": 30, "min_age": 18}
 
 ### DictClass().\_\_post\_init\_\_
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L84)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L92)
 
 ```python
 def __post_init__() -> None:
@@ -65,7 +65,7 @@ Override this method for post-init operations
 
 ### DictClass.compute_key
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L125)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L133)
 
 ```python
 @staticmethod
@@ -78,7 +78,7 @@ def compute_key(key: str) -> KeyComputer:
 
 ### DictClass().sanitize
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L334)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L348)
 
 ```python
 def sanitize(**kwargs: Any) -> None:
@@ -92,7 +92,7 @@ Sanitize all set fields.
 
 ### DictClass.sanitize_key
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L121)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L129)
 
 ```python
 @staticmethod

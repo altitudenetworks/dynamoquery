@@ -22,6 +22,7 @@ class TestDataTable:
     def test_init() -> None:
         base_dict = {"a": [1, 2, 3], "b": [1, 2]}
         data_table = DataTable(base_dict)
+        DataTable.create(base_dict)
         assert list(data_table.copy().normalize()) == [
             {"a": 1, "b": 1},
             {"a": 2, "b": 2},

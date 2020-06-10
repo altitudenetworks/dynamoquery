@@ -393,6 +393,12 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             if not query.has_more_results():
                 return
 
+    def _get_keys_projection(self) -> Set[str]:
+        if issubclass(self.record_class, DynamoDictClass):
+            return self.table_keys | set(self.record_class.get_required_field_names())
+
+        return self.table_keys
+
     def clear_table(
         self,
         partition_key: Optional[str] = None,
@@ -425,7 +431,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
                 sort_key_prefix=sort_key_prefix,
                 filter_expression=filter_expression,
                 limit=limit,
-                projection=self.table_keys,
+                projection=self._get_keys_projection(),
             )
         else:
             filter_expressions: List[ConditionExpression] = []
@@ -452,7 +458,9 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
                     filter_expression = filter_expression & part
 
             records = self.scan(
-                filter_expression=filter_expression, data=data, projection=self.table_keys
+                filter_expression=filter_expression,
+                data=data,
+                projection=self._get_keys_projection(),
             )
 
         for records_chunk in chunkify(records, self.max_batch_size):
@@ -565,9 +573,8 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             record = self.normalize_record(self._convert_record(record))
             partition_key = self._get_partition_key(record)
             sort_key = self._get_sort_key(record)
-            new_record = self._convert_record(
-                {self.partition_key_name: partition_key, self.sort_key_name: sort_key}
-            )
+            record.update({self.partition_key_name: partition_key, self.sort_key_name: sort_key})
+            new_record = self._convert_record(record)
             delete_data_table.add_record(new_record)
 
         results = (

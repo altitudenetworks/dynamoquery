@@ -1,7 +1,7 @@
 import inspect
 from collections import UserDict
 from copy import copy
-from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, TypeVar, cast
+from typing import Any, Callable, Dict, List, Tuple, Type, TypeVar, cast
 
 from dynamo_query.dictclasses.decorators import KeyComputer, KeySanitizer
 
@@ -61,22 +61,30 @@ class DictClass(UserDict):
     _sanitizers: Dict[str, List[Callable[..., Any]]] = {}
     _computers: Dict[str, Callable[[Any], Any]] = {}
     _allowed_types: Dict[str, Tuple[Any, ...]] = {}
+    _required_field_names: List[str] = []
+    _field_names: List[str] = []
 
     def __new__(cls: Type[_R], *args: Dict[str, Any], **kwargs: Any) -> _R:
         instance = super().__new__(cls)
-        if id(cls) not in cls._initialized_classes:
-            cls._local_members = cls._get_local_members()
-            cls._sanitizers = cls._get_sanitizers()
-            cls._computers = cls._get_computers()
-            cls._allowed_types = cls._get_allowed_types()
-            cls._initialized_classes.append(id(cls))
+        cls._initalize_class()
         instance.__init__(*args, **kwargs)
         return cast(_R, instance)
 
+    @classmethod
+    def _initalize_class(cls) -> None:
+        if id(cls) in cls._initialized_classes:
+            return
+
+        cls._local_members = cls._get_local_members()
+        cls._sanitizers = cls._get_sanitizers()
+        cls._computers = cls._get_computers()
+        cls._allowed_types = cls._get_allowed_types()
+        cls._initialized_classes.append(id(cls))
+        cls._required_field_names = cls._get_required_field_names()
+        cls._field_names = cls._get_field_names()
+
     def __init__(self, *args: Dict[str, Any], **kwargs: Any) -> None:
         super().__init__()
-        self._required_field_names = self._get_required_field_names()
-        self._field_names = self._get_field_names(*args, kwargs)
         self.data.clear()
         self._init_data(*args, kwargs)
         self.__post_init__()
@@ -182,10 +190,11 @@ class DictClass(UserDict):
 
         return result
 
-    def _get_required_field_names(self) -> List[str]:
+    @classmethod
+    def _get_required_field_names(cls) -> List[str]:
         result = []
-        for key in self._allowed_types:
-            if key in self._local_members:
+        for key in cls._allowed_types:
+            if key in cls._local_members:
                 continue
 
             if key.startswith("_") or key.upper() == key:
@@ -194,10 +203,11 @@ class DictClass(UserDict):
             result.append(key)
         return result
 
-    def _get_field_names(self, *_mappings: Iterable[str]) -> List[str]:
+    @classmethod
+    def _get_field_names(cls) -> List[str]:
         result = []
-        for key in self._allowed_types:
-            if key in self._local_members:
+        for key in cls._allowed_types:
+            if key in cls._local_members:
                 continue
 
             if key.startswith("_") or key.upper() == key:
@@ -205,11 +215,11 @@ class DictClass(UserDict):
 
             result.append(key)
 
-        for key, value in self._local_members.items():
+        for key, value in cls._local_members.items():
             if key.startswith("_") or key.upper() == key:
                 continue
 
-            if inspect.isfunction(value):
+            if inspect.isfunction(value) or inspect.ismethod(value) or isinstance(value, property):
                 continue
 
             result.append(key)
@@ -218,7 +228,7 @@ class DictClass(UserDict):
 
     def _init_data(self, *mappings: Dict[str, Any]) -> None:
         for key, member in self._local_members.items():
-            if key not in self._field_names or isinstance(member, property):
+            if key not in self._field_names:
                 continue
 
             self.data[key] = copy(member)
@@ -247,7 +257,7 @@ class DictClass(UserDict):
 
         for key in self._required_field_names:
             if key not in self.data:
-                raise ValueError(f"{self._class_name}.{key} must be set.")
+                raise ValueError(f"{self._class_name}.{key} must be set: {self.data}")
 
         self._update_computed()
 
@@ -291,10 +301,14 @@ class DictClass(UserDict):
         self._set_item(key, value, is_initial=False, sanitize_kwargs={})
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if hasattr(self, "_computers") and name in self._computers:
+        if name == "data":
+            super().__setattr__(name, value)
+            return
+
+        if name in self._computers:
             raise KeyError(f"Key {self._class_name}.{name} is computed and cannot be set directly")
 
-        if not hasattr(self, "_field_names") or name not in self._field_names:
+        if name not in self._field_names:
             super().__setattr__(name, value)
             return
 
