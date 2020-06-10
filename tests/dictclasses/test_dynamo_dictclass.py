@@ -57,6 +57,8 @@ class ImmutableRecord(DynamoDictClass):
 
 class TestDynamoDictClass:
     def test_init(self):
+        assert (MyRecord.get_required_field_names()) == ["name"]
+        assert (MyRecord.get_field_names()) == ["name", "age"]
         my_record = MyRecord(name="test")
         assert my_record.name == "test"
         assert my_record.age is None
@@ -91,6 +93,8 @@ class TestDynamoDictClass:
             my_record2["unknown"] = "test"
 
     def test_inherited(self):
+        assert (NewRecord.get_required_field_names()) == ['last_name', "name"]
+        assert (NewRecord.get_field_names()) == ['last_name', 'name', 'age', 'any_data', 'percent']
         my_record = MyRecord(name="test1")
         new_record = NewRecord(name="test1", last_name="test", age_next=13, unknown="test")
         assert new_record == {

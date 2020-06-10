@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any
+from typing import Any, List
 
 from dynamo_query.dictclasses.dictclass import DictClass
 
@@ -17,3 +17,13 @@ class DynamoDictClass(DictClass):
                 return int(sanitized_value)
 
         return sanitized_value
+
+    @classmethod
+    def get_required_field_names(cls) -> List[str]:
+        cls._initalize_class()
+        return cls._required_field_names
+
+    @classmethod
+    def get_field_names(cls) -> List[str]:
+        cls._initalize_class()
+        return cls._field_names

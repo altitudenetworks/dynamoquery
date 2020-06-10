@@ -1,4 +1,4 @@
-from typing import Any, Iterable, List
+from typing import Any, Dict
 
 from dynamo_query.dictclasses.dynamo_dictclass import DynamoDictClass
 
@@ -10,14 +10,13 @@ class LooseDictClass(DynamoDictClass):
     DictClass that allows any keys.
     """
 
-    def _get_field_names(self, *mappings: Iterable[str]) -> List[str]:
-        result = super()._get_field_names(*mappings)
+    def _init_data(self, *mappings: Dict[str, Any]) -> None:
         for mapping in mappings:
             for key in mapping:
-                if key not in result:
-                    result.append(key)
+                if key not in self._field_names:
+                    self._field_names.append(key)
 
-        return result
+        super()._init_data(*mappings)
 
     def __setitem__(self, key: str, value: Any) -> None:
         if key in self._computers:

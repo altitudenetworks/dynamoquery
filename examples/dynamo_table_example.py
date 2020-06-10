@@ -13,11 +13,9 @@ from dynamo_query.dynamo_table_index import DynamoTableIndex
 
 
 class UserRecord(DynamoDictClass):
-    pk: Optional[str] = None
-    sk: Optional[str] = None
     project_id: str = "my_project"
-    company: str = "Amazon"
-    email: Optional[str] = None
+    company: str
+    email: str
     name: Optional[str] = None
     age: Optional[int] = None
     dt_created: Optional[str] = None
