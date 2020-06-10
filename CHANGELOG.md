@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # [Released]
 
+## [2.6.0] - 2020-06-10
+
+### Added
+
+- `DynamoDictClass.get_required_field_names` method
+- `DynamoDictClass.get_field_names` method [#44](https://github.com/altitudenetworks/dynamoquery/pull/44)
+
+### Fixed
+
+- `DynamoTable` now works with `DynamoDictClass` with required fields
+- `DynamoDictClass` child class methods were detected as field names
+- `DynamoDictClass` fields are initialized only once per class [#44](https://github.com/altitudenetworks/dynamoquery/pull/44)
+
 ## [2.5.0] - 2020-06-09
 
 ### Added
