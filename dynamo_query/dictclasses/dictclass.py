@@ -83,7 +83,6 @@ class DictClass(UserDict):
         cls._required_field_names = cls._get_required_field_names()
         cls._field_names = cls._get_field_names()
 
-
     def __init__(self, *args: Dict[str, Any], **kwargs: Any) -> None:
         super().__init__()
         self.data.clear()
@@ -303,7 +302,8 @@ class DictClass(UserDict):
 
     def __setattr__(self, name: str, value: Any) -> None:
         if name == "data":
-            return super().__setattr__(name, value)
+            super().__setattr__(name, value)
+            return
 
         if name in self._computers:
             raise KeyError(f"Key {self._class_name}.{name} is computed and cannot be set directly")
