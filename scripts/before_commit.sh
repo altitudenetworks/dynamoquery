@@ -10,7 +10,7 @@ isort **/*.py
 pylint dynamo_query
 mypy dynamo_query
 vulture dynamo_query vulture_whitelist.py
-pytest
+pytest -m "not integration"
 # pytest --cov-report html --cov dynamo_query
 
 # ./scripts/docs.sh

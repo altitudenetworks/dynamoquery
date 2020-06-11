@@ -65,11 +65,19 @@ jobs:
           python setup.py install
       - name: Unit tests
         run: |
-          pytest
+          pytest -m "not integration"
+      - name: Setup DynamoDB Local
+        uses: rrainn/dynamodb-action@v2.0.0
+        with:
+          port: 8000
+          cors: "*"
+      - name: Integration tests
+        run: |
+          pytest -m "integration"
       - name: Send coverage report
         if: matrix.python-version == '3.8'
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: |
-          pytest --cov-report=xml --cov=dynamo_query
+          pytest --cov-report=xml --cov=dynamo_query -m "not integration"
           codecov
