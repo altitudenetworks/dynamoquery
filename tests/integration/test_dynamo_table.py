@@ -38,7 +38,7 @@ class UserDynamoTable(DynamoTable[UserRecord]):
     @property
     def table(self):
         resource: DynamoDBServiceResource = boto3.resource(
-            "dynamodb", endpoint_url="http://localhost:8000"
+            "dynamodb", endpoint_url="http://localhost:8000", region_name="us-west-1"
         )
         return resource.Table("test_dq_users_table")  # pylint: disable=no-member
 
