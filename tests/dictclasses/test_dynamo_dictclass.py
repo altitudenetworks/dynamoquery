@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 import pytest
 
@@ -55,6 +55,10 @@ class ImmutableRecord(DynamoDictClass):
         return "test"
 
 
+class TypedRecord(DynamoDictClass):
+    my_set: Set[str] = {"asd", "qwe"}
+
+
 class TestDynamoDictClass:
     def test_init(self):
         assert (MyRecord.get_required_field_names()) == ["name"]
@@ -67,9 +71,14 @@ class TestDynamoDictClass:
         assert list(my_record.keys()) == ["name"]
         assert list(my_record.items()) == [("name", "test")]
         assert my_record == MyRecord(name="test")
+        assert TypedRecord(my_set={"test"}) == {"my_set": {"test"}}
 
         my_record.name = "test2"
         my_record.age = 42
+
+        with pytest.raises(KeyError):
+            my_record.unknown = 13
+
         assert dict(my_record) == {"name": "test2", "age": 42}
 
         my_record["age"] = 12
@@ -79,7 +88,7 @@ class TestDynamoDictClass:
         my_record2 = MyRecord(my_record, {"age": None})
         assert my_record2.age == None
         assert my_record2 == {"name": "test3"}
-        my_record2.update({"age": 13})
+        my_record2.update({"age": 13}, unknown="test")
         assert dict(my_record2) == {"name": "test3", "age": 13}
 
         assert MyRecord({"name": "test", "age": Decimal(12.2)}).age == 12

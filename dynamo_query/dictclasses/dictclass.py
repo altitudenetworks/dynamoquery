@@ -241,7 +241,6 @@ class DictClass(dict):
                         raise KeyError(
                             f"{self._class_name}.{key} does not exist, got value {repr(value)}."
                         )
-
                     continue
 
                 super().__setitem__(key, value)
@@ -294,28 +293,24 @@ class DictClass(dict):
             return
 
         if key not in self._field_names:
-            raise KeyError(f"Key {self._class_name}.{key} is incorrect")
+            raise KeyError(f"Key {self._class_name}.{key} is missing in class attributes")
 
         self._set_item(key, value, is_initial=False, sanitize_kwargs={})
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if name == "data":
-            super().__setattr__(name, value)
-            return
-
         if name in self._computers:
             raise KeyError(f"Key {self._class_name}.{name} is computed and cannot be set directly")
 
         if name not in self._field_names:
-            super().__setattr__(name, value)
-            return
+            raise KeyError(f"Key {self._class_name}.{name} is missing in class attributes")
 
         self._set_item(name, value, is_initial=False, sanitize_kwargs={})
 
     def __getattribute__(self, name: str) -> Any:
         if name.startswith("_"):
             return super().__getattribute__(name)
-        if not hasattr(self, "_field_names") or name not in self._field_names:
+
+        if name not in self._field_names:
             return super().__getattribute__(name)
 
         return self.get(name, self.NOT_SET)
@@ -356,8 +351,10 @@ class DictClass(dict):
         """
         Override of original `dict.update` method to apply `_set_item` rules.
         """
-        for mapping in args:
+        mappings = [*args, kwargs]
+        for mapping in mappings:
             for key, value in mapping.items():
+                if key not in self._field_names:
+                    continue
+
                 self._set_item(key, value, is_initial=False, sanitize_kwargs={})
-        for key, value in kwargs.items():
-            self._set_item(key, value, is_initial=False, sanitize_kwargs={})
