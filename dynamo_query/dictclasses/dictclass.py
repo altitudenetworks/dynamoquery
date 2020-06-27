@@ -1,6 +1,6 @@
 import inspect
 from copy import copy
-from typing import Any, Callable, Dict, List, Tuple, Type, TypeVar, cast
+from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, TypeVar, cast
 
 from dynamo_query.dictclasses.decorators import KeyComputer, KeySanitizer
 
@@ -156,8 +156,6 @@ class DictClass(dict):
                 result[key] = (set,)
             if annotation_str.startswith("typing.Union"):
                 result[key] = child_types
-            if annotation_str.startswith("typing.Optional"):
-                result[key] = (*child_types, None)
 
         return result
 
@@ -175,16 +173,30 @@ class DictClass(dict):
                 continue
             result[key] = value
 
-        for base_class in cls.__bases__:
-            if base_class is DictClass:
-                return result
+        base_classes = cls._get_base_classes(cls.__bases__)
+        base_classes.reverse()
+        for base_class in base_classes:
             for key, value in inspect.getmembers(base_class):
                 if key == "__annotations__":
                     result["__annotations__"].update(value)
                     continue
                 if key in base_field_names or key in result:
                     continue
-                result[key] = value
+
+        return result
+
+    @classmethod
+    def _get_base_classes(cls, base_classes: Iterable[Any]) -> List[Any]:
+        result: List[Type[DictClass]] = []
+        for base_class in base_classes:
+            if base_class is DictClass:
+                continue
+
+            if not issubclass(base_class, DictClass):
+                continue
+
+            result.append(base_class)
+            result.extend(cls._get_base_classes(base_class.__bases__))
 
         return result
 
@@ -236,14 +248,14 @@ class DictClass(dict):
                 if key in self._computers:
                     continue
 
-                if key not in self._field_names:
-                    if self.RAISE_ON_UNKNOWN_KEY:
-                        raise KeyError(
-                            f"{self._class_name}.{key} does not exist, got value {repr(value)}."
-                        )
-                    continue
+                field_name_exists = key in self._field_names
+                if not field_name_exists and self.RAISE_ON_UNKNOWN_KEY:
+                    raise KeyError(
+                        f"{self._class_name}.{key} does not exist, got value {repr(value)}."
+                    )
 
-                super().__setitem__(key, value)
+                if field_name_exists:
+                    super().__setitem__(key, value)
 
         for key in self._field_names:
             super().__setitem__(key, self._sanitize_key(key, self.get(key, self.NOT_SET)))

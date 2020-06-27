@@ -6,7 +6,11 @@ import pytest
 from dynamo_query.dictclasses.dynamo_dictclass import DynamoDictClass
 
 
-class MyRecord(DynamoDictClass):
+class MyMixin:
+    _ignored = 123
+
+
+class MyRecord(DynamoDictClass, MyMixin):
     _hidden_required: str
     _hidden: str = "do not show"
 
