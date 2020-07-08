@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # [Released]
 
+## [2.7.0] - 2020-07-08
+
+### Added
+
+- `DynamoTable.cached_batch_get` method
+- `DynamoTable.cached_get_record` method
+- `DynamoTable.invalidate_cache` method [#48](https://github.com/altitudenetworks/dynamoquery/pull/48)
+
+### Fixed
+
+- `DynamoTable` does not use sort key if it does not exist in record
+- Always use provided `DynamoQuery` subclass in `DynamoTable`
+- Filter out non-key data from batch methods [#48](https://github.com/altitudenetworks/dynamoquery/pull/48)
+
 ## [2.6.0] - 2020-06-10
 
 ### Added
