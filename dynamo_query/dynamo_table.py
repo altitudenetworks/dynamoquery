@@ -32,6 +32,7 @@ from dynamo_query.dynamo_query_types import (
 from dynamo_query.dynamo_table_index import DynamoTableIndex
 from dynamo_query.expressions import ConditionExpression, ConditionExpressionType
 from dynamo_query.lazy_logger import LazyLogger
+from dynamo_query.sentinel import SentinelValue
 from dynamo_query.utils import chunkify
 
 __all__ = ("DynamoTable", "DynamoTableError")
@@ -111,10 +112,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
     partition_key_name: str = "pk"
 
     # SK column name
-    sort_key_name: str = "sk"
-
-    # Set of table keys
-    table_keys: Set[str] = {partition_key_name, sort_key_name}
+    sort_key_name: Optional[str] = "sk"
 
     # GSI indexes list
     global_secondary_indexes: Iterable[DynamoTableIndex] = []
@@ -139,12 +137,17 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
     read_capacity_units: Optional[int] = None
     write_capacity_units: Optional[int] = None
 
+    # Target recor classs
     record_class: Type[_RecordType] = LooseDictClass  # type: ignore
+
+    # Sentinels
+    NO_RECORD = SentinelValue("NO_RECORD")
 
     def __init__(self, logger: Optional[logging.Logger] = None,) -> None:
         self._lazy_logger = logger
         self._attribute_definitions = self._get_attribute_definitions()
         self._attribute_types = self._get_attribute_types()
+        self._records_cache: Dict[int, Optional[_RecordType]] = {}
 
         for global_secondary_index in self.global_secondary_indexes:
             if not global_secondary_index.read_capacity_units and self.read_capacity_units:
@@ -162,6 +165,13 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
     @property
     def client(self) -> DynamoDBClient:
         return cast(DynamoDBClient, self.table.meta.client)
+
+    @property
+    def table_keys(self) -> Set[str]:
+        if not self.sort_key_name:
+            return {self.partition_key_name}
+
+        return {self.partition_key_name, self.sort_key_name}
 
     @property
     def max_batch_size(self) -> int:
@@ -441,10 +451,10 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
                     ConditionExpression(self.partition_key_name, operator="begins_with")
                 )
                 data[self.partition_key_name] = partition_key_prefix
-            if sort_key:
+            if sort_key and self.sort_key_name:
                 filter_expressions.append(ConditionExpression(self.sort_key_name))
                 data[self.sort_key_name] = sort_key
-            if sort_key_prefix:
+            if sort_key_prefix and self.sort_key_name:
                 filter_expressions.append(
                     ConditionExpression(self.sort_key_name, operator="begins_with")
                 )
@@ -509,24 +519,74 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
 
         if not data_table:
             return data_table.copy()
-        get_data_table = DataTable(record_class=data_table.record_class)
+        get_data_table = DataTable()
         for record in data_table.get_records():
             record = self._convert_record(record)
             record = self.normalize_record(record)
-            get_data_table.add_record(
-                {
-                    **record,
-                    self.partition_key_name: self._get_partition_key(record),
-                    self.sort_key_name: self._get_sort_key(record),
-                }
-            )
+            get_data_table.add_record(self._get_record_keys(record))
 
         results = (
-            DynamoQuery.build_batch_get_item(logger=self._logger)
+            self.dynamo_query_class.build_batch_get_item(logger=self._logger)
             .table(table_keys=self.table_keys, table=self.table)
             .execute(data_table=get_data_table)
         )
         return DataTable(record_class=self.record_class).add_table(results)
+
+    def _get_cached_record(
+        self, record_keys: Dict[str, Any]
+    ) -> Union[_RecordType, SentinelValue, None]:
+        record_keys_hash = hash(frozenset(record_keys.items()))
+        return self._records_cache.get(record_keys_hash, self.NO_RECORD)
+
+    def _cache_record(self, record_keys: Dict[str, Any], record: Optional[_RecordType]) -> None:
+        record_keys_hash = hash(frozenset(record_keys.items()))
+        self._records_cache[record_keys_hash] = record
+
+    def invalidate_cache(self) -> None:
+        """
+        Clear cache for `cached_batch_get` and `cached_get_record`
+        """
+        self._records_cache.clear()
+
+    def cached_batch_get(self, data_table: DataTable[_RecordType]) -> DataTable[_RecordType]:
+        """
+        Get multuple records as a DataTable from DB with caching.
+
+        `data_table` must have all columns to calculate table keys.
+
+        Can be used instead of `batch_get` method.
+
+        Arguments:
+            data_table -- Request data table.
+
+        Returns:
+            DataTable with existing records.
+        """
+        if not data_table:
+            return data_table.copy()
+
+        result = DataTable(record_class=self.record_class)
+        non_cached_data_table = DataTable(record_class=self.record_class)
+        cached_data_table = DataTable(record_class=self.record_class)
+        for record in data_table.get_records():
+            record = self._convert_record(record)
+            record = self.normalize_record(record)
+            record_keys = self._get_record_keys(record)
+            cached_record = self._get_cached_record(record_keys)
+            if cached_record is self.NO_RECORD:
+                non_cached_data_table.add_record(record)
+                continue
+
+            if cached_record and not isinstance(cached_record, SentinelValue):
+                cached_data_table.add_record(cached_record)
+
+        non_cached_results = self.batch_get(non_cached_data_table)
+        for record in non_cached_results:
+            record_keys = self._get_record_keys(record)
+            self._cache_record(record_keys, record)
+        result.add_table(cached_data_table)
+        result.add_table(non_cached_results)
+        return result
 
     def batch_delete(self, data_table: DataTable[_RecordType]) -> DataTable[_RecordType]:
         """
@@ -568,17 +628,14 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         if not data_table:
             return DataTable(record_class=self.record_class)
 
-        delete_data_table = DataTable(record_class=self.record_class)
+        delete_data_table = DataTable()
         for record in data_table.get_records():
-            record = self.normalize_record(self._convert_record(record))
-            partition_key = self._get_partition_key(record)
-            sort_key = self._get_sort_key(record)
-            record.update({self.partition_key_name: partition_key, self.sort_key_name: sort_key})
-            new_record = self._convert_record(record)
-            delete_data_table.add_record(new_record)
+            record = self._convert_record(record)
+            record = self.normalize_record(record)
+            delete_data_table.add_record(self._get_record_keys(record))
 
         results = (
-            DynamoQuery.build_batch_delete_item(logger=self._logger)
+            self.dynamo_query_class.build_batch_delete_item(logger=self._logger)
             .table(table_keys=self.table_keys, table=self.table)
             .execute(delete_data_table)
         )
@@ -660,7 +717,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             update_data_table.add_record(dict(normalized_record))
 
         results = (
-            DynamoQuery.build_batch_update_item(logger=self._logger)
+            self.dynamo_query_class.build_batch_update_item(logger=self._logger)
             .table(table_keys=self.table_keys, table=self.table,)
             .execute(update_data_table)
         )
@@ -716,6 +773,14 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             upsert_data_table = DataTable(record_class=self.record_class).add_record(*records_chunk)
             self.batch_upsert(upsert_data_table, set_if_not_exists_keys=set_if_not_exists_keys)
 
+    def _get_record_keys(self, record: _RecordType) -> Dict[str, Any]:
+        partition_key = self._get_partition_key(record)
+        if not self.sort_key_name:
+            return {self.partition_key_name: partition_key}
+
+        sort_key = self._get_sort_key(record)
+        return {self.partition_key_name: partition_key, self.sort_key_name: sort_key}
+
     def get_record(self, record: _RecordType) -> Optional[_RecordType]:
         """
         Get Record from DB.
@@ -749,17 +814,37 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             A dict with record data or None.
         """
         record = self.normalize_record(self._convert_record(record))
-        partition_key = self._get_partition_key(record)
-        sort_key = self._get_sort_key(record)
         result = (
             self.dynamo_query_class.build_get_item(logger=self._logger)
-            .table(table_keys=self.table_keys, table=self.table,)
-            .execute_dict({self.partition_key_name: partition_key, self.sort_key_name: sort_key})
+            .table(table_keys=self.table_keys, table=self.table)
+            .execute_dict(self._get_record_keys(record))
         )
         if set(result.get_set_column_names()).issubset(self.table_keys):
             return None
 
         return self._convert_record(result.get_record(0))
+
+    def cached_get_record(self, record: _RecordType) -> Optional[_RecordType]:
+        """
+        Get Record from DB with caching.
+
+        Can be used instead of `get_record` method.
+
+        Returns:
+            A dict with record data or None.
+        """
+        record = self.normalize_record(self._convert_record(record))
+        record_keys = self._get_record_keys(record)
+        cached_record = self._get_cached_record(record_keys)
+        if cached_record is self.NO_RECORD or isinstance(cached_record, SentinelValue):
+            result = self.get_record(record)
+            if result:
+                result = self._convert_record(result)
+
+            self._cache_record(record_keys, result)
+            return result
+
+        return cached_record
 
     def upsert_record(
         self,
@@ -816,17 +901,12 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             {**record, **(extra_data or {}), "dt_modified": now_str, "dt_created": now_str,}
         )
         new_record = self.normalize_record(new_record)
-        new_record.update(
-            {
-                self.partition_key_name: self._get_partition_key(new_record),
-                self.sort_key_name: self._get_sort_key(new_record),
-            }
-        )
+        new_record.update(self._get_record_keys(new_record))
 
         update_keys = set(new_record.keys()) - self.table_keys - set_if_not_exists
         update_keys.add("dt_modified")
         result: DataTable[_RecordType] = (
-            DynamoQuery.build_update_item(
+            self.dynamo_query_class.build_update_item(
                 condition_expression=condition_expression, logger=self._logger,
             )
             .update(update=update_keys, set_if_not_exists=set_if_not_exists)
@@ -870,12 +950,10 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             A dict with record data or None.
         """
         record = self.normalize_record(self._convert_record(record))
-        partition_key = self._get_partition_key(record)
-        sort_key = self._get_sort_key(record)
-        result: DataTable[_RecordType] = DynamoQuery.build_delete_item(
+        result: DataTable[_RecordType] = self.dynamo_query_class.build_delete_item(
             condition_expression=condition_expression, logger=self._logger,
         ).table(table=self.table, table_keys=self.table_keys).execute_dict(
-            {self.partition_key_name: partition_key, self.sort_key_name: sort_key},
+            self._get_record_keys(record)
         )
         if not result:
             return None

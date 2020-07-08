@@ -79,6 +79,17 @@ class TestDynamoTable:
 
     def test_init(self):
         assert self.result.table.name == "my_table_name"
+        assert self.result.table_keys == {"pk", "sk"}
+        assert self.result._get_record_keys({"pk": "my_pk", "sk": "my_sk"}) == {
+            "pk": "my_pk",
+            "sk": "my_sk",
+        }
+        self.result.sort_key_name = None
+        assert self.result.table_keys == {"pk"}
+        assert self.result._get_record_keys({"pk": "my_pk", "sk": "my_sk"}) == {"pk": "my_pk"}
+
+    def test_invalidate_cache(self):
+        self.result.invalidate_cache()
 
     def test_get_partition_key(self):
         with pytest.raises(DynamoTableError):
@@ -288,6 +299,23 @@ class TestDynamoTable:
 
         assert list(self.result.batch_get(DataTable()).get_records()) == []
 
+    def test_cached_batch_get(self):
+        self.client_mock.batch_get_item.return_value = {
+            "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]}
+        }
+        data_table = DataTable().add_record({"pk": "my_pk", "sk": "my_sk"})
+        result = list(self.result.cached_batch_get(data_table).get_records())
+        assert result == [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]
+        self.client_mock.batch_get_item.assert_called_with(
+            RequestItems={"my_table_name": {"Keys": [{"pk": "my_pk", "sk": "my_sk"}]}},
+            ReturnConsumedCapacity="NONE",
+        )
+        self.client_mock.batch_get_item.reset_mock()
+        result = list(self.result.cached_batch_get(data_table).get_records())
+        self.client_mock.batch_get_item.assert_not_called()
+
+        assert list(self.result.cached_batch_get(DataTable()).get_records()) == []
+
     def test_batch_delete(self):
         self.client_mock.batch_write_item.return_value = {
             "Responses": {"my_table_name": [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]}
@@ -418,6 +446,20 @@ class TestDynamoTable:
         }
         self.table_mock.get_item.return_value = {"Item": {"pk": "my_pk"}}
         assert self.result.get_record({"pk_column": "my_pk", "sk_column": "my_sk"}) is None
+
+    def test_cached_get_record(self):
+        self.table_mock.get_item.return_value = {"Item": {"pk": "my_pk", "pk_column": "my_pk"}}
+        assert self.result.cached_get_record({"pk_column": "my_pk", "sk_column": "my_sk"}) == {
+            "pk": "my_pk",
+            "pk_column": "my_pk",
+            "sk": "my_sk",
+        }
+        self.table_mock.get_item.return_value = {"Item": {"pk": "my_pk"}}
+        assert self.result.cached_get_record({"pk_column": "my_pk", "sk_column": "my_sk"}) == {
+            "pk": "my_pk",
+            "pk_column": "my_pk",
+            "sk": "my_sk",
+        }
 
     def test_upsert_record(self):
         self.table_mock.update_item.return_value = {
