@@ -79,6 +79,17 @@ class TestDynamoTable:
 
     def test_init(self):
         assert self.result.table.name == "my_table_name"
+        assert self.result.table_keys == {"pk", "sk"}
+        assert self.result._get_record_keys({"pk": "my_pk", "sk": "my_sk"}) == {
+            "pk": "my_pk",
+            "sk": "my_sk",
+        }
+        self.result.sort_key_name = None
+        assert self.result.table_keys == {"pk"}
+        assert self.result._get_record_keys({"pk": "my_pk", "sk": "my_sk"}) == {"pk": "my_pk"}
+
+    def test_invalidate_cache(self):
+        self.result.invalidate_cache()
 
     def test_get_partition_key(self):
         with pytest.raises(DynamoTableError):
