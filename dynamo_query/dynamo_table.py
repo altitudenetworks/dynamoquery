@@ -513,17 +513,11 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
 
         if not data_table:
             return data_table.copy()
-        get_data_table = DataTable(record_class=data_table.record_class)
+        get_data_table = DataTable()
         for record in data_table.get_records():
             record = self._convert_record(record)
             record = self.normalize_record(record)
-            get_data_table.add_record(
-                {
-                    **record,
-                    self.partition_key_name: self._get_partition_key(record),
-                    self.sort_key_name: self._get_sort_key(record),
-                }
-            )
+            get_data_table.add_record(self._get_record_keys(record))
 
         results = (
             self.dynamo_query_class.build_batch_get_item(logger=self._logger)
@@ -572,12 +566,11 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         if not data_table:
             return DataTable(record_class=self.record_class)
 
-        delete_data_table = DataTable(record_class=self.record_class)
+        delete_data_table = DataTable()
         for record in data_table.get_records():
-            record = self.normalize_record(self._convert_record(record))
-            record.update(self._get_record_keys(record))
-            new_record = self._convert_record(record)
-            delete_data_table.add_record(new_record)
+            record = self._convert_record(record)
+            record = self.normalize_record(record)
+            delete_data_table.add_record(self._get_record_keys(record))
 
         results = (
             self.dynamo_query_class.build_batch_delete_item(logger=self._logger)
