@@ -1,12 +1,16 @@
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 import pytest
 
 from dynamo_query.dictclasses.dynamo_dictclass import DynamoDictClass
 
 
-class MyRecord(DynamoDictClass):
+class MyMixin:
+    _ignored = 123
+
+
+class MyRecord(DynamoDictClass, MyMixin):
     _hidden_required: str
     _hidden: str = "do not show"
 
@@ -55,6 +59,10 @@ class ImmutableRecord(DynamoDictClass):
         return "test"
 
 
+class TypedRecord(DynamoDictClass):
+    my_set: Set[str] = {"asd", "qwe"}
+
+
 class TestDynamoDictClass:
     def test_init(self):
         assert (MyRecord.get_required_field_names()) == ["name"]
@@ -67,9 +75,14 @@ class TestDynamoDictClass:
         assert list(my_record.keys()) == ["name"]
         assert list(my_record.items()) == [("name", "test")]
         assert my_record == MyRecord(name="test")
+        assert TypedRecord(my_set={"test"}) == {"my_set": {"test"}}
 
         my_record.name = "test2"
         my_record.age = 42
+
+        with pytest.raises(KeyError):
+            my_record.unknown = 13
+
         assert dict(my_record) == {"name": "test2", "age": 42}
 
         my_record["age"] = 12
@@ -79,7 +92,7 @@ class TestDynamoDictClass:
         my_record2 = MyRecord(my_record, {"age": None})
         assert my_record2.age == None
         assert my_record2 == {"name": "test3"}
-        my_record2.update({"age": 13})
+        my_record2.update({"age": 13}, unknown="test")
         assert dict(my_record2) == {"name": "test3", "age": 13}
 
         assert MyRecord({"name": "test", "age": Decimal(12.2)}).age == 12
@@ -93,8 +106,8 @@ class TestDynamoDictClass:
             my_record2["unknown"] = "test"
 
     def test_inherited(self):
-        assert (NewRecord.get_required_field_names()) == ['last_name', "name"]
-        assert (NewRecord.get_field_names()) == ['last_name', 'name', 'age', 'any_data', 'percent']
+        assert (NewRecord.get_required_field_names()) == ["last_name", "name"]
+        assert (NewRecord.get_field_names()) == ["last_name", "name", "age", "any_data", "percent"]
         my_record = MyRecord(name="test1")
         new_record = NewRecord(name="test1", last_name="test", age_next=13, unknown="test")
         assert new_record == {

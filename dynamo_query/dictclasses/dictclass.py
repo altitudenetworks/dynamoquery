@@ -1,7 +1,6 @@
 import inspect
-from collections import UserDict
 from copy import copy
-from typing import Any, Callable, Dict, List, Tuple, Type, TypeVar, cast
+from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, TypeVar, cast
 
 from dynamo_query.dictclasses.decorators import KeyComputer, KeySanitizer
 
@@ -11,7 +10,7 @@ __all__ = ("DictClass",)
 _R = TypeVar("_R", bound="DictClass")
 
 
-class DictClass(UserDict):
+class DictClass(dict):
     """
     Dict-based dataclass.
 
@@ -64,10 +63,10 @@ class DictClass(UserDict):
     _required_field_names: List[str] = []
     _field_names: List[str] = []
 
-    def __new__(cls: Type[_R], *args: Dict[str, Any], **kwargs: Any) -> _R:
+    def __new__(cls: Type[_R], *_args: Dict[str, Any], **_kwargs: Any) -> _R:
         instance = super().__new__(cls)
         cls._initalize_class()
-        instance.__init__(*args, **kwargs)
+        # instance.__init__(*args, **kwargs)
         return cast(_R, instance)
 
     @classmethod
@@ -85,7 +84,6 @@ class DictClass(UserDict):
 
     def __init__(self, *args: Dict[str, Any], **kwargs: Any) -> None:
         super().__init__()
-        self.data.clear()
         self._init_data(*args, kwargs)
         self.__post_init__()
 
@@ -158,8 +156,6 @@ class DictClass(UserDict):
                 result[key] = (set,)
             if annotation_str.startswith("typing.Union"):
                 result[key] = child_types
-            if annotation_str.startswith("typing.Optional"):
-                result[key] = (*child_types, None)
 
         return result
 
@@ -177,16 +173,30 @@ class DictClass(UserDict):
                 continue
             result[key] = value
 
-        for base_class in cls.__bases__:
-            if base_class is DictClass:
-                return result
+        base_classes = cls._get_base_classes(cls.__bases__)
+        base_classes.reverse()
+        for base_class in base_classes:
             for key, value in inspect.getmembers(base_class):
                 if key == "__annotations__":
                     result["__annotations__"].update(value)
                     continue
                 if key in base_field_names or key in result:
                     continue
-                result[key] = value
+
+        return result
+
+    @classmethod
+    def _get_base_classes(cls, base_classes: Iterable[Any]) -> List[Any]:
+        result: List[Type[DictClass]] = []
+        for base_class in base_classes:
+            if base_class is DictClass:
+                continue
+
+            if not issubclass(base_class, DictClass):
+                continue
+
+            result.append(base_class)
+            result.extend(cls._get_base_classes(base_class.__bases__))
 
         return result
 
@@ -231,33 +241,32 @@ class DictClass(UserDict):
             if key not in self._field_names:
                 continue
 
-            self.data[key] = copy(member)
+            super().__setitem__(key, copy(member))
 
         for mapping in mappings:
             for key, value in mapping.items():
                 if key in self._computers:
                     continue
 
-                if key not in self._field_names:
-                    if self.RAISE_ON_UNKNOWN_KEY:
-                        raise KeyError(
-                            f"{self._class_name}.{key} does not exist, got value {repr(value)}."
-                        )
+                field_name_exists = key in self._field_names
+                if not field_name_exists and self.RAISE_ON_UNKNOWN_KEY:
+                    raise KeyError(
+                        f"{self._class_name}.{key} does not exist, got value {repr(value)}."
+                    )
 
-                    continue
-
-                self.data[key] = value
+                if field_name_exists:
+                    super().__setitem__(key, value)
 
         for key in self._field_names:
-            self.data[key] = self._sanitize_key(key, self.data.get(key, self.NOT_SET))
+            super().__setitem__(key, self._sanitize_key(key, self.get(key, self.NOT_SET)))
 
-        for key, value in list(self.data.items()):
+        for key, value in list(self.items()):
             if value is self.NOT_SET:
-                del self.data[key]
+                del self[key]
 
         for key in self._required_field_names:
-            if key not in self.data:
-                raise ValueError(f"{self._class_name}.{key} must be set: {self.data}")
+            if key not in self:
+                raise ValueError(f"{self._class_name}.{key} must be set: {self}")
 
         self._update_computed()
 
@@ -272,12 +281,12 @@ class DictClass(UserDict):
 
         if not is_initial:
             if sanitized_value is self.NOT_SET:
-                if key in self.data:
-                    del self.data[key]
+                if key in self:
+                    del self[key]
                     self._update_computed()
                 return
 
-        self.data[key] = sanitized_value
+        super().__setitem__(key, sanitized_value)
 
         if not is_initial:
             self._update_computed()
@@ -286,46 +295,40 @@ class DictClass(UserDict):
         for key, computer in self._computers.items():
             value = computer(self)
             if value is self.NOT_SET:
-                if key in self.data:
-                    del self.data[key]
+                if key in self:
+                    del self[key]
             else:
-                self.data[key] = value
+                super().__setitem__(key, value)
 
     def __setitem__(self, key: str, value: Any) -> None:
         if key in self._computers:
             return
 
         if key not in self._field_names:
-            raise KeyError(f"Key {self._class_name}.{key} is incorrect")
+            raise KeyError(f"Key {self._class_name}.{key} is missing in class attributes")
 
         self._set_item(key, value, is_initial=False, sanitize_kwargs={})
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if name == "data":
-            super().__setattr__(name, value)
-            return
-
         if name in self._computers:
             raise KeyError(f"Key {self._class_name}.{name} is computed and cannot be set directly")
 
         if name not in self._field_names:
-            super().__setattr__(name, value)
-            return
+            raise KeyError(f"Key {self._class_name}.{name} is missing in class attributes")
 
         self._set_item(name, value, is_initial=False, sanitize_kwargs={})
 
     def __getattribute__(self, name: str) -> Any:
-        if name == "data":
-            return super().__getattribute__("data")
         if name.startswith("_"):
             return super().__getattribute__(name)
-        if not hasattr(self, "_field_names") or name not in self._field_names:
+
+        if name not in self._field_names:
             return super().__getattribute__(name)
 
-        return self.data.get(name, self.NOT_SET)
+        return self.get(name, self.NOT_SET)
 
     def __str__(self) -> str:
-        return f"{self._class_name}({self.data})"
+        return f"{self._class_name}({dict(self)})"
 
     def _sanitize_key(self, key: str, value: Any, **kwargs: Any) -> Any:
         """
@@ -355,3 +358,15 @@ class DictClass(UserDict):
         for key in self._sanitizers:
             value = self.get(key, self.NOT_SET)
             self._set_item(key, value, is_initial=False, sanitize_kwargs=kwargs)
+
+    def update(self, *args: Dict[str, Any], **kwargs: Any) -> None:  # type: ignore
+        """
+        Override of original `dict.update` method to apply `_set_item` rules.
+        """
+        mappings = [*args, kwargs]
+        for mapping in mappings:
+            for key, value in mapping.items():
+                if key not in self._field_names:
+                    continue
+
+                self._set_item(key, value, is_initial=False, sanitize_kwargs={})

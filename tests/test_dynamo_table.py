@@ -49,6 +49,13 @@ class TestDynamoTable:
         table_mock.meta.client = client_mock
         self.table_mock = table_mock
 
+        class RawDynamoTable(DynamoTable):
+            record_class = dict
+
+            @property
+            def table(self):
+                return table_mock
+
         class MyDynamoTable(DynamoTable):
             global_secondary_indexes = [DynamoTableIndex("gsi", "gsi_pk", "gsi_sk")]
             local_secondary_indexes = [DynamoTableIndex("lsi", "lsi_pk", "sk")]
@@ -68,12 +75,51 @@ class TestDynamoTable:
                 return record["sk_column"]
 
         self.result = MyDynamoTable()
+        self.raw_result = RawDynamoTable()
 
     def test_init(self):
         assert self.result.table.name == "my_table_name"
 
+    def test_get_partition_key(self):
+        with pytest.raises(DynamoTableError):
+            self.raw_result.get_partition_key({})
+
+    def test_get_sort_key(self):
+        with pytest.raises(DynamoTableError):
+            self.raw_result.get_sort_key({})
+
+    def test_get_keys_projection(self):
+        assert self.result._get_keys_projection() == {"pk", "sk"}
+        assert self.raw_result._get_keys_projection() == {"pk", "sk"}
+
+    def test_get_table_status(self):
+        self.client_mock.describe_table.return_value = {"Table": {"TableStatus": "test"}}
+        assert self.result.get_table_status() == "test"
+        self.client_mock.describe_table.assert_called_with(TableName="my_table_name")
+
+        self.client_mock.exceptions.ResourceNotFoundException = ValueError
+        self.client_mock.describe_table.side_effect = (
+            self.client_mock.exceptions.ResourceNotFoundException()
+        )
+        assert self.result.get_table_status() is None
+
     def test_delete_table(self):
         self.result.delete_table()
+        self.table_mock.delete.assert_called_once_with()
+
+        self.table_mock.delete.reset_mock()
+        self.result.get_table_status = MagicMock()
+        self.result.get_table_status.return_value = None
+        self.result.delete_table()
+        self.table_mock.delete.assert_not_called()
+
+        self.result.get_table_status.return_value = "DELETING"
+        self.result.delete_table()
+        self.table_mock.delete.assert_not_called()
+
+        self.result.get_table_status.return_value = "CREATING"
+        self.result.delete_table()
+        self.table_mock.wait_until_exists.assert_called_once()
         self.table_mock.delete.assert_called_once_with()
 
     def test_create_table(self):
@@ -116,6 +162,21 @@ class TestDynamoTable:
             TableName="my_table_name",
             ProvisionedThroughput={"ReadCapacityUnits": 50, "WriteCapacityUnits": 10},
         )
+
+        self.client_mock.create_table.reset_mock()
+        self.result.get_table_status = MagicMock()
+        self.result.get_table_status.return_value = "CREATING"
+        assert self.result.create_table() is None
+        self.client_mock.create_table.assert_not_called()
+
+        self.result.get_table_status.return_value = "ACTIVE"
+        assert self.result.create_table() is None
+        self.client_mock.create_table.assert_not_called()
+
+        self.result.get_table_status.return_value = "DELETING"
+        assert self.result.create_table() is not None
+        self.table_mock.wait_until_not_exists.assert_called_once()
+        self.client_mock.create_table.assert_called_once()
 
     def test_clear_table(self):
         self.table_mock.query.return_value = {"Items": [{"pk": "my_pk", "sk": "sk"}]}
@@ -176,6 +237,23 @@ class TestDynamoTable:
         self.result.clear_table(None, partition_key_prefix="prefix_")
         self.table_mock.scan.return_value = {"Items": []}
         self.table_mock.scan.assert_called()
+
+        self.result.clear_table(None, sort_key="my_sk")
+        self.table_mock.scan.assert_called_with(
+            FilterExpression="#aab = :aaa",
+            ProjectionExpression="#aaa, #aab",
+            ExpressionAttributeNames={"#aaa": "pk", "#aab": "sk"},
+            ExpressionAttributeValues={":aaa": "my_sk"},
+            Limit=1000,
+        )
+        self.result.clear_table(None, partition_key_prefix="my_pk", sort_key_prefix="my_sk")
+        self.table_mock.scan.assert_called_with(
+            FilterExpression="begins_with(#aaa, :aaa) AND begins_with(#aab, :aab)",
+            ProjectionExpression="#aaa, #aab",
+            ExpressionAttributeNames={"#aaa": "pk", "#aab": "sk"},
+            ExpressionAttributeValues={":aaa": "my_pk", ":aab": "my_sk"},
+            Limit=1000,
+        )
 
     def test_clear_records(self):
         self.table_mock.scan.return_value = {"Items": [{"pk": "my_pk", "sk": "sk"}]}
