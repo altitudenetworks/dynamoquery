@@ -111,10 +111,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
     partition_key_name: str = "pk"
 
     # SK column name
-    sort_key_name: str = "sk"
-
-    # Set of table keys
-    table_keys: Set[str] = {partition_key_name, sort_key_name}
+    sort_key_name: Optional[str] = "sk"
 
     # GSI indexes list
     global_secondary_indexes: Iterable[DynamoTableIndex] = []
@@ -162,6 +159,13 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
     @property
     def client(self) -> DynamoDBClient:
         return cast(DynamoDBClient, self.table.meta.client)
+
+    @property
+    def table_keys(self) -> Set[str]:
+        if not self.sort_key_name:
+            return {self.partition_key_name}
+
+        return {self.partition_key_name, self.sort_key_name}
 
     @property
     def max_batch_size(self) -> int:
@@ -441,10 +445,10 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
                     ConditionExpression(self.partition_key_name, operator="begins_with")
                 )
                 data[self.partition_key_name] = partition_key_prefix
-            if sort_key:
+            if sort_key and self.sort_key_name:
                 filter_expressions.append(ConditionExpression(self.sort_key_name))
                 data[self.sort_key_name] = sort_key
-            if sort_key_prefix:
+            if sort_key_prefix and self.sort_key_name:
                 filter_expressions.append(
                     ConditionExpression(self.sort_key_name, operator="begins_with")
                 )
@@ -522,7 +526,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             )
 
         results = (
-            DynamoQuery.build_batch_get_item(logger=self._logger)
+            self.dynamo_query_class.build_batch_get_item(logger=self._logger)
             .table(table_keys=self.table_keys, table=self.table)
             .execute(data_table=get_data_table)
         )
@@ -571,14 +575,12 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         delete_data_table = DataTable(record_class=self.record_class)
         for record in data_table.get_records():
             record = self.normalize_record(self._convert_record(record))
-            partition_key = self._get_partition_key(record)
-            sort_key = self._get_sort_key(record)
-            record.update({self.partition_key_name: partition_key, self.sort_key_name: sort_key})
+            record.update(self._get_record_keys(record))
             new_record = self._convert_record(record)
             delete_data_table.add_record(new_record)
 
         results = (
-            DynamoQuery.build_batch_delete_item(logger=self._logger)
+            self.dynamo_query_class.build_batch_delete_item(logger=self._logger)
             .table(table_keys=self.table_keys, table=self.table)
             .execute(delete_data_table)
         )
@@ -660,7 +662,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             update_data_table.add_record(dict(normalized_record))
 
         results = (
-            DynamoQuery.build_batch_update_item(logger=self._logger)
+            self.dynamo_query_class.build_batch_update_item(logger=self._logger)
             .table(table_keys=self.table_keys, table=self.table,)
             .execute(update_data_table)
         )
@@ -716,6 +718,14 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             upsert_data_table = DataTable(record_class=self.record_class).add_record(*records_chunk)
             self.batch_upsert(upsert_data_table, set_if_not_exists_keys=set_if_not_exists_keys)
 
+    def _get_record_keys(self, record: _RecordType) -> Dict[str, Any]:
+        partition_key = self._get_partition_key(record)
+        if not self.sort_key_name:
+            return {self.partition_key_name: partition_key}
+
+        sort_key = self._get_sort_key(record)
+        return {self.partition_key_name: partition_key, self.sort_key_name: sort_key}
+
     def get_record(self, record: _RecordType) -> Optional[_RecordType]:
         """
         Get Record from DB.
@@ -749,12 +759,10 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             A dict with record data or None.
         """
         record = self.normalize_record(self._convert_record(record))
-        partition_key = self._get_partition_key(record)
-        sort_key = self._get_sort_key(record)
         result = (
             self.dynamo_query_class.build_get_item(logger=self._logger)
-            .table(table_keys=self.table_keys, table=self.table,)
-            .execute_dict({self.partition_key_name: partition_key, self.sort_key_name: sort_key})
+            .table(table_keys=self.table_keys, table=self.table)
+            .execute_dict(self._get_record_keys(record))
         )
         if set(result.get_set_column_names()).issubset(self.table_keys):
             return None
@@ -826,7 +834,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         update_keys = set(new_record.keys()) - self.table_keys - set_if_not_exists
         update_keys.add("dt_modified")
         result: DataTable[_RecordType] = (
-            DynamoQuery.build_update_item(
+            self.dynamo_query_class.build_update_item(
                 condition_expression=condition_expression, logger=self._logger,
             )
             .update(update=update_keys, set_if_not_exists=set_if_not_exists)
@@ -870,12 +878,10 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             A dict with record data or None.
         """
         record = self.normalize_record(self._convert_record(record))
-        partition_key = self._get_partition_key(record)
-        sort_key = self._get_sort_key(record)
-        result: DataTable[_RecordType] = DynamoQuery.build_delete_item(
+        result: DataTable[_RecordType] = self.dynamo_query_class.build_delete_item(
             condition_expression=condition_expression, logger=self._logger,
         ).table(table=self.table, table_keys=self.table_keys).execute_dict(
-            {self.partition_key_name: partition_key, self.sort_key_name: sort_key},
+            self._get_record_keys(record)
         )
         if not result:
             return None
