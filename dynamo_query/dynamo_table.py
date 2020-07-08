@@ -32,6 +32,7 @@ from dynamo_query.dynamo_query_types import (
 from dynamo_query.dynamo_table_index import DynamoTableIndex
 from dynamo_query.expressions import ConditionExpression, ConditionExpressionType
 from dynamo_query.lazy_logger import LazyLogger
+from dynamo_query.sentinel import SentinelValue
 from dynamo_query.utils import chunkify
 
 __all__ = ("DynamoTable", "DynamoTableError")
@@ -136,12 +137,17 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
     read_capacity_units: Optional[int] = None
     write_capacity_units: Optional[int] = None
 
+    # Target recor classs
     record_class: Type[_RecordType] = LooseDictClass  # type: ignore
+
+    # Sentinels
+    NO_RECORD = SentinelValue("NO_RECORD")
 
     def __init__(self, logger: Optional[logging.Logger] = None,) -> None:
         self._lazy_logger = logger
         self._attribute_definitions = self._get_attribute_definitions()
         self._attribute_types = self._get_attribute_types()
+        self._records_cache: Dict[int, Optional[_RecordType]] = {}
 
         for global_secondary_index in self.global_secondary_indexes:
             if not global_secondary_index.read_capacity_units and self.read_capacity_units:
@@ -526,6 +532,62 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         )
         return DataTable(record_class=self.record_class).add_table(results)
 
+    def _get_cached_record(
+        self, record_keys: Dict[str, Any]
+    ) -> Union[_RecordType, SentinelValue, None]:
+        record_keys_hash = hash(frozenset(record_keys.items()))
+        return self._records_cache.get(record_keys_hash, self.NO_RECORD)
+
+    def _cache_record(self, record_keys: Dict[str, Any], record: Optional[_RecordType]) -> None:
+        record_keys_hash = hash(frozenset(record_keys.items()))
+        self._records_cache[record_keys_hash] = record
+
+    def invalidate_cache(self) -> None:
+        """
+        Clear cache for `cached_batch_get` and `cached_get_record`
+        """
+        self._records_cache.clear()
+
+    def cached_batch_get(self, data_table: DataTable[_RecordType]) -> DataTable[_RecordType]:
+        """
+        Get multuple records as a DataTable from DB with caching.
+
+        `data_table` must have all columns to calculate table keys.
+
+        Can be used instead of `batch_get` method.
+
+        Arguments:
+            data_table -- Request data table.
+
+        Returns:
+            DataTable with existing records.
+        """
+        if not data_table:
+            return data_table.copy()
+
+        result = DataTable(record_class=self.record_class)
+        non_cached_data_table = DataTable(record_class=self.record_class)
+        cached_data_table = DataTable(record_class=self.record_class)
+        for record in data_table.get_records():
+            record = self._convert_record(record)
+            record = self.normalize_record(record)
+            record_keys = self._get_record_keys(record)
+            cached_record = self._get_cached_record(record_keys)
+            if cached_record is self.NO_RECORD:
+                non_cached_data_table.add_record(record)
+                continue
+
+            if cached_record and not isinstance(cached_record, SentinelValue):
+                cached_data_table.add_record(cached_record)
+
+        non_cached_results = self.batch_get(non_cached_data_table)
+        for record in non_cached_results:
+            record_keys = self._get_record_keys(record)
+            self._cache_record(record_keys, record)
+        result.add_table(cached_data_table)
+        result.add_table(non_cached_results)
+        return result
+
     def batch_delete(self, data_table: DataTable[_RecordType]) -> DataTable[_RecordType]:
         """
         Delete multuple records as a DataTable from DB.
@@ -761,6 +823,28 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             return None
 
         return self._convert_record(result.get_record(0))
+
+    def cached_get_record(self, record: _RecordType) -> Optional[_RecordType]:
+        """
+        Get Record from DB with caching.
+
+        Can be used instead of `get_record` method.
+
+        Returns:
+            A dict with record data or None.
+        """
+        record = self.normalize_record(self._convert_record(record))
+        record_keys = self._get_record_keys(record)
+        cached_record = self._get_cached_record(record_keys)
+        if cached_record is self.NO_RECORD or isinstance(cached_record, SentinelValue):
+            result = self.get_record(record)
+            if result:
+                result = self._convert_record(result)
+
+            self._cache_record(record_keys, result)
+            return result
+
+        return cached_record
 
     def upsert_record(
         self,
