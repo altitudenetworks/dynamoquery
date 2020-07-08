@@ -1,4 +1,4 @@
-from collections import UserDict, defaultdict
+from collections import defaultdict
 from copy import copy, deepcopy
 from typing import (
     Any,
@@ -35,7 +35,7 @@ class DataTableError(BaseException):
     """
 
 
-class DataTable(Generic[_RecordType], UserDict):
+class DataTable(Generic[_RecordType], dict):
     """
     Dictionary that has lists as values
 

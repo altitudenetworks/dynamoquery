@@ -28,3 +28,15 @@ class LooseDictClass(DynamoDictClass):
             self._field_names.append(key)
 
         self._set_item(key, value, is_initial=False, sanitize_kwargs={})
+
+    def update(self, *args: Dict[str, Any], **kwargs: Any) -> None:  # type: ignore
+        """
+        Override of original `dict.update` method to apply `_set_item` rules.
+        """
+        mappings = [*args, kwargs]
+        for mapping in mappings:
+            for key, value in mapping.items():
+                if key not in self._field_names:
+                    self._field_names.append(key)
+
+                self._set_item(key, value, is_initial=False, sanitize_kwargs={})
