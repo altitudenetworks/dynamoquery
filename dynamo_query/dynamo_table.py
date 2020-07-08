@@ -901,12 +901,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             {**record, **(extra_data or {}), "dt_modified": now_str, "dt_created": now_str,}
         )
         new_record = self.normalize_record(new_record)
-        new_record.update(
-            {
-                self.partition_key_name: self._get_partition_key(new_record),
-                self.sort_key_name: self._get_sort_key(new_record),
-            }
-        )
+        new_record.update(self._get_record_keys(new_record))
 
         update_keys = set(new_record.keys()) - self.table_keys - set_if_not_exists
         update_keys.add("dt_modified")
