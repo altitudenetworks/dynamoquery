@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # [Released]
 
+## [2.7.1] - 2020-07-09
+
+### Fixed
+
+- Fix missing required record keys error on internal `batch_get` usage [#50](https://github.com/altitudenetworks/dynamoquery/pull/50)
+
 ## [2.7.0] - 2020-07-08
 
 ### Added
