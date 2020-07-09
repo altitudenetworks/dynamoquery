@@ -523,7 +523,8 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         for record in data_table.get_records():
             record = self._convert_record(record)
             record = self.normalize_record(record)
-            get_data_table.add_record(self._get_record_keys(record))
+            record.update(self._get_record_keys(record))
+            get_data_table.add_record(record)
 
         results = (
             self.dynamo_query_class.build_batch_get_item(logger=self._logger)
@@ -632,7 +633,8 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         for record in data_table.get_records():
             record = self._convert_record(record)
             record = self.normalize_record(record)
-            delete_data_table.add_record(self._get_record_keys(record))
+            record.update(self._get_record_keys(record))
+            delete_data_table.add_record(record)
 
         results = (
             self.dynamo_query_class.build_batch_delete_item(logger=self._logger)
