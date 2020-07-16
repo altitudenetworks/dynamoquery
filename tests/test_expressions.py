@@ -81,6 +81,7 @@ class TestConditionExpression:
         self.result = ConditionExpression("key", "=", "value")
         self.other = ConditionExpression("key2", "attribute_exists")
         self.between = ConditionExpression("key3", "BETWEEN", ["value1", "value2"])
+        self.nested = ConditionExpression("nested.key.test")
 
     def test_init(self) -> None:
         assert self.result.key == "key"
@@ -89,6 +90,7 @@ class TestConditionExpression:
         assert self.other.key == "key2"
         assert self.other.operator == "attribute_exists"
         assert self.other.value is True
+        assert self.nested.key == "nested.key.test"
         assert ConditionExpression("key2", "=").value == "key2"
 
         with pytest.raises(ExpressionError):
@@ -105,6 +107,8 @@ class TestConditionExpression:
         assert self.between.get_format_values() == {"value1", "value2"}
         assert self.result.get_operators() == {"="}
         assert self.other.get_operators() == {"attribute_exists"}
+        assert self.nested.get_format_keys() == {"nested", "key", "test"}
+        assert self.nested.get_format_values() == {"nested.key.test"}
 
     def test_render(self) -> None:
         assert self.result.render() == "{key} = {value__value}"
@@ -132,6 +136,7 @@ class TestConditionExpression:
             ConditionExpression("key", "contains", "value").render()
             == "contains({key}, {value__value})"
         )
+        assert self.nested.render() == "{nested}.{key}.{test} = {nested_key_test__value}"
 
     def test_operators(self) -> None:
         and_result = self.result & self.other
