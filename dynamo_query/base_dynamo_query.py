@@ -174,7 +174,8 @@ class BaseDynamoQuery(LazyLogger):
     ) -> FormatDict:
         result = {v: v for v in projection_dict.values()}
         for key, value in data_dict.items():
-            result_key = f"{key}{cls._value_key_postfix}"
+            safe_key = key.replace(".", "_")
+            result_key = f"{safe_key}{cls._value_key_postfix}"
             result[result_key] = repr(value)
 
         return result
@@ -198,13 +199,16 @@ class BaseDynamoQuery(LazyLogger):
                 if key not in value_keys:
                     continue
 
-                safe_key = next(string_generator)
-                result_key = f"{key}{cls._value_key_postfix}"
-                key_value = f":{safe_key}"
+                replace_key = next(string_generator)
+                safe_key = key.replace(".", "_")
+                result_key = f"{safe_key}{cls._value_key_postfix}"
+                key_value = f":{replace_key}"
                 expand_lists = expression_name in cls._expand_lists_expression_names
 
                 if expand_lists and cls._is_set_like_value(value):
-                    key_value = ", ".join([f":{safe_key}___{index}" for index in range(len(value))])
+                    key_value = ", ".join(
+                        [f":{replace_key}___{index}" for index in range(len(value))]
+                    )
                 result[result_key] = key_value
 
         return result
@@ -219,7 +223,8 @@ class BaseDynamoQuery(LazyLogger):
     ) -> Dict[str, Any]:
         result = {}
         for key, value in data_dict.items():
-            format_dict_key = f"{key}{cls._value_key_postfix}"
+            safe_key = key.replace(".", "_")
+            format_dict_key = f"{safe_key}{cls._value_key_postfix}"
             if format_dict_key not in format_dict:
                 continue
 

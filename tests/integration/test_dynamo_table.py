@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, Optional
 
 import boto3
 import pytest
@@ -7,6 +7,7 @@ from dynamo_query.data_table import DataTable
 from dynamo_query.dictclasses.dynamo_dictclass import DynamoDictClass
 from dynamo_query.dynamo_table import DynamoTable
 from dynamo_query.dynamo_table_index import DynamoTableIndex
+from dynamo_query.expressions import ConditionExpression
 
 
 class UserRecord(DynamoDictClass):
@@ -17,6 +18,7 @@ class UserRecord(DynamoDictClass):
     age: Optional[int] = None
     dt_created: Optional[str] = None
     dt_modified: Optional[str] = None
+    nested: Optional[Dict] = None
 
     @DynamoDictClass.compute_key("pk")
     def get_pk(self) -> str:
@@ -104,3 +106,37 @@ class TestDataTable:
         assert len(list(self.table.scan())) == 1
         self.table.batch_delete_records([UserRecord(email="john_student@gmail.com", company="IBM")])
         assert len(list(self.table.scan())) == 0
+
+    def test_query(self):
+        record = UserRecord(
+            email="john_student@gmail.com",
+            company="IBM",
+            name="John",
+            age=34,
+            nested={"test": {"deep": "value"}},
+        )
+        self.table.upsert_record(record)
+        assert (
+            len(
+                list(
+                    self.table.query(
+                        partition_key="my_project",
+                        filter_expression=ConditionExpression("nested.test.deep"),
+                        data={"nested.test.deep": "value"},
+                    )
+                )
+            )
+            == 1
+        )
+        assert (
+            len(
+                list(
+                    self.table.query(
+                        partition_key="my_project",
+                        filter_expression=ConditionExpression("nested.test.deep"),
+                        data={"nested.test.deep": "none"},
+                    )
+                )
+            )
+            == 0
+        )

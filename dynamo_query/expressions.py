@@ -296,7 +296,7 @@ class ConditionExpression(BaseConditionExpression):
         Returns:
             A set of keys.
         """
-        return {self.key}
+        return set(self.key.split("."))
 
     def get_format_values(self) -> Set[str]:
         """
@@ -352,6 +352,14 @@ class ConditionExpression(BaseConditionExpression):
 
         raise ExpressionError(f"Incompatible expression operation: {self.render()} AND {other}")
 
+    def _render_key(self) -> str:
+        parts = [f"{{{i}}}" for i in self.key.split(".")]
+        return ".".join(parts)
+
+    def _render_value(self) -> str:
+        safe_value = self.value.replace(".", "_")
+        return f"{{{safe_value}{self._value_key_postfix}}}"
+
     def _render(self) -> str:
         """
         Render expression part to string.
@@ -360,35 +368,34 @@ class ConditionExpression(BaseConditionExpression):
             A rendered expression part as a string.
         """
         if self.operator == "IN":
-            return f"{{{self.key}}} IN ({{{self.value}{self._value_key_postfix}}})"
+            return f"{self._render_key()} IN ({self._render_value()})"
 
         if self.operator == "BETWEEN":
-            return (
-                f"{{{self.key}}} BETWEEN {{{self.value[0]}{self._value_key_postfix}}}"
-                f" AND {{{self.value[1]}{self._value_key_postfix}}}"
-            )
+            value_from = f"{{{self.value[0].replace('.', '_')}{self._value_key_postfix}}}"
+            value_to = f"{{{self.value[1].replace('.', '_')}{self._value_key_postfix}}}"
+            return f"{self._render_key()} BETWEEN {value_from} AND {value_to}"
 
         if self.operator == "begins_with":
-            return f"begins_with({{{self.key}}}, {{{self.value}{self._value_key_postfix}}})"
+            return f"begins_with({self._render_key()}, {self._render_value()})"
 
         if self.operator == "contains":
-            return f"contains({{{self.key}}}, {{{self.value}{self._value_key_postfix}}})"
+            return f"contains({self._render_key()}, {self._render_value()})"
 
         if self.operator == "attribute_exists":
             function_name = "attribute_exists"
             if not self.value:
                 function_name = "attribute_not_exists"
 
-            return f"{function_name}({{{self.key}}})"
+            return f"{function_name}({self._render_key()})"
 
         if self.operator == "attribute_not_exists":
             function_name = "attribute_not_exists"
             if not self.value:
                 function_name = "attribute_exists"
 
-            return f"{function_name}({{{self.key}}})"
+            return f"{function_name}({self._render_key()})"
 
-        return f"{{{self.key}}} {self.operator} {{{self.value}{self._value_key_postfix}}}"
+        return f"{self._render_key()} {self.operator} {self._render_value()}"
 
     def get_operators(self) -> Set[ConditionExpressionOperatorStr]:
         """
