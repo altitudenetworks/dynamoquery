@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # [Released]
 
+## [2.8.0] - 2020-07-20
+
+### Added
+
+- Nested keys support for `ConditionExpression` [#52](https://github.com/altitudenetworks/dynamoquery/pull/52)
+
 ## [2.7.1] - 2020-07-09
 
 ### Fixed
