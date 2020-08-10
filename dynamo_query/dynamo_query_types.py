@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, Iterable, Mapping, Set, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, Iterable, MutableMapping, Set, TypeVar
 
 if TYPE_CHECKING:
     from typing_extensions import Literal
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     ExpressionMap = Dict[str, BaseExpression]
     FormatDict = Dict[str, Any]
     TableKeys = Set[str]
-    RecordType = Mapping[str, Any]
+    RecordType = MutableMapping[str, Any]
     RecordsType = Iterable[RecordType]
     ExclusiveStartKey = Dict[str, Any]
     ConditionExpressionOperatorStr = Literal[

@@ -2,7 +2,7 @@
 Expression builders.
 """
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, List, Set, Tuple, TypeVar, Union
+from typing import Any, Iterable, List, Mapping, Set, Tuple, TypeVar, Union
 
 from dynamo_query.dynamo_query_types import (
     ConditionExpressionJoinOperatorStr,
@@ -60,7 +60,7 @@ class BaseExpression:
             A set of keys.
         """
 
-    def validate_input_data(self, data: Dict[str, Any]) -> None:
+    def validate_input_data(self, data: Mapping[str, Any]) -> None:
         """
         Validate data that is used to format the expression.
         Override this method in a subclass to add validation logic.
@@ -286,7 +286,7 @@ class ConditionExpression(BaseConditionExpression):
                 value = key
 
         self.key = key
-        self.operator = operator
+        self.operator: ConditionExpressionOperatorStr = operator
         self.value: Any = value
 
     def get_format_keys(self) -> Set[str]:
@@ -425,7 +425,7 @@ class ConditionExpressionGroup(BaseConditionExpression):
         join_operators: Iterable[ConditionExpressionJoinOperatorStr],
     ):
         self.expressions = tuple(expressions)
-        self.join_operators = tuple(join_operators)
+        self.join_operators: Tuple[ConditionExpressionJoinOperatorStr, ...] = tuple(join_operators)
 
     def get_format_keys(self) -> Set[str]:
         """
@@ -567,7 +567,7 @@ class UpdateExpression(BaseExpression):
         self.delete = tuple(delete)
         self.remove = tuple(remove)
 
-    def validate_input_data(self, data: Dict[str, Any]) -> None:
+    def validate_input_data(self, data: Mapping[str, Any]) -> None:
         """
         Validate data that is used to format the expression.
         `ADD` and `DELETE` directives allow only sets and numbers.

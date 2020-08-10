@@ -577,10 +577,12 @@ class DynamoQuery(BaseDynamoQuery):
         Returns:
             A `DataTable` with query results.
         """
-        if not isinstance(data_table, DataTable):
-            data_table = DataTable().add_record(*data_table)
+        if isinstance(data_table, DataTable):
+            input_data_table = data_table
+        else:
+            input_data_table = DataTable().add_record(*data_table)
 
-        if not data_table.is_normalized():
+        if not input_data_table.is_normalized():
             raise DynamoQueryError("Input DataTable is not normalized.")
 
         self.table(
@@ -608,7 +610,7 @@ class DynamoQuery(BaseDynamoQuery):
             QueryType.BATCH_UPDATE_ITEM: self._execute_method_batch_update_item,
             QueryType.BATCH_DELETE_ITEM: self._execute_method_batch_delete_item,
         }
-        return method_map[self._query_type](data_table)
+        return method_map[self._query_type](input_data_table)
 
     def execute_dict(
         self,

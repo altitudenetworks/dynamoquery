@@ -8,6 +8,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    MutableMapping,
     Optional,
     Set,
     Type,
@@ -37,7 +38,7 @@ from dynamo_query.utils import chunkify
 
 __all__ = ("DynamoTable", "DynamoTableError")
 
-_RecordType = TypeVar("_RecordType", bound=DynamoDictClass)
+_RecordType = TypeVar("_RecordType", bound=MutableMapping[str, Any])
 
 
 class DynamoTableError(BaseException):
@@ -137,7 +138,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
     read_capacity_units: Optional[int] = None
     write_capacity_units: Optional[int] = None
 
-    # Target recor classs
+    # Target record class
     record_class: Type[_RecordType] = LooseDictClass  # type: ignore
 
     # Sentinels
@@ -196,13 +197,13 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         )
 
     def _get_partition_key(self, record: _RecordType) -> Any:
-        if self.partition_key_name in record:
+        if self.partition_key_name and self.partition_key_name in record:
             return record[self.partition_key_name]
 
         return self.get_partition_key(record)
 
     def _get_sort_key(self, record: _RecordType) -> Any:
-        if self.sort_key_name in record:
+        if self.sort_key_name and self.sort_key_name in record:
             return record[self.sort_key_name]
 
         return self.get_sort_key(record)

@@ -5,10 +5,10 @@ from typing import (
     DefaultDict,
     Dict,
     Generic,
-    Iterable,
     Iterator,
     List,
     Optional,
+    Sequence,
     Tuple,
     Type,
     TypeVar,
@@ -35,7 +35,7 @@ class DataTableError(BaseException):
     """
 
 
-class DataTable(Generic[_RecordType], dict):
+class DataTable(dict, Generic[_RecordType]):
     """
     Dictionary that has lists as values
 
@@ -106,7 +106,7 @@ class DataTable(Generic[_RecordType], dict):
         record_class: Optional[Type[_RecordType]] = None,
     ) -> None:
         super().__init__()
-        self.record_class: Type[_RecordType] = record_class or dict  # type: ignore
+        self.record_class: Any = record_class or dict
         if base_dict:
             if not isinstance(base_dict, dict):
                 raise DataTableError(
@@ -295,7 +295,7 @@ class DataTable(Generic[_RecordType], dict):
 
         return self
 
-    def filter_keys(self: _R, keys: Iterable[str]) -> _R:
+    def filter_keys(self: _R, keys: Sequence[str]) -> _R:
         """
         Create a new `DataTable` instance only with keys listed it `keys`
 

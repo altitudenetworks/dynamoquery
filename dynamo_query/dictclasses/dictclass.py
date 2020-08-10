@@ -1,6 +1,6 @@
 import inspect
 from copy import copy
-from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, TypeVar, cast
+from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, TypeVar
 
 from dynamo_query.dictclasses.decorators import KeyComputer, KeySanitizer
 
@@ -67,7 +67,7 @@ class DictClass(dict):
         instance = super().__new__(cls)
         cls._initalize_class()
         # instance.__init__(*args, **kwargs)
-        return cast(_R, instance)
+        return instance
 
     @classmethod
     def _initalize_class(cls) -> None:
