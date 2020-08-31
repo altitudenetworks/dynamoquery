@@ -5,6 +5,7 @@ import pytest
 from typing_extensions import TypedDict
 
 from dynamo_query.data_table import DataTable, DataTableError
+from dynamo_query.dictclasses.dictclass import DictClass
 from dynamo_query.dictclasses.dynamo_dictclass import DynamoDictClass
 
 
@@ -294,3 +295,62 @@ class TestDataTable:
 
         with pytest.raises(ValueError):
             data_table.add_record({})
+
+    def test_drop_duplicates(self):
+        class MyRecord(DictClass):
+            first_name: str
+            last_name: str
+            sex: str
+
+        data_table = DataTable(
+            record_class=MyRecord,
+            base_dict={
+                "first_name": ["ABC", "ABC", "DEF", "DEF", "DEF"],
+                "last_name": ["XYZ", "XYZ", "MNO", "MNO", "MNO"],
+                "sex": ["M", "M", "F", "M", "F"],
+            },
+        )
+
+        assert isinstance(data_table.get_record(0), MyRecord)
+
+        deduplicated_data_table = data_table.drop_duplicates()
+        assert isinstance(deduplicated_data_table.get_record(0), MyRecord)
+        assert {
+            "first_name": ["ABC", "DEF", "DEF"],
+            "last_name": ["XYZ", "MNO", "MNO"],
+            "sex": ["M", "F", "M"],
+        } == deduplicated_data_table
+
+        deduplicated_data_table = data_table.drop_duplicates(subset=("first_name",))
+        assert isinstance(deduplicated_data_table.get_record(0), MyRecord)
+        assert {
+            "first_name": ["ABC", "DEF"],
+            "last_name": ["XYZ", "MNO"],
+            "sex": ["M", "F"],
+        } == deduplicated_data_table
+
+        deduplicated_data_table = data_table.drop_duplicates(subset=("last_name", "sex"))
+        assert isinstance(deduplicated_data_table.get_record(0), MyRecord)
+        assert {
+            "first_name": ["ABC", "DEF", "DEF"],
+            "last_name": ["XYZ", "MNO", "MNO"],
+            "sex": ["M", "F", "M"],
+        } == deduplicated_data_table
+
+        # it should throw an error as the column name provied is invalid
+        with pytest.raises(DataTableError):
+            _ = data_table.drop_duplicates(subset=("invalid_column", ))
+
+        # not normalized table
+        data_table = DataTable(
+            record_class=MyRecord,
+            base_dict={
+                "first_name": ["ABC", "ABC", "DEF", "DEF", "DEF"],
+                "last_name": ["XYZ", "XYZ", "MNO", "MNO"],
+                "sex": ["M", "M", "F", "M", "F"],
+            },
+        )
+
+        # It should throw an error as table is not normalized
+        with pytest.raises(DataTableError):
+            _ = data_table.drop_duplicates()

@@ -1,28 +1,28 @@
 from typing import TYPE_CHECKING, Any, Dict, Iterable, Mapping, Set, TypeVar
 
 if TYPE_CHECKING:
-    from typing_extensions import Literal
     from mypy_boto3_application_autoscaling.client import ApplicationAutoScalingClient
     from mypy_boto3_application_autoscaling.type_defs import (
         TargetTrackingScalingPolicyConfigurationTypeDef,
     )
-    from mypy_boto3_dynamodb.service_resource import Table
     from mypy_boto3_dynamodb.client import DynamoDBClient
+    from mypy_boto3_dynamodb.service_resource import Table
     from mypy_boto3_dynamodb.type_defs import (
-        GetItemOutputTypeDef,
-        UpdateItemOutputTypeDef,
-        DeleteItemOutputTypeDef,
-        QueryOutputTypeDef,
-        ScanOutputTypeDef,
+        AttributeDefinitionTypeDef,
         BatchGetItemOutputTypeDef,
         BatchWriteItemOutputTypeDef,
         CreateTableOutputTypeDef,
-        LocalSecondaryIndexTypeDef,
-        ProjectionTypeDef,
+        DeleteItemOutputTypeDef,
+        GetItemOutputTypeDef,
         GlobalSecondaryIndexTypeDef,
         KeySchemaElementTypeDef,
-        AttributeDefinitionTypeDef,
+        LocalSecondaryIndexTypeDef,
+        ProjectionTypeDef,
+        QueryOutputTypeDef,
+        ScanOutputTypeDef,
+        UpdateItemOutputTypeDef,
     )
+    from typing_extensions import Literal
 
     BaseExpression = TypeVar("BaseExpression")
     ExpressionMap = Dict[str, BaseExpression]

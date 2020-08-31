@@ -9,6 +9,8 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Sequence,
+    Set,
     Tuple,
     Type,
     TypeVar,
@@ -21,7 +23,6 @@ from dynamo_query.sentinel import SentinelValue
 
 _RecordType = TypeVar("_RecordType", bound=RecordType)
 _R = TypeVar("_R", bound="DataTable")
-
 
 __all__ = (
     "DataTable",
@@ -660,8 +661,8 @@ class DataTable(Generic[_RecordType], dict):
 
         try:
             self[column_name][record_index] = value
-        except IndexError:
-            raise DataTableError(f"Column {column_name} does not have index {record_index}")
+        except IndexError as e:
+            raise DataTableError(f"Column {column_name} does not have index {record_index}") from e
 
         return self
 
@@ -729,3 +730,39 @@ class DataTable(Generic[_RecordType], dict):
             A new instance.
         """
         return self.__copy__()
+
+    def drop_duplicates(self: _R, subset: Optional[Sequence[str]] = None) -> _R:
+        """
+        Remove duplicate rows from the DataTable (keep first occurrence)
+        Args:
+            subset (optional): sequence of column names. Only consider certain columns for
+                                identifying duplicates or by default use all of the columns.
+
+        Returns:
+            A new instance.
+        """
+        if not self.is_normalized():
+            raise DataTableError(
+                "Cannot drop duplicates from not normalized table. Use `normalize` method."
+            )
+
+        columns = list(self.keys())
+
+        if subset:
+            if not all(key in columns for key in subset):
+                raise DataTableError(
+                    f"Invalid values in `subset`. Allowed values are {', '.join(columns)}"
+                )
+        else:
+            subset = columns
+
+        hashed_val_set: Set[int] = set()
+        result = self.__class__({key: [] for key in self.keys()}, record_class=self.record_class)
+        for record in self.get_records():
+            hashed_val = hash(str([value for key, value in record.items() if key in subset]))
+
+            if hashed_val not in hashed_val_set:
+                hashed_val_set.add(hashed_val)
+                result.extend({key: [value] for key, value in record.items()})
+
+        return result

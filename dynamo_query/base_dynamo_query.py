@@ -483,7 +483,7 @@ class BaseDynamoQuery(LazyLogger):
                 try:
                     expression.validate_input_data(item_data)
                 except ExpressionError as e:
-                    raise DynamoQueryError(f"Invalid input data: {e}")
+                    raise DynamoQueryError(f"Invalid input data: {e}") from e
 
         projection_dict = self._get_projection_dict(expression_map)
         full_data = {
