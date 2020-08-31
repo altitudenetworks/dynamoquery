@@ -302,11 +302,14 @@ class TestDataTable:
             last_name: str
             sex: str
 
-        data_table = DataTable(record_class=MyRecord, base_dict={
-            "first_name": ["ABC", "ABC", "DEF", "DEF", "DEF"],
-            "last_name": ["XYZ", "XYZ", "MNO", "MNO", "MNO"],
-            "sex": ["M", "M", "F", "M", "F"]
-        })
+        data_table = DataTable(
+            record_class=MyRecord,
+            base_dict={
+                "first_name": ["ABC", "ABC", "DEF", "DEF", "DEF"],
+                "last_name": ["XYZ", "XYZ", "MNO", "MNO", "MNO"],
+                "sex": ["M", "M", "F", "M", "F"],
+            },
+        )
 
         assert isinstance(data_table.get_record(0), MyRecord)
 
@@ -315,15 +318,15 @@ class TestDataTable:
         assert {
             "first_name": ["ABC", "DEF", "DEF"],
             "last_name": ["XYZ", "MNO", "MNO"],
-            "sex": ["M", "F", "M"]
+            "sex": ["M", "F", "M"],
         } == deduplicated_data_table
 
-        deduplicated_data_table = data_table.drop_duplicates(subset=("first_name", ))
+        deduplicated_data_table = data_table.drop_duplicates(subset=("first_name",))
         assert isinstance(deduplicated_data_table.get_record(0), MyRecord)
         assert {
             "first_name": ["ABC", "DEF"],
             "last_name": ["XYZ", "MNO"],
-            "sex": ["M", "F"]
+            "sex": ["M", "F"],
         } == deduplicated_data_table
 
         deduplicated_data_table = data_table.drop_duplicates(subset=("last_name", "sex"))
@@ -331,5 +334,5 @@ class TestDataTable:
         assert {
             "first_name": ["ABC", "DEF", "DEF"],
             "last_name": ["XYZ", "MNO", "MNO"],
-            "sex": ["M", "F", "M"]
+            "sex": ["M", "F", "M"],
         } == deduplicated_data_table

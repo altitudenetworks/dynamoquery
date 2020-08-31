@@ -270,8 +270,10 @@ class ConditionExpression(BaseConditionExpression):
     ):
         try:
             Operator(operator)
-        except ValueError:
-            raise ExpressionError(f"Invalid operator {operator}, choices are {Operator.values()}")
+        except ValueError as e:
+            raise ExpressionError(
+                f"Invalid operator {operator}, choices are " f"{Operator.values()}"
+            ) from e
 
         if operator == "BETWEEN":
             if not isinstance(value, (list, tuple)) or len(value) != 2:

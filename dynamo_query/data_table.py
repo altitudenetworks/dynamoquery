@@ -661,8 +661,8 @@ class DataTable(Generic[_RecordType], dict):
 
         try:
             self[column_name][record_index] = value
-        except IndexError:
-            raise DataTableError(f"Column {column_name} does not have index {record_index}")
+        except IndexError as e:
+            raise DataTableError(f"Column {column_name} does not have index {record_index}") from e
 
         return self
 
