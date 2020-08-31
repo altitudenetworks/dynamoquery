@@ -336,3 +336,21 @@ class TestDataTable:
             "last_name": ["XYZ", "MNO", "MNO"],
             "sex": ["M", "F", "M"],
         } == deduplicated_data_table
+
+        # it should throw an error as the column name provied is invalid
+        with pytest.raises(DataTableError):
+            _ = data_table.drop_duplicates(subset=("invalid_column", ))
+
+        # not normalized table
+        data_table = DataTable(
+            record_class=MyRecord,
+            base_dict={
+                "first_name": ["ABC", "ABC", "DEF", "DEF", "DEF"],
+                "last_name": ["XYZ", "XYZ", "MNO", "MNO"],
+                "sex": ["M", "M", "F", "M", "F"],
+            },
+        )
+
+        # It should throw an error as table is not normalized
+        with pytest.raises(DataTableError):
+            _ = data_table.drop_duplicates()
