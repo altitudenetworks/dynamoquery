@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # [Released]
 
+## [2.9.0] - 2020-08-31
+
+### Changed
+
+- Added `DataTable.drop_duplicates` [#54](https://github.com/altitudenetworks/dynamoquery/pull/54)
+
 ## [2.8.0] - 2020-07-20
 
 ### Added
