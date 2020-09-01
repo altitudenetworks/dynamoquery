@@ -746,17 +746,17 @@ class DataTable(Generic[_RecordType], dict):
                 "Cannot drop duplicates from not normalized table. Use `normalize` method."
             )
 
-        columns = list(self.keys())
+        columns = [x.lower() for x in self.keys()]
 
         if subset:
+            subset = [x.lower() for x in subset]
             if not all(key in columns for key in subset):
                 raise DataTableError(
-                    f"Invalid values in `subset`. Allowed values are {', '.join(columns)}"
+                    f"Invalid subset value(s) [{', '.join(subset)}]. Allowed values are"
+                    f" {', '.join(columns)}"
                 )
         else:
             subset = columns
-
-        subset = [x.lower() for x in subset]
 
         hashed_val_set: Set[int] = set()
         result = self.__class__({key: [] for key in self.keys()}, record_class=self.record_class)
