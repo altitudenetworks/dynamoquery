@@ -339,7 +339,7 @@ class TestDataTable:
 
         # it should throw an error as the column name provied is invalid
         with pytest.raises(DataTableError):
-            _ = data_table.drop_duplicates(subset=("invalid_column", ))
+            _ = data_table.drop_duplicates(subset=("invalid_column",))
 
         # not normalized table
         data_table = DataTable(

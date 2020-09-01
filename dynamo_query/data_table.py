@@ -756,10 +756,14 @@ class DataTable(Generic[_RecordType], dict):
         else:
             subset = columns
 
+        subset = [x.lower() for x in subset]
+
         hashed_val_set: Set[int] = set()
         result = self.__class__({key: [] for key in self.keys()}, record_class=self.record_class)
         for record in self.get_records():
-            hashed_val = hash(str([value for key, value in record.items() if key in subset]))
+            hashed_val = hash(
+                str([value for key, value in record.items() if key.lower() in subset])
+            )
 
             if hashed_val not in hashed_val_set:
                 hashed_val_set.add(hashed_val)
