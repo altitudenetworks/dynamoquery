@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # [Released]
 
+## [2.10.1] - 2020-09-01
+
+### Fixed
+
+- Case insensitive column names bug in `DataTable.drop_duplicates` [#58](https://github.com/altitudenetworks/dynamoquery/pull/58)
+
 ## [2.10.0] - 2020-09-01
 
 ### Changed
