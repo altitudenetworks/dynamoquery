@@ -1,5 +1,6 @@
 from collections import defaultdict
 from copy import copy, deepcopy
+from enum import Enum, auto
 from typing import (
     Any,
     DefaultDict,
@@ -24,10 +25,12 @@ from dynamo_query.sentinel import SentinelValue
 _RecordType = TypeVar("_RecordType", bound=RecordType)
 _R = TypeVar("_R", bound="DataTable")
 
-__all__ = (
-    "DataTable",
-    "DataTableError",
-)
+__all__ = ("DataTable", "DataTableError", "Filter")
+
+
+class Filter(Enum):
+    EQUALS = auto()
+    NOT_EQUALS = auto()
 
 
 class DataTableError(BaseException):
@@ -394,7 +397,7 @@ class DataTable(Generic[_RecordType], dict):
 
         return self._convert_record(result)
 
-    def filter_records(self: _R, query: Dict[str, Any]) -> _R:
+    def filter_records(self: _R, query: Dict[str, Any], operand: Filter = Filter.EQUALS) -> _R:
         """
         Create a new `DataTable` instance with records that match `query`
 
@@ -416,17 +419,30 @@ class DataTable(Generic[_RecordType], dict):
             raise DataTableError("Cannot filter not normalized table. Use `normalize` method.")
 
         result = self.__class__({key: [] for key in self.keys()}, record_class=self.record_class)
-        for record in self.get_records():
-            record_match = True
-            for lookup_key, lookup_value in query.items():
-                if record.get(lookup_key) != lookup_value:
-                    record_match = False
-                    break
 
-            if record_match:
+        def _equals() -> _R:
+            for record in self.get_records():
+                if any(
+                    record.get(lookup_key) != lookup_value
+                    for lookup_key, lookup_value in query.items()
+                ):
+                    continue
                 result.extend({key: [value] for key, value in record.items()})
+            return result
 
-        return result
+        def _not_equals() -> _R:
+            for record in self.get_records():
+                if all(
+                    record.get(lookup_key) == lookup_value
+                    for lookup_key, lookup_value in query.items()
+                ):
+                    continue
+                result.extend({key: [value] for key, value in record.items()})
+            return result
+
+        job_map = {Filter.EQUALS: _equals, Filter.NOT_EQUALS: _not_equals}
+
+        return job_map[operand]()
 
     def _convert_record(self, record: Union[_RecordType, Dict]) -> _RecordType:
         # pylint: disable=isinstance-second-argument-not-valid-type

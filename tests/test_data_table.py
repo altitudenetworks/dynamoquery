@@ -4,7 +4,7 @@ from typing import Optional
 import pytest
 from typing_extensions import TypedDict
 
-from dynamo_query.data_table import DataTable, DataTableError
+from dynamo_query.data_table import DataTable, DataTableError, Filter
 from dynamo_query.dictclasses.dictclass import DictClass
 from dynamo_query.dictclasses.dynamo_dictclass import DynamoDictClass
 
@@ -172,7 +172,7 @@ class TestDataTable:
             next(records)
 
     @staticmethod
-    def test_filter_records() -> None:
+    def test_filter_records_equals() -> None:
         data_table = DataTable({"a": [1, 2, 1], "b": [3, 4, 5]})
         assert data_table.filter_records({"a": 1}) == {"a": [1, 1], "b": [3, 5]}
         assert data_table.filter_records({"a": 2, "b": 4}) == {"a": [2], "b": [4]}
@@ -181,6 +181,28 @@ class TestDataTable:
 
         with pytest.raises(DataTableError):
             DataTable({"a": [1, 2, 1], "b": [3, 4]}).filter_records({"a": 1})
+
+    @staticmethod
+    def test_filter_records_not_equals() -> None:
+        data_table = DataTable({"a": [1, 2, 1], "b": [3, 4, 5]})
+        assert data_table.filter_records({"a": 1}, operand=Filter.NOT_EQUALS) == {
+            "a": [2],
+            "b": [4],
+        }
+        assert data_table.filter_records({"a": 2, "b": 4}, operand=Filter.NOT_EQUALS) == {
+            "a": [1, 1],
+            "b": [3, 5],
+        }
+
+        assert data_table.filter_records({"a": 1, "b": 4}, operand=Filter.NOT_EQUALS) == {
+            "a": [1, 2, 1],
+            "b": [3, 4, 5],
+        }
+
+        with pytest.raises(DataTableError):
+            DataTable({"a": [1, 2, 1], "b": [3, 4]}).filter_records(
+                {"a": 1}, operand=Filter.NOT_EQUALS
+            )
 
     @staticmethod
     def test_add_record() -> None:
