@@ -123,13 +123,6 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
     # Prefix to find items if you store several records in one table
     sort_key_prefix: Optional[str] = None
 
-    # Primary global index
-    primary_index = DynamoTableIndex(
-        name=DynamoTableIndex.PRIMARY,
-        partition_key_name=partition_key_name,
-        sort_key_name=sort_key_name,
-    )
-
     # class to use as DynamoQuery for easier subclassing
     dynamo_query_class: Type[DynamoQuery] = DynamoQuery
 
@@ -176,6 +169,21 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
     @property
     def max_batch_size(self) -> int:
         return self.dynamo_query_class.MAX_BATCH_SIZE
+
+    @property
+    def primary_index(self) -> DynamoTableIndex:
+        return self.get_primary_index()
+
+    @classmethod
+    def get_primary_index(cls) -> DynamoTableIndex:
+        """
+        Primary global index
+        """
+        return DynamoTableIndex(
+            name=DynamoTableIndex.PRIMARY,
+            partition_key_name=cls.partition_key_name,
+            sort_key_name=cls.sort_key_name,
+        )
 
     def get_partition_key(self, record: _RecordType) -> Any:
         """
@@ -415,7 +423,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         partition_key_prefix: Optional[str] = None,
         sort_key: Optional[str] = None,
         sort_key_prefix: Optional[str] = None,
-        index: DynamoTableIndex = primary_index,
+        index: Optional[DynamoTableIndex] = None,
         filter_expression: Optional[ConditionExpressionType] = None,
         limit: Optional[int] = None,
     ) -> None:
@@ -473,11 +481,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
                 projection=self._get_keys_projection(),
             )
 
-        for records_chunk in chunkify(records, self.max_batch_size):
-            existing_records = DataTable(record_class=self.record_class).add_record(*records_chunk)
-            self.dynamo_query_class.build_batch_delete_item(logger=self._logger).table(
-                table_keys=self.table_keys, table=self.table,
-            ).execute(existing_records)
+        self.batch_delete_records(records)
 
     def batch_get(self, data_table: DataTable[_RecordType]) -> DataTable[_RecordType]:
         """
@@ -907,7 +911,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
 
         update_keys = set(new_record.keys()) - self.table_keys - set_if_not_exists
         update_keys.add("dt_modified")
-        result: DataTable[_RecordType] = (
+        result = (
             self.dynamo_query_class.build_update_item(
                 condition_expression=condition_expression, logger=self._logger,
             )
@@ -952,10 +956,12 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             A dict with record data or None.
         """
         record = self.normalize_record(self._convert_record(record))
-        result: DataTable[_RecordType] = self.dynamo_query_class.build_delete_item(
-            condition_expression=condition_expression, logger=self._logger,
-        ).table(table=self.table, table_keys=self.table_keys).execute_dict(
-            self._get_record_keys(record)
+        result = (
+            self.dynamo_query_class.build_delete_item(
+                condition_expression=condition_expression, logger=self._logger,
+            )
+            .table(table=self.table, table_keys=self.table_keys)
+            .execute_dict(self._get_record_keys(record))
         )
         if not result:
             return None
@@ -1021,7 +1027,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
     def query(
         self,
         partition_key: Any,
-        index: DynamoTableIndex = primary_index,
+        index: Optional[DynamoTableIndex] = None,
         sort_key: Optional[Any] = None,
         sort_key_prefix: Optional[str] = None,
         filter_expression: Optional[ConditionExpressionType] = None,
@@ -1080,6 +1086,8 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         Yields:
             Matching record.
         """
+        if not index:
+            index = self.primary_index
         sort_key_operator: SortKeyOperatorTypeDef = "="
         partition_key_operator: PartitionKeyOperatorTypeDef = "="
         if sort_key_prefix is not None:

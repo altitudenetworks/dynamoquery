@@ -6,14 +6,14 @@ from typing import Optional
 import boto3
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 
-from dynamo_query.data_table import DataTable
 from dynamo_query.dictclasses.dynamo_dictclass import DynamoDictClass
 from dynamo_query.dynamo_table import DynamoTable
 from dynamo_query.dynamo_table_index import DynamoTableIndex
 
 
 class UserRecord(DynamoDictClass):
-    project_id: str = "my_project"
+    pk: str
+    project_id: str
     company: str
     email: str
     name: Optional[str] = None
@@ -49,11 +49,25 @@ def main() -> None:
     user_dynamo_table.create_table()
     user_dynamo_table.wait_until_exists()
     user_dynamo_table.clear_table()
-    users_table = DataTable[UserRecord](record_class=UserRecord).add_record(
-        UserRecord(email="john_student@gmail.com", company="IBM", name="John", age=34),
-        dict(email="mary@gmail.com", company="CiscoSystems", name="Mary", age=34),
+
+    user_dynamo_table.batch_upsert_records(
+        [
+            UserRecord(
+                project_id="my_project",
+                email="john_student@gmail.com",
+                company="IBM",
+                name="John",
+                age=34,
+            ),
+            UserRecord(
+                project_id="my_project",
+                email="mary@gmail.com",
+                company="CiscoSystems",
+                name="Mary",
+                age=34,
+            ),
+        ]
     )
-    user_dynamo_table.batch_upsert(users_table)
 
     print("Get all records:")
     for user_record in user_dynamo_table.scan():
