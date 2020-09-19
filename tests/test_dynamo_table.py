@@ -180,6 +180,10 @@ class TestDynamoTable:
         assert self.result.create_table() is None
         self.client_mock.create_table.assert_not_called()
 
+        self.result.get_table_status.return_value = "UPDATING"
+        assert self.result.create_table() is None
+        self.client_mock.create_table.assert_not_called()
+
         self.result.get_table_status.return_value = "ACTIVE"
         assert self.result.create_table() is None
         self.client_mock.create_table.assert_not_called()
