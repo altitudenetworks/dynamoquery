@@ -300,6 +300,10 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             self._logger.debug(f"Table {self.table.name} is creating, skipping")
             return None
 
+        if status == "UPDATING":
+            self._logger.debug(f"Table {self.table.name} is updating, skipping")
+            return None
+
         if status == "ACTIVE":
             self._logger.debug(f"Table {self.table.name} is active, skipping")
             return None
