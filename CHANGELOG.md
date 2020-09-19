@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # [Released]
 
+## [2.11.0] - 2020-09-19
+
+### Notes
+
+### Changed
+
+- `DataTable.filter_records`: add support for `not_equals` operand [#60](https://github.com/altitudenetworks/dynamoquery/pull/60)
+
+### Fixed
+
+- Generate `DynamoTable.primary_index` dynamically to respect overriden table keys [#61](https://github.com/altitudenetworks/dynamoquery/pull/61)
+- Handle `UPDATING` status in `dyanmo_table.create_table` [#62](https://github.com/altitudenetworks/dynamoquery/pull/62)
+
 ## [2.10.1] - 2020-09-01
 
 ### Fixed
