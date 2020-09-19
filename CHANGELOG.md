@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 # [Released]
 
+## [2.11.1] - 2020-09-19
+
+### Notes
+
+### Fixed
+
+- Revert `batch_delete_records` call in `dynamo_table.clear_table` [#64](https://github.com/altitudenetworks/dynamoquery/pull/64)
+
 ## [2.11.0] - 2020-09-19
 
 ### Notes
