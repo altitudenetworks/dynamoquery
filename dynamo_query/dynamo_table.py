@@ -485,7 +485,11 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
                 projection=self._get_keys_projection(),
             )
 
-        self.batch_delete_records(records)
+        for records_chunk in chunkify(records, self.max_batch_size):
+            existing_records = DataTable(record_class=self.record_class).add_record(*records_chunk)
+            self.dynamo_query_class.build_batch_delete_item(logger=self._logger).table(
+                table_keys=self.table_keys, table=self.table,
+            ).execute(existing_records)
 
     def batch_get(self, data_table: DataTable[_RecordType]) -> DataTable[_RecordType]:
         """
