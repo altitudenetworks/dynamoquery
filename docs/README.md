@@ -187,3 +187,9 @@ Recommended `.vscode/settings.json`
 The following features are not supported. We plan to add these features in the future, and welcome contributions from the open source community.
 - DAX
 - DynamoDB transactions
+
+## Feature requests and bug reports
+Before reporting a bug or submitting a feature request, 
+please check if the bug / request is already submitted in the Issues page.
+If not, please open a new Issue.
+
