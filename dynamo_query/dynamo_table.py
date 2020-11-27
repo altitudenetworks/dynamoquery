@@ -327,6 +327,8 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
                 "ReadCapacityUnits": self.read_capacity_units,
                 "WriteCapacityUnits": self.write_capacity_units,
             }
+        else:
+            extra_params["BillingMode"] = "PAY_PER_REQUEST"
 
         return self.client.create_table(
             AttributeDefinitions=self._attribute_definitions,
