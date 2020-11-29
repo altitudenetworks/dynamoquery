@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Get PullRequest number
-        uses: actions/github-script@0.9.0
+        uses: actions/github-script@v3
         id: pr-number
         with:
           result-encoding: string
@@ -32,7 +32,7 @@ jobs:
             console.log('prNumber', prNumber)
             return prNumber
       - name: Get PR issue
-        uses: actions/github-script@0.9.0
+        uses: actions/github-script@v3
         id: issue
         if: steps.pr-number.outputs.result
         with:
@@ -52,7 +52,7 @@ jobs:
             }
             return issue
       - name: Precalculate versions
-        uses: actions/github-script@0.9.0
+        uses: actions/github-script@v3
         id: versions
         if: steps.issue.outputs.result
         with:
@@ -75,7 +75,7 @@ jobs:
             console.log('versions', result)
             return result
       - name: Get or create a release draft
-        uses: actions/github-script@0.9.0
+        uses: actions/github-script@v3
         id: release
         if: steps.issue.outputs.result
         with:
@@ -112,7 +112,7 @@ jobs:
             console.log('new release draft', response.data)
             return response.data
       - name: Build release notes sections
-        uses: actions/github-script@0.9.0
+        uses: actions/github-script@v3
         id: sections
         if: steps.issue.outputs.result
         with:
@@ -191,7 +191,7 @@ jobs:
             console.log('result', result)
             return result
       - name: Calculate new version for release notes
-        uses: actions/github-script@0.9.0
+        uses: actions/github-script@v3
         id: new-version
         if: steps.issue.outputs.result
         with:
@@ -212,7 +212,7 @@ jobs:
             }
             return versions.patch
       - name: Update release draft
-        uses: actions/github-script@0.9.0
+        uses: actions/github-script@v3
         if: steps.issue.outputs.result
         with:
           script: |

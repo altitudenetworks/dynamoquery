@@ -148,11 +148,17 @@ class DynamoTableIndex:
 
     def as_attribute_definitions(self) -> List[AttributeDefinitionTypeDef]:
         attribute_definitions: List[AttributeDefinitionTypeDef] = [
-            {"AttributeName": self.partition_key_name, "AttributeType": self.partition_key_type,},
+            {
+                "AttributeName": self.partition_key_name,
+                "AttributeType": self.partition_key_type,
+            },
         ]
         if self.sort_key_name:
             attribute_definitions.append(
-                {"AttributeName": self.sort_key_name, "AttributeType": self.sort_key_type,}
+                {
+                    "AttributeName": self.sort_key_name,
+                    "AttributeType": self.sort_key_type,
+                }
             )
         return attribute_definitions
 

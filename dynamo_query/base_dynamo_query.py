@@ -170,7 +170,9 @@ class BaseDynamoQuery(LazyLogger):
 
     @classmethod
     def _get_repr_format_dict(
-        cls, projection_dict: Dict[str, str], data_dict: Dict[str, Any],
+        cls,
+        projection_dict: Dict[str, str],
+        data_dict: Dict[str, Any],
     ) -> FormatDict:
         result = {v: v for v in projection_dict.values()}
         for key, value in data_dict.items():
@@ -219,7 +221,9 @@ class BaseDynamoQuery(LazyLogger):
 
     @classmethod
     def _get_expression_attribute_values(
-        cls, format_dict: FormatDict, data_dict: Dict[str, Any],
+        cls,
+        format_dict: FormatDict,
+        data_dict: Dict[str, Any],
     ) -> Dict[str, Any]:
         result = {}
         for key, value in data_dict.items():
@@ -241,7 +245,9 @@ class BaseDynamoQuery(LazyLogger):
 
     @classmethod
     def _get_formatted_expressions(
-        cls, expression_map: ExpressionMap, format_dict: FormatDict,
+        cls,
+        expression_map: ExpressionMap,
+        format_dict: FormatDict,
     ) -> Dict[str, str]:
         result = {}
         for name, expression in expression_map.items():
@@ -300,7 +306,10 @@ class BaseDynamoQuery(LazyLogger):
             result.add_table(self._execute_paginated_query(data=record))
         return result
 
-    def _execute_method_scan(self, data_table: DataTable,) -> DataTable:
+    def _execute_method_scan(
+        self,
+        data_table: DataTable,
+    ) -> DataTable:
         self._validate_last_evaluated_key()
         self._validate_required_value_keys(data_table)
 
@@ -347,12 +356,18 @@ class BaseDynamoQuery(LazyLogger):
                     f"{self} must have {self.UPDATE_EXPRESSION} or `update` method."
                 )
             key_data = {k: v for k, v in record.items() if k in self.table_keys}
-            result_record = self._execute_item_query(key_data=key_data, item_data=record,)
+            result_record = self._execute_item_query(
+                key_data=key_data,
+                item_data=record,
+            )
             if result_record is not None:
                 result.add_record(result_record)
         return result
 
-    def _execute_method_delete_item(self, data_table: DataTable,) -> DataTable:
+    def _execute_method_delete_item(
+        self,
+        data_table: DataTable,
+    ) -> DataTable:
         self._validate_data_table_has_table_keys(data_table)
         self._validate_required_value_keys(data_table)
 
@@ -376,7 +391,10 @@ class BaseDynamoQuery(LazyLogger):
                 key_data = {k: v for k, v in record.items() if k in self.table_keys}
                 key_data_list.append(key_data)
             request_items = {table_name: {"Keys": key_data_list}}
-            response = self._batch_get_item(RequestItems=request_items, **self._extra_params,)
+            response = self._batch_get_item(
+                RequestItems=request_items,
+                **self._extra_params,
+            )
             if response.get("Responses", {}).get(table_name):
                 response_table.add_record(*response["Responses"][table_name])
 
@@ -401,7 +419,8 @@ class BaseDynamoQuery(LazyLogger):
                 request_list.append({"PutRequest": {"Item": dict(record)}})
             request_items = {table_name: request_list}
             self._batch_write_item(
-                RequestItems=request_items, **self._extra_params,
+                RequestItems=request_items,
+                **self._extra_params,
             )
 
         return data_table
@@ -420,7 +439,8 @@ class BaseDynamoQuery(LazyLogger):
                     request_list.append(request_item)
             request_items = {table_name: request_list}
             self._batch_write_item(
-                RequestItems=request_items, **self._extra_params,
+                RequestItems=request_items,
+                **self._extra_params,
             )
 
         return data_table
@@ -467,13 +487,16 @@ class BaseDynamoQuery(LazyLogger):
         expression_map: ExpressionMap,
     ) -> None:
         repr_format_dict = self._get_repr_format_dict(
-            projection_dict=projection_dict, data_dict=data_dict,
+            projection_dict=projection_dict,
+            data_dict=data_dict,
         )
         for name, expression in expression_map.items():
             self._logger.debug(f'Using {name} = "{expression.render().format(**repr_format_dict)}"')
 
     def _execute_item_query(
-        self, key_data: Dict[str, Any], item_data: Dict[str, Any],
+        self,
+        key_data: Dict[str, Any],
+        item_data: Dict[str, Any],
     ) -> Optional[Dict[str, Any]]:
         self._logger.debug(f"{self._query_type.value}_key_data = {dumps(key_data)}")
         expression_map = self._expressions
@@ -491,17 +514,23 @@ class BaseDynamoQuery(LazyLogger):
             **item_data,
         }
         format_dict = self._get_format_dict(
-            projection_dict=projection_dict, expression_map=expression_map, data_dict=full_data,
+            projection_dict=projection_dict,
+            expression_map=expression_map,
+            data_dict=full_data,
         )
         self._log_expressions(
-            projection_dict=projection_dict, expression_map=expression_map, data_dict=full_data,
+            projection_dict=projection_dict,
+            expression_map=expression_map,
+            data_dict=full_data,
         )
 
         formatted_expressions = self._get_formatted_expressions(
-            expression_map=expression_map, format_dict=format_dict,
+            expression_map=expression_map,
+            format_dict=format_dict,
         )
         expression_attribute_values = self._get_expression_attribute_values(
-            format_dict=format_dict, data_dict=item_data,
+            format_dict=format_dict,
+            data_dict=item_data,
         )
 
         extra_params = dict(self._extra_params)
@@ -513,21 +542,27 @@ class BaseDynamoQuery(LazyLogger):
         result: Optional[Dict[str, Any]] = None
         if self._query_type == QueryType.UPDATE_ITEM:
             update_response = self._execute_update_item(
-                Key=key_data, **formatted_expressions, **extra_params,
+                Key=key_data,
+                **formatted_expressions,
+                **extra_params,
             )
             self._was_executed = True
             result = update_response.get("Attributes")
 
         if self._query_type == QueryType.DELETE_ITEM:
             delete_response = self._execute_delete_item(
-                Key=key_data, **formatted_expressions, **extra_params,
+                Key=key_data,
+                **formatted_expressions,
+                **extra_params,
             )
             self._was_executed = True
             result = delete_response.get("Attributes")
 
         if self._query_type == QueryType.GET_ITEM:
             get_response = self._execute_get_item(
-                Key=key_data, **formatted_expressions, **extra_params,
+                Key=key_data,
+                **formatted_expressions,
+                **extra_params,
             )
             self._was_executed = True
             result = get_response.get("Item")
@@ -540,19 +575,25 @@ class BaseDynamoQuery(LazyLogger):
 
         projection_dict = self._get_projection_dict(expression_map)
         format_dict = self._get_format_dict(
-            projection_dict=projection_dict, expression_map=expression_map, data_dict=data,
+            projection_dict=projection_dict,
+            expression_map=expression_map,
+            data_dict=data,
         )
         self._log_expressions(
-            projection_dict=projection_dict, expression_map=expression_map, data_dict=data,
+            projection_dict=projection_dict,
+            expression_map=expression_map,
+            data_dict=data,
         )
 
         last_page = False
         limit = self._limit
         expression_attribute_values = self._get_expression_attribute_values(
-            format_dict=format_dict, data_dict=data,
+            format_dict=format_dict,
+            data_dict=data,
         )
         formatted_expressions = self._get_formatted_expressions(
-            expression_map=expression_map, format_dict=format_dict,
+            expression_map=expression_map,
+            format_dict=format_dict,
         )
         result = DataTable[Dict[str, Any]]()
 
@@ -570,7 +611,9 @@ class BaseDynamoQuery(LazyLogger):
 
             if self._query_type == QueryType.QUERY:
                 response = self._execute_query(
-                    **formatted_expressions, **extra_params, **page_params,
+                    **formatted_expressions,
+                    **extra_params,
+                    **page_params,
                 )
 
                 self._last_evaluated_key = response.get("LastEvaluatedKey")
@@ -581,7 +624,9 @@ class BaseDynamoQuery(LazyLogger):
 
             if self._query_type == QueryType.SCAN:
                 response = self._execute_scan(
-                    **formatted_expressions, **extra_params, **page_params,
+                    **formatted_expressions,
+                    **extra_params,
+                    **page_params,
                 )
 
                 self._last_evaluated_key = response.get("LastEvaluatedKey")

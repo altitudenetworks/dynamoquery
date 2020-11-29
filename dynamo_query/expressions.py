@@ -266,7 +266,10 @@ class ConditionExpression(BaseConditionExpression):
     _value_key_postfix = "__value"
 
     def __init__(
-        self, key: str, operator: ConditionExpressionOperatorStr = "=", value: Any = None,
+        self,
+        key: str,
+        operator: ConditionExpressionOperatorStr = "=",
+        value: Any = None,
     ):
         try:
             Operator(operator)
@@ -315,7 +318,8 @@ class ConditionExpression(BaseConditionExpression):
         return {self.value}
 
     def __or__(
-        self, other: Union["ConditionExpression", "ConditionExpressionGroup"],
+        self,
+        other: Union["ConditionExpression", "ConditionExpressionGroup"],
     ) -> "ConditionExpressionGroup":
         join_operators: List[ConditionExpressionJoinOperatorStr] = []
         if isinstance(other, ConditionExpressionGroup):
@@ -335,7 +339,8 @@ class ConditionExpression(BaseConditionExpression):
         raise ExpressionError(f"Incompatible expression operation: {self.render()} AND {other}")
 
     def __and__(
-        self, other: Union["ConditionExpression", "ConditionExpressionGroup"],
+        self,
+        other: Union["ConditionExpression", "ConditionExpressionGroup"],
     ) -> "ConditionExpressionGroup":
         join_operators: List[ConditionExpressionJoinOperatorStr] = []
         if isinstance(other, ConditionExpressionGroup):
@@ -466,7 +471,8 @@ class ConditionExpressionGroup(BaseConditionExpression):
         return result
 
     def __or__(
-        self, other: Union["ConditionExpression", "ConditionExpressionGroup"],
+        self,
+        other: Union["ConditionExpression", "ConditionExpressionGroup"],
     ) -> "ConditionExpressionGroup":
         join_operators: List[ConditionExpressionJoinOperatorStr] = []
         if isinstance(other, ConditionExpressionGroup):
@@ -489,7 +495,8 @@ class ConditionExpressionGroup(BaseConditionExpression):
         raise ExpressionError(f"Incompatible expression operation: {self.render()} AND {other}")
 
     def __and__(
-        self, other: Union["ConditionExpression", "ConditionExpressionGroup"],
+        self,
+        other: Union["ConditionExpression", "ConditionExpressionGroup"],
     ) -> "ConditionExpressionGroup":
         join_operators: List[ConditionExpressionJoinOperatorStr] = []
         if isinstance(other, ConditionExpressionGroup):

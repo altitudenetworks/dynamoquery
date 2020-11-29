@@ -136,7 +136,8 @@ class DynamoQuery(BaseDynamoQuery):
             expressions[cls.PROJECTION_EXPRESSION] = projection_expression
 
         extra_params: Dict[str, Any] = dict(
-            ConsistentRead=consistent_read, ScanIndexForward=scan_index_forward,
+            ConsistentRead=consistent_read,
+            ScanIndexForward=scan_index_forward,
         )
         if index_name is not None:
             extra_params["IndexName"] = index_name
@@ -258,7 +259,8 @@ class DynamoQuery(BaseDynamoQuery):
             expressions[cls.PROJECTION_EXPRESSION] = projection_expression
 
         extra_params: Dict[str, Any] = dict(
-            ConsistentRead=consistent_read, ReturnConsumedCapacity=return_consumed_capacity,
+            ConsistentRead=consistent_read,
+            ReturnConsumedCapacity=return_consumed_capacity,
         )
 
         return cls(
@@ -526,7 +528,9 @@ class DynamoQuery(BaseDynamoQuery):
         )
 
     def table(
-        self: _R, table: Optional[Table], table_keys: Optional[TableKeys] = TABLE_KEYS,
+        self: _R,
+        table: Optional[Table],
+        table_keys: Optional[TableKeys] = TABLE_KEYS,
     ) -> _R:
         """
         Set table resource and table keys.
@@ -584,7 +588,8 @@ class DynamoQuery(BaseDynamoQuery):
             raise DynamoQueryError("Input DataTable is not normalized.")
 
         self.table(
-            table=table or self.table_resource, table_keys=table_keys or self._table_keys,
+            table=table or self.table_resource,
+            table_keys=table_keys or self._table_keys,
         )
 
         self._logger.debug(f"Execute {self._query_type.value} on {self.table_resource.name}")
@@ -641,7 +646,8 @@ class DynamoQuery(BaseDynamoQuery):
             A `DataTable` with query results.
         """
         self.table(
-            table=table or self.table_resource, table_keys=table_keys or self._table_keys,
+            table=table or self.table_resource,
+            table_keys=table_keys or self._table_keys,
         )
         return self.execute(data_table=[data or {"dummy": True}])
 
@@ -738,7 +744,11 @@ class DynamoQuery(BaseDynamoQuery):
         Returns:
             Itself, so this method can be chained.
         """
-        if self._query_type not in (QueryType.QUERY, QueryType.SCAN, QueryType.GET_ITEM,):
+        if self._query_type not in (
+            QueryType.QUERY,
+            QueryType.SCAN,
+            QueryType.GET_ITEM,
+        ):
             raise DynamoQueryError(f"{self} does not support ProjectionExpression")
         self._expressions[self.PROJECTION_EXPRESSION] = ProjectionExpression(*fields)
         return self

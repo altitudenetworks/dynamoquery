@@ -185,7 +185,9 @@ class TestDynamoQuery:
     def test_get_item() -> None:
         table_resource_mock = MagicMock()
         query = (
-            DynamoQuery.build_get_item(projection_expression=ProjectionExpression("test2"),)
+            DynamoQuery.build_get_item(
+                projection_expression=ProjectionExpression("test2"),
+            )
             .table(table=table_resource_mock, table_keys=("pk", "sk"))
             .projection("test")
         )

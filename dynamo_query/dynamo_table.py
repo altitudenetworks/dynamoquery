@@ -136,7 +136,10 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
     # Sentinels
     NO_RECORD = SentinelValue("NO_RECORD")
 
-    def __init__(self, logger: Optional[logging.Logger] = None,) -> None:
+    def __init__(
+        self,
+        logger: Optional[logging.Logger] = None,
+    ) -> None:
         self._lazy_logger = logger
         self._attribute_definitions = self._get_attribute_definitions()
         self._attribute_types = self._get_attribute_types()
@@ -337,7 +340,9 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             **extra_params,
         )
 
-    def _get_attribute_definitions(self,) -> List[AttributeDefinitionTypeDef]:
+    def _get_attribute_definitions(
+        self,
+    ) -> List[AttributeDefinitionTypeDef]:
         attribute_definitions: List[AttributeDefinitionTypeDef] = []
         attribute_names: Set[str] = set()
         indexes = (
@@ -389,7 +394,8 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         for attribute_name, attribute_type in self._attribute_types.items():
             if attribute_name not in record:
                 raise DynamoTableError(
-                    f"Attribute {attribute_name} is not set in record.", data=record,
+                    f"Attribute {attribute_name} is not set in record.",
+                    data=record,
                 )
             value = record[attribute_name]
             if not isinstance(value, attribute_type):
@@ -404,7 +410,8 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         records_count = 0
         while True:
             results_data_table = query.table(
-                table_keys=self.table_keys, table=self.table,
+                table_keys=self.table_keys,
+                table=self.table,
             ).execute_dict(data)
 
             for record in results_data_table.get_records():
@@ -490,7 +497,8 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         for records_chunk in chunkify(records, self.max_batch_size):
             existing_records = DataTable(record_class=self.record_class).add_record(*records_chunk)
             self.dynamo_query_class.build_batch_delete_item(logger=self._logger).table(
-                table_keys=self.table_keys, table=self.table,
+                table_keys=self.table_keys,
+                table=self.table,
             ).execute(existing_records)
 
     def batch_get(self, data_table: DataTable[_RecordType]) -> DataTable[_RecordType]:
@@ -658,7 +666,9 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         return DataTable(record_class=self.record_class).add_table(results)
 
     def batch_upsert(
-        self, data_table: DataTable[_RecordType], set_if_not_exists_keys: Iterable[str] = (),
+        self,
+        data_table: DataTable[_RecordType],
+        set_if_not_exists_keys: Iterable[str] = (),
     ) -> DataTable[_RecordType]:
         """
         Upsert multuple records as a DataTable to DB.
@@ -734,7 +744,10 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
 
         results = (
             self.dynamo_query_class.build_batch_update_item(logger=self._logger)
-            .table(table_keys=self.table_keys, table=self.table,)
+            .table(
+                table_keys=self.table_keys,
+                table=self.table,
+            )
             .execute(update_data_table)
         )
         results.record_class = self.record_class
@@ -774,7 +787,9 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             self.batch_delete(delete_data_table)
 
     def batch_upsert_records(
-        self, records: Iterable[_RecordType], set_if_not_exists_keys: Iterable[str] = (),
+        self,
+        records: Iterable[_RecordType],
+        set_if_not_exists_keys: Iterable[str] = (),
     ) -> None:
         """
         Upsert records to DB.
@@ -914,7 +929,12 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         now_str = now.isoformat()
 
         new_record = self._convert_record(
-            {**record, **(extra_data or {}), "dt_modified": now_str, "dt_created": now_str,}
+            {
+                **record,
+                **(extra_data or {}),
+                "dt_modified": now_str,
+                "dt_created": now_str,
+            }
         )
         new_record = self.normalize_record(new_record)
         new_record.update(self._get_record_keys(new_record))
@@ -923,16 +943,22 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         update_keys.add("dt_modified")
         result = (
             self.dynamo_query_class.build_update_item(
-                condition_expression=condition_expression, logger=self._logger,
+                condition_expression=condition_expression,
+                logger=self._logger,
             )
             .update(update=update_keys, set_if_not_exists=set_if_not_exists)
-            .table(table_keys=self.table_keys, table=self.table,)
+            .table(
+                table_keys=self.table_keys,
+                table=self.table,
+            )
             .execute_dict(cast(Dict[str, Any], new_record))
         )
         return self._convert_record(result.get_record(0))
 
     def delete_record(
-        self, record: _RecordType, condition_expression: Optional[ConditionExpression] = None,
+        self,
+        record: _RecordType,
+        condition_expression: Optional[ConditionExpression] = None,
     ) -> Optional[_RecordType]:
         """
         Delete Record from DB.
@@ -968,7 +994,8 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         record = self.normalize_record(self._convert_record(record))
         result = (
             self.dynamo_query_class.build_delete_item(
-                condition_expression=condition_expression, logger=self._logger,
+                condition_expression=condition_expression,
+                logger=self._logger,
             )
             .table(table=self.table, table_keys=self.table_keys)
             .execute_dict(self._get_record_keys(record))
@@ -1019,7 +1046,8 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             limit -- Max number of results.
         """
         query = self.dynamo_query_class.build_scan(
-            filter_expression=filter_expression, logger=self._logger,
+            filter_expression=filter_expression,
+            logger=self._logger,
         )
         if limit:
             query.limit(limit)
@@ -1112,7 +1140,8 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         )
         if sort_key is not None and index.sort_key_name is not None:
             key_condition_expression = key_condition_expression & ConditionExpression(
-                index.sort_key_name, operator=sort_key_operator,
+                index.sort_key_name,
+                operator=sort_key_operator,
             )
         query = self.dynamo_query_class.build_query(
             index_name=index.name,
