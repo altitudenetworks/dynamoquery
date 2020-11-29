@@ -19,14 +19,14 @@ jobs:
           git pull
       - name: Get release version
         id: version
-        uses: actions/github-script@0.9.0
+        uses: actions/github-script@v3
         with:
           result-encoding: string
           script: |
             return context.ref.split('/').pop()
       - name: Get release data
         id: release
-        uses: actions/github-script@0.9.0
+        uses: actions/github-script@v3
         with:
           script: |
             const newVersion = '${{ steps.version.outputs.result }}'
@@ -40,14 +40,14 @@ jobs:
             return response.data
       - name: Get release notes
         id: release-notes
-        uses: actions/github-script@0.9.0
+        uses: actions/github-script@v3
         with:
           result-encoding: string
           script: |
             const release = ${{ steps.release.outputs.result }}
             return release.body.replace('\r\n', '\n')
       - name: Update version
-        uses: actions/github-script@0.9.0
+        uses: actions/github-script@v3
         with:
           result-encoding: string
           script: |
@@ -57,7 +57,7 @@ jobs:
 
             fs.writeFileSync('dynamo_query/version.txt', `${newVersion}\n`)
       - name: Update changelog
-        uses: actions/github-script@0.9.0
+        uses: actions/github-script@v3
         with:
           result-encoding: string
           script: |
