@@ -169,7 +169,8 @@ class TestConditionExpressionGroup:
 
     def setup_method(self) -> None:
         self.result = ConditionExpressionGroup(
-            [ConditionExpression("key", ">", "value"), ConditionExpression("key2")], ["AND"],
+            [ConditionExpression("key", ">", "value"), ConditionExpression("key2")],
+            ["AND"],
         )
         self.other = ConditionExpressionGroup(
             [ConditionExpression("key3"), ConditionExpression("key4")], ["OR"]

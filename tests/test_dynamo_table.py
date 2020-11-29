@@ -490,11 +490,16 @@ class TestDynamoTable:
             "Items": [{"pk": "my_pk", "sk": "sk"}, {"pk": "my_pk2", "sk": "sk2"}]
         }
         filter_expression_mock = MagicMock()
-        assert list(
-            self.result.scan(
-                filter_expression=filter_expression_mock, data={"key": "value"}, limit=1,
+        assert (
+            list(
+                self.result.scan(
+                    filter_expression=filter_expression_mock,
+                    data={"key": "value"},
+                    limit=1,
+                )
             )
-        ) == [{"pk": "my_pk", "sk": "sk"}]
+            == [{"pk": "my_pk", "sk": "sk"}]
+        )
         self.table_mock.scan.assert_called_with(
             FilterExpression=filter_expression_mock.render().format(), Limit=1
         )
@@ -504,15 +509,18 @@ class TestDynamoTable:
             "Items": [{"pk": "my_pk", "sk": "sk"}, {"pk": "my_pk2", "sk": "sk2"}]
         }
         filter_expression_mock = ConditionExpression("key")
-        assert list(
-            self.result.query(
-                partition_key="pk_value",
-                sort_key="sk_value",
-                filter_expression=filter_expression_mock,
-                data={"key": ["key_value"]},
-                limit=1,
+        assert (
+            list(
+                self.result.query(
+                    partition_key="pk_value",
+                    sort_key="sk_value",
+                    filter_expression=filter_expression_mock,
+                    data={"key": ["key_value"]},
+                    limit=1,
+                )
             )
-        ) == [{"pk": "my_pk", "sk": "sk"}]
+            == [{"pk": "my_pk", "sk": "sk"}]
+        )
         self.table_mock.query.assert_called_with(
             KeyConditionExpression="#aab = :aaa AND #aac = :aab",
             FilterExpression="#aaa = :aac___0",

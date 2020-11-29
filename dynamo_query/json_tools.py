@@ -70,22 +70,30 @@ class SafeJSONEncoder(json.JSONEncoder):
 
 
 def dumps(
-    data: Any, sort_keys: bool = True, cls: Type[json.JSONEncoder] = SafeJSONEncoder, **kwargs: Any,
+    data: Any,
+    sort_keys: bool = True,
+    cls: Type[json.JSONEncoder] = SafeJSONEncoder,
+    **kwargs: Any,
 ) -> str:
     """
-        Alias for `json.dumps`. Uses `SafeJSONEncoder` to serialize
-        Decimals and non-serializeable objects. Sorts dict keys by default.
+    Alias for `json.dumps`. Uses `SafeJSONEncoder` to serialize
+    Decimals and non-serializeable objects. Sorts dict keys by default.
 
-        Arguments:
-            data -- JSON-serializeable object.
-            sort_keys -- Sort output of dictionaries by key.
-            cls -- JSON encoder for Python data structures.
-            kwargs -- List of additional parameters to pass to `json.dumps`.
+    Arguments:
+        data -- JSON-serializeable object.
+        sort_keys -- Sort output of dictionaries by key.
+        cls -- JSON encoder for Python data structures.
+        kwargs -- List of additional parameters to pass to `json.dumps`.
 
-        Returns:
-            A string with serialized JSON.
+    Returns:
+        A string with serialized JSON.
     """
-    return json.dumps(data, sort_keys=sort_keys, cls=cls, **kwargs,)
+    return json.dumps(
+        data,
+        sort_keys=sort_keys,
+        cls=cls,
+        **kwargs,
+    )
 
 
 def loads(data: str, **kwargs: Any) -> Any:
