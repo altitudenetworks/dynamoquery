@@ -60,6 +60,23 @@ class TestDataTable:
     def setup_method(self):
         self.table.clear_table()
 
+    def test_create_pay_per_request(self):
+        class Cheap(DynamoTable):
+            "Use default 'pk' and 'sk' for keys."
+            @property
+            def table(self):
+                resource: DynamoDBServiceResource = boto3.resource(
+                    "dynamodb",
+                    endpoint_url="http://localhost:8000",
+                    region_name="us-west-1",
+                    aws_access_key_id="null",
+                    aws_secret_access_key="null",
+                )
+                return resource.Table("test_dq_cheap_table")  # pylint: disable=no-member
+
+        table = Cheap()
+        table.create_table()
+
     def test_clear_table(self):
         self.table.upsert_record(
             UserRecord(email="john_student@gmail.com", company="IBM", name="John", age=34)
