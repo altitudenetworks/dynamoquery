@@ -145,7 +145,7 @@ class DictClass(dict):
             child_types: Tuple[Any, ...] = tuple()
 
             if hasattr(annotation, "__args__"):
-                child_types = tuple([i for i in annotation.__args__ if inspect.isclass(i)])
+                child_types = tuple(i for i in annotation.__args__ if inspect.isclass(i))
 
             result[key] = tuple()
             if annotation_str.startswith("typing.Dict"):
