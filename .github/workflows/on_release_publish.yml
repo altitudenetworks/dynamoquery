@@ -1,100 +1,77 @@
-name: Create release PR
+name: Bump version, update CHANGELOG.md and publish
 
 on:
   release:
-    types:
-      - published
+    types: [published]
 
 jobs:
-  build:
+  bump:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Checkout master branch
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.9"
+      - name: Get Release tag
+        uses: actions/github-script@v3
+        id: tag
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          result-encoding: string
+          script: |
+            const result = context.payload.release.tag_name
+            console.log(result)
+            return result
+      - name: Get Release body
+        uses: actions/github-script@v3
+        id: body
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          result-encoding: string
+          script: |
+            const result = context.payload.release.body
+            console.log(result)
+            return result
+      - name: Install dependencies
+        run: |
+          python -m pip install -U pip
+          python -m pip install -U wheel logchange newversion
+      - name: Get Release version
+        id: version
+        env:
+          TAG: ${{ steps.tag.outputs.result }}
+        run: |
+          VERSION=`echo ${TAG} | python -m newversion`
+          echo "${VERSION}"
+          echo "::set-output name=result::${VERSION}"
+      - name: Update CHANGELOG.md
+        env:
+          VERSION: ${{ steps.version.outputs.result }}
+          NOTES: "${{ steps.body.outputs.result }}"
+        run: |
+          echo "${NOTES}" | python -m logchange add "${VERSION}"
+          python -m logchange set unreleased -i ""
+      - name: Bump version
+        env:
+          VERSION: ${{ steps.version.outputs.result }}
+        run: |
+          if [[-f pyproject.toml ]]; then
+            sed -i -E "s/^version\s*=\s*\".+/version = \"${VERSION}\"/" pyproject.toml
+          fi
+          if [[-f setup.cfg ]]; then
+            sed -i -E "s/^version \s*=\s*.+/version = ${VERSION}/" setup.cfg
+          fi
+      - name: Commit changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.result }}
         run: |
-          git fetch --all
-          git checkout master
-          git pull
-      - name: Get release version
-        id: version
-        uses: actions/github-script@v3
-        with:
-          result-encoding: string
-          script: |
-            return context.ref.split('/').pop()
-      - name: Get release data
-        id: release
-        uses: actions/github-script@v3
-        with:
-          script: |
-            const newVersion = '${{ steps.version.outputs.result }}'
-
-            const response = await github.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: newVersion,
-            })
-            console.log('release', response.data)
-            return response.data
-      - name: Get release notes
-        id: release-notes
-        uses: actions/github-script@v3
-        with:
-          result-encoding: string
-          script: |
-            const release = ${{ steps.release.outputs.result }}
-            return release.body.replace('\r\n', '\n')
-      - name: Update version
-        uses: actions/github-script@v3
-        with:
-          result-encoding: string
-          script: |
-            const fs = require('fs')
-
-            const newVersion = '${{ steps.version.outputs.result }}'
-
-            fs.writeFileSync('dynamo_query/version.txt', `${newVersion}\n`)
-      - name: Update changelog
-        uses: actions/github-script@v3
-        with:
-          result-encoding: string
-          script: |
-            const fs = require('fs')
-            const strip = s => s.replace(/^\s+|\s+$/g, '')
-
-            const version = '${{ steps.version.outputs.result }}'
-            const release = ${{ steps.release.outputs.result }}
-            const changelog = fs.readFileSync('CHANGELOG.md', 'utf-8')
-            console.log(changelog)
-
-            const releaseNotes = release.body.replace('\r\n', '\n')
-            const releasedMarker = '# [Released]'
-            const releasedMarkerIndex = changelog.indexOf(releasedMarker)
-            const [head, ...tails] = changelog.split(releasedMarker)
-            const tail = tails.join(releasedMarker)
-
-            const dateNow = new Date().toISOString().split('T')[0]
-            const newSection = `## [${strip(version)}] - ${dateNow}\n\n${strip(releaseNotes)}`
-
-            const newChangelog = `${strip(head)}\n\n${releasedMarker}\n\n${newSection}\n\n${strip(tail)}`
-
-            fs.writeFileSync('CHANGELOG.md', newChangelog)
-      - name: Create Pull Request
-        id: cpr
-        uses: peter-evans/create-pull-request@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: release/${{ steps.version.outputs.result }}
-          commit-message: Release ${{ steps.version.outputs.result }}
-          labels: release, bot
-          title: "[Actions] Release ${{ steps.version.outputs.result }}"
-          body: |
-            # Release ${{ steps.version.outputs.result }}
-
-            Merge this PR to update version number in master and release a new version.
-
-            ## Release notes
-
-            ${{ steps.release-notes.outputs.result }}
+          git config --global user.email "volshebnyi@gmail.com"
+          git config --global user.name "${GITHUB_ACTOR}"
+          git add pyproject.toml
+          git add setup.cfg
+          git add CHANGELOG.md
+          git checkout -b release/${VERSION}
+          git commit -m "Bump version to ${VERSION}"
+          git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${{ context.repo.owner }}/${{ context.repo.repo }}.git HEAD:release/${VERSION}

@@ -1,0 +1,30 @@
+name: Send coverage report
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - dynamo_query/**
+      - tests/**
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.9"
+      - name: Install dependencies
+        run: |
+          python -m pip install -U poetry pip wheel
+          python -m poetry config virtualenvs.create false
+          python -m poetry install -n
+      - name: Send coverage report
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          pytest --cov-report=xml --cov=dynamo_query -m "not integration"
+          codecov

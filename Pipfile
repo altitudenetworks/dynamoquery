@@ -1,23 +1,11 @@
 [[source]]
-url = "https://pypi.python.org/simple"
+url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
-[dev-packages]
-codecov = "*"
-pytest = "*"
-pytest-cov = "*"
-pylint = "*"
-isort = "*"
-black = "==20.8b1"
-mypy = "*"
-vulture = "*"
-handsdown = "*"
-typing_extensions = "*"
-"boto3_stubs[dynamodb,application-autoscaling]" = "*"
-
 [packages]
-dynamoquery = {path = ".",editable = true}
 
-[pipenv]
-allow_prereleases = true
+[dev-packages]
+
+[requires]
+python_version = "3.9"
