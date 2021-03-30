@@ -92,7 +92,7 @@ jobs:
         id: type
         run: |
           # github-actions-managed: true
-          command -v mypy && mypy
+          command -v mypy && mypy $(git ls-files '*.py')
           if test -f "pyrightconfig.json"; then
             echo "pyrightconfig.json found"
             npm i -g pyright
