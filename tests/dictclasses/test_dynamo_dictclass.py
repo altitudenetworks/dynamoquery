@@ -95,7 +95,7 @@ class TestDynamoDictClass:
         my_record2.update({"age": 13}, unknown="test")
         assert dict(my_record2) == {"name": "test3", "age": 13}
 
-        assert MyRecord({"name": "test", "age": Decimal(12.2)}).age == 12
+        assert MyRecord({"name": "test", "age": Decimal(12)}).age == 12
         assert (
             NewRecord({"name": "test", "last_name": "test", "percent": Decimal(12.2)}).percent
             == 12.2
