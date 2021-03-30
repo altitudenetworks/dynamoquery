@@ -1,0 +1,105 @@
+# This workflow provided by GitHubActions.py project
+# Documentation: https://github.com/vemel/github_actions_js
+#
+# --- How to modify this workflow and still get updates ---
+# - Set 'github-actions-managed' to false on manual edit to prevent step overwrite on update
+# - User-added steps survive update as well
+# - Deleted steps are restored on update, so make them empty instead of removing
+# - Do not add multiple jobs, only one job is supported
+# - This comment is user-editable and is not updated automatically
+
+name: Run style checks and unit tests
+"on":
+  push: {}
+  workflow_dispatch: {}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      PIP_NO_CACHE_DIR: false
+      PIP_USER: 1
+      PIPENV_HIDE_EMOJIS: 1
+      PIPENV_NOSPIN: 1
+      PIPENV_IGNORE_VIRTUALENVS: 1
+      PYTHONUSERBASE: ${{ github.workspace }}/.cache/py-user-base
+    strategy:
+      matrix:
+        python-version:
+          - 3.6
+          - 3.7
+          - 3.8
+          - 3.9
+    steps:
+      - name: Add PYTHONUSERBASE to PATH
+        run: |
+          # github-actions-managed: true
+          echo '${{ env.PYTHONUSERBASE }}/bin/' >> $GITHUB_PATH
+      - name: Checkout current branch
+        id: checkout
+        uses: actions/checkout@v2
+        with:
+          github-actions-managed: true
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          github-actions-managed: true
+          python-version: "${{ matrix.python-version }}"
+      - name: Cache pip downloads
+        uses: actions/cache@v2
+        id: cache
+        if: steps.scripts.outputs.result
+        with:
+          github-actions-managed: true
+          path: ${{ env.PYTHONUSERBASE }}
+          key: ${{ runner.os }}-${{ env.PYTHONUSERBASE }}-${{ matrix.python-version  }}-${{ hashFiles('./poetry.lock', './Pipfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.PYTHONUSERBASE }}-${{ matrix.python-version  }}-
+      - name: Install package
+        id: install
+        run: |
+          # github-actions-managed: true
+          if test -f "Pipfile.lock"; then
+              echo "Pipfile.lock found, installing using pipenv"
+              python -m pip install pipenv
+              python -m pipenv install --dev --deploy --system
+          fi
+          if test -f "poetry.lock"; then
+              echo "poetry.lock found, installing using poetry"
+              python -m pip install -U poetry
+              python -m poetry config virtualenvs.create false
+              python -m poetry install -n
+          fi
+          if test -f "requirements.txt"; then
+              echo "requirements.txt found, installing using pip"
+              python -m pip install -r requirements.txt
+          fi
+          if test -f "requirements-dev.txt"; then
+              echo "requirements-dev.txt found, installing using pip"
+              python -m pip install -r requirements-dev.txt
+          fi
+          if test -f "setup.py"; then
+              echo "setup.py found, installing in develop mode"
+              python setup.py develop
+          fi
+      - name: Check code style
+        id: lint
+        run: |
+          # github-actions-managed: true
+          command -v flake8 && flake8
+          command -v pylint && pylint $(git ls-files '*.py')
+      - name: Check type correctness
+        id: type
+        run: |
+          # github-actions-managed: true
+          command -v mypy && mypy
+          if test -f "pyrightconfig.json"; then
+            echo "pyrightconfig.json found"
+            npm i -g pyright
+            pyright
+          fi
+      - name: Run unit tests
+        id: test
+        run: |
+          # github-actions-managed: true
+          command -v pytest && pytest
