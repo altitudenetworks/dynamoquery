@@ -95,8 +95,8 @@ jobs:
           command -v mypy && mypy $(git ls-files '*.py')
           if test -f "pyrightconfig.json"; then
             echo "pyrightconfig.json found"
-            npm i -g pyright
-            pyright
+            npm i pyright --no-save
+            npx pyright
           fi
       - name: Run unit tests
         id: test
