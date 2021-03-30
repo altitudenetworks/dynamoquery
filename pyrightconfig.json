@@ -1,0 +1,16 @@
+{
+    "include": [
+        "dynamo_query"
+    ],
+    "exclude": [
+        "**/__pycache__",
+        "**/node_modules",
+        "tests",
+        "typestubs"
+    ],
+    "reportMissingImports": false,
+    "reportMissingTypeStubs": false,
+    "reportMissingTypeArgument": "error",
+    "reportIncompatibleMethodOverride": "error",
+    "reportIncompatibleVariableOverride": "error"
+}

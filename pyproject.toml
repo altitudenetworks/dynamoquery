@@ -1,3 +1,54 @@
+[tool.poetry]
+name = "dynamoquery"
+version = "2.11.1"
+description = "Helper for building Boto3 DynamoDB queries"
+authors = ["Vlad Emelianov <vlad.emelianov.nz@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.6.10"
+botocore = "*"
+
+[tool.poetry.dev-dependencies]
+codecov = "*"
+pytest = "*"
+pytest-cov = "*"
+pylint = "*"
+isort = "*"
+boto3 = "*"
+black = "==20.8b1"
+mypy = "*"
+vulture = "*"
+handsdown = "*"
+typing_extensions = "*"
+boto3_stubs = {version = "*", extras = ["dynamodb", "application-autoscaling"]}
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.coverage.report]
+exclude_lines = [
+    "if self.debug:",
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@overload",
+]
+ignore_errors = true
+omit = [
+    "tests/*",
+]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+known_first_party = [
+    "dynamo_query",
+    "tests",
+]
+src_paths = []
+
 [tool.black]
 line-length = 100
 include = '(dynamo_query|tests|examples)/.*\.pyi?$'

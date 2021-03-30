@@ -1,23 +1,19 @@
-# Change Log
-
+# Changelog
 All notable changes to this project are documented on [Releases](https://github.com/altitudenetworks/dynamoquery/releases) page.
- 
-The format is based on [Keep a Changelog](http://keepachangelog.com/)
-and this project adheres to [Semantic Versioning](http://semver.org/).
 
-# [Released]
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to
+[PEP 440 -- Version Identification and Dependency Specification](https://www.python.org/dev/peps/pep-0440/).
+
+## [Unreleased]
 
 ## [2.11.1] - 2020-09-19
-
-### Notes
 
 ### Fixed
 
 - Revert `batch_delete_records` call in `dynamo_table.clear_table` [#64](https://github.com/altitudenetworks/dynamoquery/pull/64)
 
 ## [2.11.0] - 2020-09-19
-
-### Notes
 
 ### Changed
 
