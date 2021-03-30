@@ -1,0 +1,109 @@
+# This workflow provided by GitHubActions.py project
+# Documentation: https://github.com/vemel/github_actions_js
+#
+# --- How to modify this workflow and still get updates ---
+# - Set 'github-actions-managed' to false on manual edit to prevent step overwrite on update
+# - User-added steps survive update as well
+# - Deleted steps are restored on update, so make them empty instead of removing
+# - Do not add multiple jobs, only one job is supported
+# - This comment is user-editable and is not updated automatically
+
+name: Publish to PyPI
+"on":
+  pull_request:
+    types:
+      - closed
+  workflow_dispatch:
+    inputs:
+      number:
+        description: Pull Request number
+        required: true
+jobs:
+  publish-to-pypi:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Secrets
+        id: secrets
+        uses: actions/github-script@v3
+        env:
+          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        with:
+          github-actions-managed: true
+          script: |
+            process.env.PYPI_PASSWORD && core.setOutput("PYPI_PASSWORD", true);
+      - name: Get Pull Request
+        id: pull-request
+        if: steps.secrets.outputs.PYPI_PASSWORD
+        uses: actions/github-script@v3
+        with:
+          github-actions-managed: true
+          script: |
+            let pullRequest = null;
+            if (context.payload.inputs && context.payload.inputs.number) {
+              // find Pull Request by number fom input
+              const number = context.payload.inputs.number;
+              try {
+                pullRequest = (await github.pulls.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: number,
+                })).data;
+              } catch(e) {
+                core.error(`Cannot get Pull Request #${number}: ${e}`);
+                return;
+              }
+            } else {
+              // get Pull Request from event payload
+              pullRequest = context.payload.pull_request;
+            }
+
+            if (!pullRequest) {
+              core.error(`Cannot find Pull Request`);
+              return;
+            }
+
+            // Stop if Pull request is not merged
+            if (!pullRequest.merged) {
+              core.info(`Pull Request ${pullRequest.number} is not merged, skipping`);
+              return;
+            }
+
+            // Stop if Pull Request branch name starts with `release`
+            const branch = pullRequest.head.ref;
+            if (!branch.startsWith('release')) {
+              core.info(`This is not a release branch ${branch}, skipping`);
+              return;
+            }
+
+            core.setOutput('branch', branch);
+            core.setOutput('base', pullRequest.base.ref);
+            core.setOutput('number', pullRequest.number);
+            core.setOutput('url', pullRequest.html_url);
+            core.setOutput('body', pullRequest.body);
+            core.setOutput('suffix', `[#${pullRequest.number}](${pullRequest.html_url})`);
+            return true;
+      - name: Checkout Pull Request base branch
+        id: checkout
+        if: steps.pull-request.outputs.result
+        uses: actions/checkout@v2
+        with:
+          github-actions-managed: true
+          ref: ${{ steps.pull-request.outputs.base }}
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        id: setup-python
+        if: steps.pull-request.outputs.result
+        with:
+          github-actions-managed: true
+          python-version: 3.9
+      - name: Publish new version to PyPI
+        id: publish
+        if: steps.pull-request.outputs.result
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          # github-actions-managed: true
+          python -m pip install wheel
+          python setup.py build sdist bdist_wheel
+          twine upload --non-interactive dist/*

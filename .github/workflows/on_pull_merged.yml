@@ -1,0 +1,203 @@
+# This workflow provided by GitHubActions.py project
+# Documentation: https://github.com/vemel/github_actions_js
+#
+# --- How to modify this workflow and still get updates ---
+# - Set 'github-actions-managed' to false on manual edit to prevent step overwrite on update
+# - User-added steps survive update as well
+# - Deleted steps are restored on update, so make them empty instead of removing
+# - Do not add multiple jobs, only one job is supported
+# - This comment is user-editable and is not updated automatically
+
+name: Update Release from Pull Request
+"on":
+  pull_request:
+    types:
+      - closed
+  workflow_dispatch:
+    inputs:
+      number:
+        description: Pull Request number
+        required: true
+jobs:
+  update-release-draft:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Pull Request
+        uses: actions/github-script@v3
+        id: pull-request
+        with:
+          github-actions-managed: true
+          script: |
+            let pullRequest = null;
+            if (context.payload.inputs && context.payload.inputs.number) {
+              const number = context.payload.inputs.number;
+              // find Pull Request by number fom input
+              try {
+                pullRequest = (await github.pulls.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: number,
+                })).data;
+              } catch(e) {
+                core.error(`Cannot get Pull Request #${number}: ${e}`);
+                return;
+              }
+            }
+            if (context.payload.pull_request){
+              // get Pull Request from event payload
+              pullRequest = context.payload.pull_request;
+            }
+
+            if (!pullRequest) {
+              core.error(`Cannot find Pull Request`);
+              return;
+            }
+
+            // Stop if Pull request is not merged
+            if (!pullRequest.merged) {
+              core.info(`Pull Request ${pullRequest.number} is not merged, skipping Release draft update`);
+              return;
+            }
+
+            // Stop if Pull Request branch name starts with `release`
+            const branch = pullRequest.head.ref;
+            if (branch.startsWith('release/')) {
+              core.info(`This is a release branch ${branch}, skipping Release draft update`);
+              return;
+            }
+
+            core.setOutput('branch', branch);
+            core.setOutput('base', pullRequest.base.ref);
+            core.setOutput('number', pullRequest.number);
+            core.setOutput('url', pullRequest.html_url);
+            core.setOutput('body', pullRequest.body);
+            core.setOutput('suffix', `[#${pullRequest.number}](${pullRequest.html_url})`);
+            return true;
+      - name: Checkout Pull Request base branch
+        id: checkout
+        if: steps.pull-request.outputs.result
+        uses: actions/checkout@v2
+        with:
+          github-actions-managed: true
+          ref: ${{ steps.pull-request.outputs.base }}
+      - name: Get Unreleased notes
+        id: unreleased
+        if: steps.pull-request.outputs.result
+        uses: vemel/nextchange@main
+        with:
+          github-actions-managed: true
+          github-actions-comment: Get Unreleased section of CHANGELOG.md to set as notes of a newly created Release draft
+          get: Unreleased
+          sanitize: true
+      - name: Get or create Release draft
+        uses: actions/github-script@v3
+        id: release
+        if: steps.pull-request.outputs.result
+        with:
+          github-actions-managed: true
+          script: |
+            let release = null;
+            const baseBranch = ${{ toJSON(steps.pull-request.outputs.base) }};
+
+            // find existing relese draft for pull request base branch in first 100 releases
+            const releasesResponse = await github.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            })
+            for (let releaseItem of releasesResponse.data) {
+              if (!releaseItem.draft) continue;
+              if (releaseItem.target_commitish !== baseBranch) continue;
+              release = releaseItem;
+              core.info(`Found existing release draft ${release.name}`);
+              break;
+            }
+
+            // create a release draft if there is none
+            if (!release) {
+              const response = await github.repos.createRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag_name: '0.0.0',
+                name: '0.0.0',
+                draft: true,
+                target_commitish: baseBranch,
+                body: ${{ toJSON(steps.unreleased.outputs.result) }},
+              })
+              release = response.data;
+              core.info(`Created Release draft ${release.name}`);
+            }
+
+            core.setOutput('id', release.id);
+            core.setOutput("url", release.html_url);
+            core.setOutput('tag', release.tag_name);
+            core.setOutput('name', release.name);
+            core.setOutput('body', release.body);
+      - name: Build Release notes
+        id: notes
+        if: steps.pull-request.outputs.result
+        uses: vemel/nextchange@main
+        with:
+          github-actions-managed: true
+          github-actions-comment: Merge Pull Request notes to Release notes and add link to this PR
+          set: ${{ steps.release.outputs.body }}
+          append: ${{ steps.pull-request.outputs.body }}
+          suffix: ${{ steps.pull-request.outputs.suffix }}
+      - name: Get suggested version
+        id: version
+        if: steps.pull-request.outputs.result
+        uses: vemel/nextversion@main
+        with:
+          github-actions-managed: true
+          github-actions-comment: Release draft will be an RC, use 'stable' instead if needed
+          path: ./package.json
+          type: pep440
+          release: rc
+          result: ${{ steps.notes.outputs.label }}
+      - name: Update release draft
+        uses: actions/github-script@v3
+        id: update-release
+        if: steps.pull-request.outputs.result
+        with:
+          github-actions-managed: true
+          script: |
+            const releaseId = ${{ steps.release.outputs.id }};
+            core.info(`Release ID: ${releaseId}`);
+
+            // set release draft tag and name to suggested version
+            const version = ${{ toJSON(steps.version.outputs.result) }};
+            core.info(`Release version: ${version}`);
+
+            // do not update release body if it already has link to this pull request
+            const suffix = ${{ toJSON(steps.pull-request.outputs.suffix) }};
+            const oldBody = ${{ toJSON(steps.release.outputs.body) }};
+            const newBody = ${{ toJSON(steps.notes.outputs.result) }};
+            const body = oldBody.includes(suffix) ? oldBody : newBody;
+            core.info(`Release body: ${body}`);
+
+            const response = await github.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: releaseId,
+              tag_name: version,
+              name: version,
+              draft: true,
+              body: body,
+              prerelease: ${{ steps.version.outputs.is-prerelease }},
+            });
+            core.info(`Release URL: ${response.data.html_url}`);
+      - name: Add comment to Pull Request
+        id: add-comment
+        uses: actions/github-script@v3
+        if: steps.pull-request.outputs.result
+        with:
+          github-actions-managed: true
+          script: |
+            const issueNumber = ${{ steps.pull-request.outputs.number }};
+            const version = ${{ toJSON(steps.version.outputs.result) }};
+            const response = await github.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: `Pull request notes were merged to release draft ${version}`,
+            });
+            core.info(`Comment URL: ${response.data.html_url}`);

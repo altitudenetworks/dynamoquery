@@ -1,0 +1,98 @@
+# This workflow provided by GitHubActions.py project
+# Documentation: https://github.com/vemel/github_actions_js
+#
+# --- How to modify this workflow and still get updates ---
+# - Set 'github-actions-managed' to false on manual edit to prevent step overwrite on update
+# - User-added steps survive update as well
+# - Deleted steps are restored on update, so make them empty instead of removing
+# - Do not add multiple jobs, only one job is supported
+# - This comment is user-editable and is not updated automatically
+
+name: Update Pull Request labels
+"on":
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+  workflow_dispatch:
+    inputs:
+      number:
+        description: Pull Request number
+        required: true
+jobs:
+  update-pull-request-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Pull Request
+        uses: actions/github-script@v3
+        id: pull-request
+        with:
+          github-actions-managed: true
+          script: |
+            let pullRequest = null;
+            if (context.payload.inputs && context.payload.inputs.number) {
+              const number = context.payload.inputs.number;
+              // find Pull Request by number fom input
+              try {
+                pullRequest = (await github.pulls.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: number,
+                })).data;
+              } catch(e) {
+                core.error(`Cannot get Pull Request #${number}: ${e}`);
+                return;
+              }
+            }
+            if (context.payload.pull_request){
+              // get Pull Request from event payload
+              pullRequest = context.payload.pull_request;
+            }
+
+            if (!pullRequest) {
+              core.error(`Cannot find Pull Request`);
+              return;
+            }
+
+            core.setOutput('branch', pullRequest.head.ref);
+            core.setOutput('number', pullRequest.number);
+            core.setOutput('body', pullRequest.body);
+            core.setOutput('labels', pullRequest.labels.map(data => data.name));
+            return true;
+      - name: Analyze PR notes
+        id: notes
+        if: steps.pull-request.outputs.result
+        uses: vemel/nextchange@main
+        with:
+          github-actions-managed: true
+          github-actions-comment: Create Release notes from Pull Request notes in output
+          set: ${{ steps.pull-request.outputs.body }}
+      - name: Update Pull Request labels
+        id: update-labels
+        uses: actions/github-script@v3
+        if: steps.pull-request.outputs.result
+        with:
+          github-actions-managed: true
+          script: |
+            // get suggested patch, minor or major label from pull request notes
+            const number = ${{ steps.pull-request.outputs.number }};
+            const branch = ${{ toJSON(steps.pull-request.outputs.branch) }};
+            const label = ${{ toJSON(steps.notes.outputs.label) }};
+            const oldLabels = ${{ steps.pull-request.outputs.labels }};
+
+            // remove patch, minor and major label from pull request
+            const managedLabels = ['patch', 'minor', 'major', 'release'];
+            const otherLabels = oldLabels.filter(label => !managedLabels.includes(label));
+
+            // add suggested label to Pull Request
+            const newLabels = [...otherLabels, label];
+            if (branch.startsWith('release/')) newLabels.push('release');
+            core.info(`New labels: ${newLabels}`);
+
+            await github.issues.setLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: number,
+              labels: newLabels
+            })
