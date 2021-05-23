@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, Iterable, Mapping, Set, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Mapping, Set
 
 if TYPE_CHECKING:
     from mypy_boto3_application_autoscaling.client import ApplicationAutoScalingClient
@@ -6,6 +6,13 @@ if TYPE_CHECKING:
         TargetTrackingScalingPolicyConfigurationTypeDef,
     )
     from mypy_boto3_dynamodb.client import DynamoDBClient
+    from mypy_boto3_dynamodb.literals import (
+        ConditionalOperatorType,
+        ReturnConsumedCapacityType,
+        ReturnItemCollectionMetricsType,
+        ReturnValueType,
+        ScalarAttributeTypeType,
+    )
     from mypy_boto3_dynamodb.service_resource import Table
     from mypy_boto3_dynamodb.type_defs import (
         AttributeDefinitionTypeDef,
@@ -18,14 +25,13 @@ if TYPE_CHECKING:
         KeySchemaElementTypeDef,
         LocalSecondaryIndexTypeDef,
         ProjectionTypeDef,
+        ProvisionedThroughputTypeDef,
         QueryOutputTypeDef,
         ScanOutputTypeDef,
         UpdateItemOutputTypeDef,
     )
     from typing_extensions import Literal
 
-    BaseExpression = TypeVar("BaseExpression")
-    ExpressionMap = Dict[str, BaseExpression]
     FormatDict = Dict[str, Any]
     TableKeys = Set[str]
     RecordType = Mapping[str, Any]
@@ -45,15 +51,7 @@ if TYPE_CHECKING:
         "BETWEEN",
         "contains",
     ]
-    ConditionExpressionJoinOperatorStr = Literal[
-        "AND",
-        "OR",
-    ]
 
-    ReturnValues = Literal["NONE", "ALL_OLD", "UPDATED_OLD", "ALL_NEW", "UPDATED_NEW"]
-    ReturnItemCollectionMetrics = Literal["NONE", "SIZE"]
-    ReturnConsumedCapacity = Literal["INDEXES", "TOTAL", "NONE"]
-    KeyTypeDef = Literal["S", "N", "B"]
     SortKeyOperatorTypeDef = Literal["=", "begins_with"]
     ScalableDimensionTypeDef = Literal[
         "dynamodb:index:ReadCapacityUnits",
@@ -69,7 +67,6 @@ else:
     Literal = object
     Table = object
     DynamoDBClient = object
-    BaseExpression = object
     GetItemOutputTypeDef = object
     UpdateItemOutputTypeDef = object
     DeleteItemOutputTypeDef = object
@@ -85,19 +82,56 @@ else:
     ApplicationAutoScalingClient = object
     TargetTrackingScalingPolicyConfigurationTypeDef = object
     ExclusiveStartKey = object
-    ExpressionMap = object
     FormatDict = object
     TableKeys = object
-    ConditionExpressionJoinOperatorStr = object
+    ConditionalOperatorType = object
     ConditionExpressionOperatorStr = object
-    ReturnValues = object
-    ReturnItemCollectionMetrics = object
-    ReturnConsumedCapacity = object
+    ReturnValueType = object
+    ReturnItemCollectionMetricsType = object
+    ReturnConsumedCapacityType = object
     RecordType = object
     RecordsType = object
-    KeyTypeDef = object
+    ScalarAttributeTypeType = object
     SortKeyOperatorTypeDef = object
     ScalableDimensionTypeDef = object
     MetricTypeTypeDef = object
     PartitionKeyOperatorTypeDef = object
     ProjectionTypeDef = object
+    ProvisionedThroughputTypeDef = object
+
+__all__ = (
+    "Literal",
+    "Table",
+    "DynamoDBClient",
+    "GetItemOutputTypeDef",
+    "UpdateItemOutputTypeDef",
+    "DeleteItemOutputTypeDef",
+    "QueryOutputTypeDef",
+    "ScanOutputTypeDef",
+    "BatchGetItemOutputTypeDef",
+    "BatchWriteItemOutputTypeDef",
+    "CreateTableOutputTypeDef",
+    "LocalSecondaryIndexTypeDef",
+    "GlobalSecondaryIndexTypeDef",
+    "KeySchemaElementTypeDef",
+    "AttributeDefinitionTypeDef",
+    "ApplicationAutoScalingClient",
+    "TargetTrackingScalingPolicyConfigurationTypeDef",
+    "ExclusiveStartKey",
+    "FormatDict",
+    "TableKeys",
+    "ConditionalOperatorType",
+    "ProvisionedThroughputTypeDef",
+    "ConditionExpressionOperatorStr",
+    "ReturnValueType",
+    "ReturnItemCollectionMetricsType",
+    "ReturnConsumedCapacityType",
+    "RecordType",
+    "RecordsType",
+    "ScalarAttributeTypeType",
+    "SortKeyOperatorTypeDef",
+    "ScalableDimensionTypeDef",
+    "MetricTypeTypeDef",
+    "PartitionKeyOperatorTypeDef",
+    "ProjectionTypeDef",
+)

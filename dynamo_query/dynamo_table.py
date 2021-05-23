@@ -238,7 +238,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         except self.client.exceptions.ResourceNotFoundException:
             return None
 
-        return response["Table"]["TableStatus"]
+        return response["Table"].get("TableStatus")
 
     def delete_table(self) -> None:
         """

@@ -7,7 +7,7 @@ cd $ROOT_PATH
 # vulture dynamo_query --make-whitelist > vulture_whitelist.py
 black **/*.py
 isort **/*.py
-pylint dynamo_query
+flake8 dynamo_query
 mypy dynamo_query
 vulture dynamo_query vulture_whitelist.py
 pytest -m "not integration"

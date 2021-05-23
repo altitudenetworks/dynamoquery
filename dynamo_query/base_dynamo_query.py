@@ -11,7 +11,6 @@ from dynamo_query.dynamo_query_types import (
     DeleteItemOutputTypeDef,
     DynamoDBClient,
     ExclusiveStartKey,
-    ExpressionMap,
     FormatDict,
     GetItemOutputTypeDef,
     QueryOutputTypeDef,
@@ -25,6 +24,8 @@ from dynamo_query.expressions import BaseExpression, ExpressionError, Operator
 from dynamo_query.json_tools import dumps
 from dynamo_query.lazy_logger import LazyLogger
 from dynamo_query.utils import ascii_string_generator, chunkify
+
+ExpressionMap = Dict[str, BaseExpression]
 
 
 class DynamoQueryError(Exception):
@@ -86,7 +87,7 @@ class BaseDynamoQuery(LazyLogger):
     def __init__(
         self,
         query_type: QueryType,
-        expressions: Dict[str, BaseExpression],
+        expressions: ExpressionMap,
         extra_params: Dict[str, Any],
         limit: int = MAX_LIMIT,
         exclusive_start_key: Optional[ExclusiveStartKey] = None,

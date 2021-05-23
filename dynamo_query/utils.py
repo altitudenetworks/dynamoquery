@@ -3,6 +3,7 @@ from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, TypeVar
 
 _T = TypeVar("_T")
 
+
 def chunkify(data: Iterable[_T], size: int) -> Iterator[List[_T]]:
     """
     Splits data to chunks of `size` length or less.

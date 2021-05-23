@@ -179,9 +179,9 @@ class TestConditionExpressionGroup:
 
     def test_init(self) -> None:
         assert len(self.result.expressions) == 2
-        assert self.result.join_operators == ("AND",)
+        assert self.result.join_operators == ["AND"]
         assert len(self.other.expressions) == 2
-        assert self.other.join_operators == ("OR",)
+        assert self.other.join_operators == ["OR"]
 
     def test_methods(self) -> None:
         assert self.result.get_format_keys() == {"key", "key2"}

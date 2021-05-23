@@ -69,4 +69,4 @@ class Operator(enum.Enum):
 
     @classmethod
     def values(cls) -> Set[str]:
-        return set(cls)
+        return set(cls)  # type: ignore

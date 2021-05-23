@@ -147,7 +147,7 @@ class DataTable(Generic[_RecordType], dict):
         if not isinstance(values, list):
             raise DataTableError(f"DataTable values can only be lists, got {values} instead")
 
-        if not key in self:
+        if key not in self:
             self[key] = list()
         self[key].extend(values)
 
@@ -395,7 +395,7 @@ class DataTable(Generic[_RecordType], dict):
                 )
             result[key] = record_value
 
-        return self._convert_record(result)
+        return self._convert_record(result)  # type: ignore
 
     def filter_records(self: _R, query: Dict[str, Any], operand: Filter = Filter.EQUALS) -> _R:
         """

@@ -4,9 +4,10 @@ from dynamo_query.dynamo_query_types import (
     AttributeDefinitionTypeDef,
     GlobalSecondaryIndexTypeDef,
     KeySchemaElementTypeDef,
-    KeyTypeDef,
     LocalSecondaryIndexTypeDef,
     ProjectionTypeDef,
+    ProvisionedThroughputTypeDef,
+    ScalarAttributeTypeType,
 )
 
 
@@ -50,17 +51,17 @@ class DynamoTableIndex:
         name: str,
         partition_key_name: str,
         sort_key_name: Optional[str],
-        partition_key_type: KeyTypeDef = "S",
-        sort_key_type: KeyTypeDef = "S",
+        partition_key_type: ScalarAttributeTypeType = "S",
+        sort_key_type: ScalarAttributeTypeType = "S",
         read_capacity_units: Optional[int] = None,
         write_capacity_units: Optional[int] = None,
         projection: Iterable[str] = tuple(),
     ):
         self._name = name
         self.partition_key_name = partition_key_name
-        self.partition_key_type = partition_key_type
+        self.partition_key_type: ScalarAttributeTypeType = partition_key_type
         self.sort_key_name = sort_key_name
-        self.sort_key_type = sort_key_type
+        self.sort_key_type: ScalarAttributeTypeType = sort_key_type
         self.read_capacity_units = read_capacity_units
         self.write_capacity_units = write_capacity_units
         self.projection = projection
@@ -104,10 +105,11 @@ class DynamoTableIndex:
             "Projection": self._get_projection(),
         }
         if self.read_capacity_units and self.write_capacity_units:
-            result["ProvisionedThroughput"] = {
+            provisioned_throughput: ProvisionedThroughputTypeDef = {
                 "ReadCapacityUnits": self.read_capacity_units,
                 "WriteCapacityUnits": self.write_capacity_units,
             }
+            result["ProvisionedThroughput"] = provisioned_throughput
         return result
 
     def as_local_secondary_index(self) -> LocalSecondaryIndexTypeDef:
