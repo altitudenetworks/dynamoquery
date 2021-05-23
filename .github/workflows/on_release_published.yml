@@ -26,8 +26,8 @@ jobs:
         uses: actions/github-script@v3
         id: release
         with:
-          github-actions-managed: true
           script: |
+            // github-actions-managed: true
             let release = null;
             if (context.payload.inputs && context.payload.inputs.tag) {
               const tagName = context.payload.inputs.tag;
@@ -49,8 +49,7 @@ jobs:
             }
 
             if (!release) {
-              core.error(`Cannot find Release`);
-              return;
+              throw new Error(`Cannot find Release`);
             }
 
             core.setOutput('target', release.target_commitish);
@@ -63,18 +62,15 @@ jobs:
             return true;
       - name: Checkout Release target branch
         id: checkout
-        if: steps.release.outputs.result
         uses: actions/checkout@v2
         with:
           github-actions-managed: true
           ref: ${{ steps.release.outputs.target }}
       - name: Update version
         id: version
-        if: steps.release.outputs.result
-        uses: vemel/nextversion@main
+        uses: vemel/nextversion@0.1.1
         with:
           github-actions-managed: true
-          github-actions-comment: Change path here if version is stored in another file
           path: ./setup.cfg
           type: pep440
           result: ${{ steps.release.outputs.tag }}
@@ -83,8 +79,7 @@ jobs:
             ./pyproject.toml
       - name: Add new release to CHANGELOG.md
         id: changelog
-        if: steps.release.outputs.result
-        uses: vemel/nextchange@main
+        uses: vemel/nextchange@0.1.0
         with:
           github-actions-managed: true
           release: ${{ steps.version.outputs.result }}
@@ -92,31 +87,43 @@ jobs:
           set: ${{ steps.release.outputs.body }}
       - name: Clear Unreleased in CHANGELOG.md
         id: clear-unreleased
-        if: steps.release.outputs.result
-        uses: vemel/nextchange@main
+        if: ${{ steps.version.outputs.is-prerelease == 'false' }}
+        uses: vemel/nextchange@0.1.0
         with:
           github-actions-managed: true
           release: Unreleased
           clear: true
+      - name: Setup git credentials
+        id: setup-git
+        run: |
+          # github-actions-managed: true
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+      - name: Import GPG key
+        id: import-gpg
+        if: env.GPG_PRIVATE_KEY
+        uses: crazy-max/ghaction-import-gpg@v3
+        with:
+          github-actions-managed: true
+          gpg-private-key: ${{ env.GPG_PRIVATE_KEY }}
+          passphrase: ${{ env.GPG_PRIVATE_KEY_PASSPHRASE }}
+          git-user-signingkey: true
+          git-commit-gpgsign: true
       - name: Commit changes
         id: commit
-        if: steps.release.outputs.result
         run: |
           # github-actions-managed: true
           VERSION=${{ toJSON(steps.version.outputs.result) }}
           BRANCH=${{ toJSON(steps.release.outputs.branch) }}
-          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
           git checkout -b $BRANCH
           git commit -am "Bump version to $VERSION"
           git push --set-upstream origin $BRANCH
       - name: Create Pull Request
         id: create-pull-request
         uses: actions/github-script@v3
-        if: steps.release.outputs.result
         with:
-          github-actions-managed: true
           script: |
+            // github-actions-managed: true
             const response = await github.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,

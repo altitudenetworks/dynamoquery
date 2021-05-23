@@ -27,18 +27,17 @@ jobs:
           github-actions-managed: true
       - name: Get Unreleased notes
         id: unreleased
-        uses: vemel/nextchange@main
+        uses: vemel/nextchange@0.1.0
         with:
           github-actions-managed: true
-          github-actions-comment: Get Unreleased section of CHANGELOG.md to set as a body of a newly created release draft
           get: Unreleased
           sanitize: true
       - name: Get or create Release draft
         uses: actions/github-script@v3
         id: release
         with:
-          github-actions-managed: true
           script: |
+            // github-actions-managed: true
             let release = null;
             const baseBranch = ${{ toJSON(github.event.ref) }}.replace("refs/heads/", "");
             const unreleased = ${{ toJSON(steps.unreleased.outputs.result) }};
@@ -78,16 +77,15 @@ jobs:
             core.setOutput('body', unreleased);
       - name: Analyze Release notes
         id: notes
-        uses: vemel/nextchange@main
+        uses: vemel/nextchange@0.1.0
         with:
           github-actions-managed: true
           set: ${{ steps.release.outputs.body }}
       - name: Get suggested version
         id: version
-        uses: vemel/nextversion@main
+        uses: vemel/nextversion@0.1.1
         with:
           github-actions-managed: true
-          github-actions-comment: Bump version from package.json according to release notes
           path: ./package.json
           type: pep440
           release: ${{ github.event.inputs.release }}
@@ -96,8 +94,8 @@ jobs:
         id: update-release
         uses: actions/github-script@v3
         with:
-          github-actions-managed: true
           script: |
+            // github-actions-managed: true
             const releaseId = ${{ steps.release.outputs.id }};
             core.info(`Release ID: ${releaseId}`);
 
