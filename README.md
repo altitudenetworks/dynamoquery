@@ -75,7 +75,6 @@ from typing import Optional
 from dynamo_query import DynamoTable, DynamoDictClass
 
 # first, define your record
-@dataclass
 class UserRecord(DynamoDictClass):
     pk: str
     email: str
