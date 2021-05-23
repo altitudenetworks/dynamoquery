@@ -9,6 +9,7 @@ from dynamo_query.data_table import DataTable
 from dynamo_query.dynamo_query_types import (
     ExclusiveStartKey,
     RecordsType,
+    RecordType,
     ReturnConsumedCapacityType,
     ReturnItemCollectionMetricsType,
     ReturnValueType,
@@ -24,6 +25,7 @@ __all__ = (
 )
 
 
+_RecordType = TypeVar("_RecordType", bound="RecordType")
 _R = TypeVar("_R", bound="DynamoQuery")
 
 
@@ -545,10 +547,10 @@ class DynamoQuery(BaseDynamoQuery):
 
     def execute(
         self,
-        data_table: Union[DataTable, RecordsType],
+        data_table: Union[DataTable[_RecordType], RecordsType],
         table: Optional[Table] = None,
         table_keys: Optional[TableKeys] = TABLE_KEYS,
-    ) -> DataTable:
+    ) -> DataTable[_RecordType]:
         """
         Execute a query and get results. To get raw AWS responses, use
         `query.get_raw_responses()` after this method. To get `LastEvaluatedKey`, use
@@ -603,7 +605,7 @@ class DynamoQuery(BaseDynamoQuery):
 
         self._raw_responses = []
 
-        method_map: Dict[QueryType, Callable[[DataTable], DataTable]] = {
+        method_map: Dict[QueryType, Callable[[DataTable[_RecordType]], DataTable[_RecordType]]] = {
             QueryType.QUERY: self._execute_method_query,
             QueryType.SCAN: self._execute_method_scan,
             QueryType.GET_ITEM: self._execute_method_get_item,
@@ -620,7 +622,7 @@ class DynamoQuery(BaseDynamoQuery):
         data: Optional[Dict[str, Any]] = None,
         table: Optional[Table] = None,
         table_keys: Optional[TableKeys] = TABLE_KEYS,
-    ) -> DataTable:
+    ) -> DataTable[_RecordType]:
         """
         Execute a query for a single record and get results. See `DynamoQuery.execute` method.
 
@@ -649,7 +651,7 @@ class DynamoQuery(BaseDynamoQuery):
             table=table or self.table_resource,
             table_keys=table_keys or self._table_keys,
         )
-        return self.execute(data_table=[data or {"dummy": True}])
+        return self.execute(data_table=[data or {"dummy": True}])  # type: ignore
 
     def get_last_evaluated_key(self) -> Optional[ExclusiveStartKey]:
         """
@@ -687,7 +689,7 @@ class DynamoQuery(BaseDynamoQuery):
         self._last_evaluated_key = None
         return self
 
-    def get_raw_responses(self) -> List[Dict]:
+    def get_raw_responses(self) -> List[Dict[str, Any]]:
         """
         Get raw AWS responses from the last execution. Use flags `ReturnConsumedCapacity` and
         `ReturnItemCollectionMetrics` to get additional metrics. Also `Count` and `ScannedCount`

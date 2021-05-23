@@ -57,3 +57,19 @@ target-version = [
     'py37',
     'py38',
 ]
+
+[tool.pyright]
+include = [
+    "repo_checker",
+]
+exclude = [
+    "**/__pycache__",
+    "tests",
+    "typestubs",
+]
+reportMissingImports = true
+reportMissingTypeStubs = false
+reportMissingTypeArgument = "error"
+reportIncompatibleMethodOverride = "error"
+reportIncompatibleVariableOverride = "error"
+reportUnknownParameterType = "error"
