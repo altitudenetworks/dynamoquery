@@ -13,7 +13,7 @@
 
 ## DynamoTableIndex
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L13)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L14)
 
 ```python
 class DynamoTableIndex():
@@ -21,8 +21,8 @@ class DynamoTableIndex():
         name: str,
         partition_key_name: str,
         sort_key_name: Optional[str],
-        partition_key_type: KeyTypeDef = 'S',
-        sort_key_type: KeyTypeDef = 'S',
+        partition_key_type: ScalarAttributeTypeType = 'S',
+        sort_key_type: ScalarAttributeTypeType = 'S',
         read_capacity_units: Optional[int] = None,
         write_capacity_units: Optional[int] = None,
         projection: Iterable[str] = tuple(),
@@ -63,11 +63,11 @@ table_index.as_dynamodb_dict()
 
 #### See also
 
-- [KeyTypeDef](dynamo_query_types.md#keytypedef)
+- [ScalarAttributeTypeType](dynamo_query_types.md#scalarattributetypetype)
 
 ### DynamoTableIndex().as_attribute_definitions
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L149)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L151)
 
 ```python
 def as_attribute_definitions() -> List[AttributeDefinitionTypeDef]:
@@ -75,7 +75,7 @@ def as_attribute_definitions() -> List[AttributeDefinitionTypeDef]:
 
 ### DynamoTableIndex().as_global_secondary_index
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L87)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L88)
 
 ```python
 def as_global_secondary_index() -> GlobalSecondaryIndexTypeDef:
@@ -93,7 +93,7 @@ A dict with index data.
 
 ### DynamoTableIndex().as_key_schema
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L134)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L136)
 
 ```python
 def as_key_schema() -> List[KeySchemaElementTypeDef]:
@@ -107,7 +107,7 @@ A dict with index data.
 
 ### DynamoTableIndex().as_local_secondary_index
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L113)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L115)
 
 ```python
 def as_local_secondary_index() -> LocalSecondaryIndexTypeDef:
@@ -125,13 +125,13 @@ A dict with index data.
 
 ### DynamoTableIndex().get_query_data
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L162)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L170)
 
 ```python
 def get_query_data(
     partition_key: str,
     sort_key: Optional[str],
-) -> Dict[str, str]:
+) -> Dict[(str, str)]:
 ```
 
 Get query-ready data with `partition_key` and `sort_key` values.
@@ -147,7 +147,7 @@ Query-ready data.
 
 ### DynamoTableIndex().name
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L68)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_table_index.py#L69)
 
 ```python
 @property

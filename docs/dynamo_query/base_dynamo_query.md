@@ -15,14 +15,14 @@ Helper for building Boto3 DynamoDB queries.
 
 ## BaseDynamoQuery
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base_dynamo_query.py#L36)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base_dynamo_query.py#L37)
 
 ```python
 class BaseDynamoQuery(LazyLogger):
     def __init__(
         query_type: QueryType,
-        expressions: Dict[str, BaseExpression],
-        extra_params: Dict[str, Any],
+        expressions: ExpressionMap,
+        extra_params: Dict[(str, Any)],
         limit: int = MAX_LIMIT,
         exclusive_start_key: Optional[ExclusiveStartKey] = None,
         logger: logging.Logger = None,
@@ -63,12 +63,13 @@ query = BaseDynamoQuery(
 
 #### See also
 
+- [ExpressionMap](#expressionmap)
 - [LazyLogger](lazy_logger.md#lazylogger)
 - [QueryType](enums.md#querytype)
 
 ### BaseDynamoQuery().client
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base_dynamo_query.py#L123)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base_dynamo_query.py#L124)
 
 ```python
 @property
@@ -81,7 +82,7 @@ def client() -> DynamoDBClient:
 
 ### BaseDynamoQuery().has_more_results
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base_dynamo_query.py#L136)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base_dynamo_query.py#L137)
 
 ```python
 def has_more_results() -> bool:
@@ -95,7 +96,7 @@ True if query has more results than returned or was not yet executed.
 
 ### BaseDynamoQuery().table_keys
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base_dynamo_query.py#L116)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base_dynamo_query.py#L117)
 
 ```python
 @property
@@ -108,7 +109,7 @@ def table_keys() -> TableKeys:
 
 ### BaseDynamoQuery().table_resource
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base_dynamo_query.py#L109)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base_dynamo_query.py#L110)
 
 ```python
 @property
@@ -121,7 +122,7 @@ def table_resource() -> Table:
 
 ### BaseDynamoQuery().was_executed
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base_dynamo_query.py#L127)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base_dynamo_query.py#L128)
 
 ```python
 def was_executed() -> bool:
@@ -135,7 +136,7 @@ True if query was executed.
 
 ## DynamoQueryError
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base_dynamo_query.py#L30)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/base_dynamo_query.py#L31)
 
 ```python
 class DynamoQueryError(Exception):
