@@ -615,7 +615,7 @@ class DynamoQuery(BaseDynamoQuery):
             QueryType.BATCH_UPDATE_ITEM: self._execute_method_batch_update_item,
             QueryType.BATCH_DELETE_ITEM: self._execute_method_batch_delete_item,
         }
-        return method_map[self._query_type](data_table)
+        return method_map[self._query_type](data_table)  # type: ignore
 
     def execute_dict(
         self,

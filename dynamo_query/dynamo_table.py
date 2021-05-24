@@ -409,7 +409,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
     ) -> Iterator[_RecordType]:
         records_count = 0
         while True:
-            results_data_table = query.table(
+            results_data_table: DataTable[Any] = query.table(
                 table_keys=self.table_keys,
                 table=self.table,
             ).execute_dict(data)
@@ -548,7 +548,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             record.update(self._get_record_keys(record))
             get_data_table.add_record(record)
 
-        results = (
+        results: DataTable[Any] = (
             self.dynamo_query_class.build_batch_get_item(logger=self._logger)
             .table(table_keys=self.table_keys, table=self.table)
             .execute(data_table=get_data_table)
@@ -658,7 +658,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             record.update(self._get_record_keys(record))
             delete_data_table.add_record(record)
 
-        results = (
+        results: DataTable[Any] = (
             self.dynamo_query_class.build_batch_delete_item(logger=self._logger)
             .table(table_keys=self.table_keys, table=self.table)
             .execute(delete_data_table)
@@ -742,7 +742,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             self.validate_record_attributes(normalized_record)
             update_data_table.add_record(dict(normalized_record))
 
-        results = (
+        results: DataTable[Any] = (
             self.dynamo_query_class.build_batch_update_item(logger=self._logger)
             .table(
                 table_keys=self.table_keys,
@@ -845,7 +845,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             A dict with record data or None.
         """
         record = self.normalize_record(self._convert_record(record))
-        result = (
+        result: DataTable[Any] = (
             self.dynamo_query_class.build_get_item(logger=self._logger)
             .table(table_keys=self.table_keys, table=self.table)
             .execute_dict(self._get_record_keys(record))
@@ -941,7 +941,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
 
         update_keys = set(new_record.keys()) - self.table_keys - set_if_not_exists
         update_keys.add("dt_modified")
-        result = (
+        result: DataTable[Any] = (
             self.dynamo_query_class.build_update_item(
                 condition_expression=condition_expression,
                 logger=self._logger,
@@ -992,7 +992,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             A dict with record data or None.
         """
         record = self.normalize_record(self._convert_record(record))
-        result = (
+        result: DataTable[Any] = (
             self.dynamo_query_class.build_delete_item(
                 condition_expression=condition_expression,
                 logger=self._logger,
