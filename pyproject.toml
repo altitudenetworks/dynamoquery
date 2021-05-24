@@ -12,10 +12,10 @@ botocore = "*"
 codecov = "*"
 pytest = "*"
 pytest-cov = "*"
-pylint = "*"
+flake8 = "*"
 isort = "*"
 boto3 = "*"
-black = "==20.8b1"
+black = "*"
 mypy = "*"
 vulture = "*"
 handsdown = "*"
@@ -57,3 +57,19 @@ target-version = [
     'py37',
     'py38',
 ]
+
+[tool.pyright]
+include = [
+    "repo_checker",
+]
+exclude = [
+    "**/__pycache__",
+    "tests",
+    "typestubs",
+]
+reportMissingImports = true
+reportMissingTypeStubs = false
+reportMissingTypeArgument = "error"
+reportIncompatibleMethodOverride = "error"
+reportIncompatibleVariableOverride = "error"
+reportUnknownParameterType = "error"

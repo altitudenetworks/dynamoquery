@@ -75,7 +75,6 @@ from typing import Optional
 from dynamo_query import DynamoTable, DynamoDictClass
 
 # first, define your record
-@dataclass
 class UserRecord(DynamoDictClass):
     pk: str
     email: str
@@ -136,7 +135,7 @@ Run unit tests and linting.
 Add false-positive unused entities to `vulture` whitelist
 
 ```bash
-vulture dynamo_query --make-whitelist > vulture_whitelist.py
+vulture dynamo_query --make-whitelist > vulture_whitelist.txt
 ```
 
 ### VSCode

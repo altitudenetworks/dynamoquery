@@ -40,7 +40,7 @@ tables and indexes.
 
 ### DynamoAutoscaler.create_scaling_policy_configs
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L216)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L222)
 
 ```python
 @staticmethod
@@ -72,7 +72,7 @@ Scaling policy configs to use in put_scaling_policy
 
 ### DynamoAutoscaler().deregister_auto_scaling
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L47)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L49)
 
 ```python
 def deregister_auto_scaling(
@@ -90,7 +90,7 @@ Deregister auto scaling for table.
 
 ### DynamoAutoscaler().deregister_scalable_target
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L162)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L168)
 
 ```python
 def deregister_scalable_target(
@@ -114,7 +114,7 @@ Deregister scalable table or index.
 
 ### DynamoAutoscaler().put_scaling_policy
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L242)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L248)
 
 ```python
 def put_scaling_policy(
@@ -141,7 +141,7 @@ Add scaling policy for table or for index.
 
 ### DynamoAutoscaler().register_auto_scaling
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L76)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L82)
 
 ```python
 def register_auto_scaling(
@@ -163,7 +163,7 @@ Register auto scaling for table.
 
 ### DynamoAutoscaler().register_scalable_target
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L186)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_autoscaler.py#L192)
 
 ```python
 def register_scalable_target(

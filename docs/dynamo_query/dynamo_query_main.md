@@ -27,7 +27,7 @@ Helper for building Boto3 DynamoDB queries.
 
 ## DynamoQuery
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L31)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L32)
 
 ```python
 class DynamoQuery(BaseDynamoQuery):
@@ -80,13 +80,13 @@ list(result_data_table.get_records())
 
 ### DynamoQuery.build_batch_delete_item
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L484)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L488)
 
 ```python
 @classmethod
 def build_batch_delete_item(
-    return_consumed_capacity: ReturnConsumedCapacity = 'NONE',
-    return_item_collection_metrics: ReturnItemCollectionMetrics = 'NONE',
+    return_consumed_capacity: ReturnConsumedCapacityType = 'NONE',
+    return_item_collection_metrics: ReturnItemCollectionMetricsType = 'NONE',
     logger: Optional[logging.Logger] = None,
 ) -> _R:
 ```
@@ -120,17 +120,17 @@ result_data_table = query.execute(
 
 #### See also
 
-- [ReturnConsumedCapacity](dynamo_query_types.md#returnconsumedcapacity)
-- [ReturnItemCollectionMetrics](dynamo_query_types.md#returnitemcollectionmetrics)
+- [ReturnConsumedCapacityType](dynamo_query_types.md#returnconsumedcapacitytype)
+- [ReturnItemCollectionMetricsType](dynamo_query_types.md#returnitemcollectionmetricstype)
 
 ### DynamoQuery.build_batch_get_item
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L399)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L403)
 
 ```python
 @classmethod
 def build_batch_get_item(
-    return_consumed_capacity: ReturnConsumedCapacity = 'NONE',
+    return_consumed_capacity: ReturnConsumedCapacityType = 'NONE',
     logger: Optional[logging.Logger] = None,
 ) -> _R:
 ```
@@ -163,17 +163,17 @@ result_data_table = query.execute(
 
 #### See also
 
-- [ReturnConsumedCapacity](dynamo_query_types.md#returnconsumedcapacity)
+- [ReturnConsumedCapacityType](dynamo_query_types.md#returnconsumedcapacitytype)
 
 ### DynamoQuery.build_batch_update_item
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L438)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L442)
 
 ```python
 @classmethod
 def build_batch_update_item(
-    return_consumed_capacity: ReturnConsumedCapacity = 'NONE',
-    return_item_collection_metrics: ReturnItemCollectionMetrics = 'NONE',
+    return_consumed_capacity: ReturnConsumedCapacityType = 'NONE',
+    return_item_collection_metrics: ReturnItemCollectionMetricsType = 'NONE',
     logger: Optional[logging.Logger] = None,
 ) -> _R:
 ```
@@ -209,20 +209,20 @@ result_data_table = query.execute(
 
 #### See also
 
-- [ReturnConsumedCapacity](dynamo_query_types.md#returnconsumedcapacity)
-- [ReturnItemCollectionMetrics](dynamo_query_types.md#returnitemcollectionmetrics)
+- [ReturnConsumedCapacityType](dynamo_query_types.md#returnconsumedcapacitytype)
+- [ReturnItemCollectionMetricsType](dynamo_query_types.md#returnitemcollectionmetricstype)
 
 ### DynamoQuery.build_delete_item
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L340)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L344)
 
 ```python
 @classmethod
 def build_delete_item(
     condition_expression: Optional[ConditionExpressionType] = None,
-    return_consumed_capacity: ReturnConsumedCapacity = 'NONE',
-    return_item_collection_metrics: ReturnItemCollectionMetrics = 'NONE',
-    return_values: ReturnValues = 'ALL_OLD',
+    return_consumed_capacity: ReturnConsumedCapacityType = 'NONE',
+    return_item_collection_metrics: ReturnItemCollectionMetricsType = 'NONE',
+    return_values: ReturnValueType = 'ALL_OLD',
     logger: Optional[logging.Logger] = None,
 ) -> _R:
 ```
@@ -263,20 +263,20 @@ result_data_table = query.execute(
 
 #### See also
 
-- [ReturnConsumedCapacity](dynamo_query_types.md#returnconsumedcapacity)
-- [ReturnItemCollectionMetrics](dynamo_query_types.md#returnitemcollectionmetrics)
-- [ReturnValues](dynamo_query_types.md#returnvalues)
+- [ReturnConsumedCapacityType](dynamo_query_types.md#returnconsumedcapacitytype)
+- [ReturnItemCollectionMetricsType](dynamo_query_types.md#returnitemcollectionmetricstype)
+- [ReturnValueType](dynamo_query_types.md#returnvaluetype)
 
 ### DynamoQuery.build_get_item
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L218)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L221)
 
 ```python
 @classmethod
 def build_get_item(
     projection_expression: Optional[ProjectionExpression] = None,
     consistent_read: bool = False,
-    return_consumed_capacity: ReturnConsumedCapacity = 'NONE',
+    return_consumed_capacity: ReturnConsumedCapacityType = 'NONE',
     logger: Optional[logging.Logger] = None,
 ) -> _R:
 ```
@@ -314,11 +314,11 @@ result_data_table = query.execute(
 
 #### See also
 
-- [ReturnConsumedCapacity](dynamo_query_types.md#returnconsumedcapacity)
+- [ReturnConsumedCapacityType](dynamo_query_types.md#returnconsumedcapacitytype)
 
 ### DynamoQuery.build_query
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L77)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L78)
 
 ```python
 @classmethod
@@ -384,7 +384,7 @@ result_data_table = query.execute(
 
 ### DynamoQuery.build_scan
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L153)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L156)
 
 ```python
 @classmethod
@@ -439,16 +439,16 @@ result_data_table = query.execute(
 
 ### DynamoQuery.build_update_item
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L271)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L275)
 
 ```python
 @classmethod
 def build_update_item(
     condition_expression: Optional[ConditionExpressionType] = None,
     update_expression: Optional[UpdateExpression] = None,
-    return_consumed_capacity: ReturnConsumedCapacity = 'NONE',
-    return_item_collection_metrics: ReturnItemCollectionMetrics = 'NONE',
-    return_values: ReturnValues = 'ALL_NEW',
+    return_consumed_capacity: ReturnConsumedCapacityType = 'NONE',
+    return_item_collection_metrics: ReturnItemCollectionMetricsType = 'NONE',
+    return_values: ReturnValueType = 'ALL_NEW',
     logger: Optional[logging.Logger] = None,
 ) -> _R:
 ```
@@ -496,20 +496,20 @@ result_data_table = query.execute(
 
 #### See also
 
-- [ReturnConsumedCapacity](dynamo_query_types.md#returnconsumedcapacity)
-- [ReturnItemCollectionMetrics](dynamo_query_types.md#returnitemcollectionmetrics)
-- [ReturnValues](dynamo_query_types.md#returnvalues)
+- [ReturnConsumedCapacityType](dynamo_query_types.md#returnconsumedcapacitytype)
+- [ReturnItemCollectionMetricsType](dynamo_query_types.md#returnitemcollectionmetricstype)
+- [ReturnValueType](dynamo_query_types.md#returnvaluetype)
 
 ### DynamoQuery().execute
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L542)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L548)
 
 ```python
 def execute(
-    data_table: Union[DataTable, RecordsType],
+    data_table: Union[(DataTable[_RecordType], RecordsType)],
     table: Optional[Table] = None,
     table_keys: Optional[TableKeys] = TABLE_KEYS,
-) -> DataTable:
+) -> DataTable[_RecordType]:
 ```
 
 Execute a query and get results. To get raw AWS responses, use
@@ -545,20 +545,16 @@ results = DynamoQuery.build_scan(
 
 A `DataTable` with query results.
 
-#### See also
-
-- [DataTable](data_table.md#datatable)
-
 ### DynamoQuery().execute_dict
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L613)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L620)
 
 ```python
 def execute_dict(
-    data: Optional[Dict[str, Any]] = None,
+    data: Optional[Dict[(str, Any)]] = None,
     table: Optional[Table] = None,
     table_keys: Optional[TableKeys] = TABLE_KEYS,
-) -> DataTable:
+) -> DataTable[_RecordType]:
 ```
 
 Execute a query for a single record and get results. See [DynamoQuery().execute](#dynamoqueryexecute) method.
@@ -586,13 +582,9 @@ results = DynamoQuery.build_scan(
 
 A `DataTable` with query results.
 
-#### See also
-
-- [DataTable](data_table.md#datatable)
-
 ### DynamoQuery().get_last_evaluated_key
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L648)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L656)
 
 ```python
 def get_last_evaluated_key() -> Optional[ExclusiveStartKey]:
@@ -626,10 +618,10 @@ A dict that can be used in `ExclusiveStartKey` parameter.
 
 ### DynamoQuery().get_raw_responses
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L684)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L692)
 
 ```python
-def get_raw_responses() -> List[Dict]:
+def get_raw_responses() -> List[Dict[(str, Any)]]:
 ```
 
 Get raw AWS responses from the last execution. Use flags `ReturnConsumedCapacity` and
@@ -642,7 +634,7 @@ A list of AWS responses.
 
 ### DynamoQuery.get_table_keys
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L695)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L703)
 
 ```python
 @staticmethod
@@ -672,7 +664,7 @@ A list of table keys.
 
 ### DynamoQuery().limit
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L746)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L758)
 
 ```python
 def limit(limit: int) -> _R:
@@ -695,7 +687,7 @@ Itself, so this method can be chained.
 
 ### DynamoQuery().projection
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L720)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L728)
 
 ```python
 def projection(*fields: str) -> _R:
@@ -724,7 +716,7 @@ Itself, so this method can be chained.
 
 ### DynamoQuery().reset_start_key
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L677)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L685)
 
 ```python
 def reset_start_key() -> _R:
@@ -734,7 +726,7 @@ Set paginated query to the start.
 
 ### DynamoQuery().table
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L528)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L532)
 
 ```python
 def table(
@@ -752,7 +744,7 @@ Set table resource and table keys.
 
 ### DynamoQuery().update
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L767)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dynamo_query_main.py#L779)
 
 ```python
 def update(

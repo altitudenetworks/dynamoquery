@@ -4,10 +4,7 @@ Expression builders.
 from abc import abstractmethod
 from typing import Any, Dict, Iterable, List, Set, Tuple, TypeVar, Union
 
-from dynamo_query.dynamo_query_types import (
-    ConditionExpressionJoinOperatorStr,
-    ConditionExpressionOperatorStr,
-)
+from dynamo_query.dynamo_query_types import ConditionalOperatorType, ConditionExpressionOperatorStr
 from dynamo_query.enums import Operator
 from dynamo_query.utils import get_format_keys
 
@@ -291,7 +288,7 @@ class ConditionExpression(BaseConditionExpression):
                 value = key
 
         self.key = key
-        self.operator = operator
+        self.operator: ConditionExpressionOperatorStr = operator
         self.value: Any = value
 
     def get_format_keys(self) -> Set[str]:
@@ -321,7 +318,7 @@ class ConditionExpression(BaseConditionExpression):
         self,
         other: Union["ConditionExpression", "ConditionExpressionGroup"],
     ) -> "ConditionExpressionGroup":
-        join_operators: List[ConditionExpressionJoinOperatorStr] = []
+        join_operators: List[ConditionalOperatorType] = []
         if isinstance(other, ConditionExpressionGroup):
             join_operators.append("OR")
             join_operators.extend(other.join_operators)
@@ -342,7 +339,7 @@ class ConditionExpression(BaseConditionExpression):
         self,
         other: Union["ConditionExpression", "ConditionExpressionGroup"],
     ) -> "ConditionExpressionGroup":
-        join_operators: List[ConditionExpressionJoinOperatorStr] = []
+        join_operators: List[ConditionalOperatorType] = []
         if isinstance(other, ConditionExpressionGroup):
             join_operators.append("AND")
             join_operators.extend(other.join_operators)
@@ -429,10 +426,10 @@ class ConditionExpressionGroup(BaseConditionExpression):
     def __init__(
         self,
         expressions: Iterable[ConditionExpression],
-        join_operators: Iterable[ConditionExpressionJoinOperatorStr],
+        join_operators: Iterable[ConditionalOperatorType],
     ):
         self.expressions = tuple(expressions)
-        self.join_operators = tuple(join_operators)
+        self.join_operators: List[ConditionalOperatorType] = list(join_operators)
 
     def get_format_keys(self) -> Set[str]:
         """
@@ -474,7 +471,7 @@ class ConditionExpressionGroup(BaseConditionExpression):
         self,
         other: Union["ConditionExpression", "ConditionExpressionGroup"],
     ) -> "ConditionExpressionGroup":
-        join_operators: List[ConditionExpressionJoinOperatorStr] = []
+        join_operators: List[ConditionalOperatorType] = []
         if isinstance(other, ConditionExpressionGroup):
             join_operators.extend(self.join_operators)
             join_operators.append("OR")
@@ -498,7 +495,7 @@ class ConditionExpressionGroup(BaseConditionExpression):
         self,
         other: Union["ConditionExpression", "ConditionExpressionGroup"],
     ) -> "ConditionExpressionGroup":
-        join_operators: List[ConditionExpressionJoinOperatorStr] = []
+        join_operators: List[ConditionalOperatorType] = []
         if isinstance(other, ConditionExpressionGroup):
             join_operators.extend(self.join_operators)
             join_operators.append("AND")

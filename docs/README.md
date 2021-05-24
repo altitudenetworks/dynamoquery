@@ -6,8 +6,7 @@
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dynamoquery.svg?color=blue)](https://pypi.org/project/dynamoquery)
 [![Coverage](https://img.shields.io/codecov/c/github/altitudenetworks/dynamoquery)](https://codecov.io/gh/altitudenetworks/dynamoquery)
 
-DynamoQuery is a Pythonic interface to AWS DynamoDB. 
-DynamoDB works as an Object Relational Mapper to DynamoDB, enabling you to start developing against DynamoDB using familiar Pythonic patterns.
+Helper for building Boto3 DynamoDB queries.
 
 Full dynamo-query project documentation can be found in [Modules](MODULES.md#dynamo-query-modules)
 
@@ -21,22 +20,6 @@ Full dynamo-query project documentation can be found in [Modules](MODULES.md#dyn
     - [PyCharm](#pycharm)
   - [Versioning](#versioning)
   - [dynamo-query Modules](MODULES.md#dynamo-query-modules)
-
-
-## Features
-- Python >= 3.6 support
-- Type Hints
-- An ORM-like interface with query and scan filters
-- Support for Unicode, Binary, JSON, Number, Set, StringSet, and UTC Datetime attributes
-- Support for Global and Local Secondary Indexes
-- Support for partitioned tables
-- Support for batch operations with automatic pagination
-- Support for cached queries
-- Provides iterators for working with Query and Scan operations
-- Support for table-like data sets via a powerful data type `DataTable`
-- Flexibility in using different data types. DynamoQuery does not enforce using a Model for storing data and interacting with DynamoDB.
-- Table restore and backups
-
 
 ## Installation
 
@@ -97,7 +80,6 @@ from typing import Optional
 from dynamo_query import DynamoTable, DynamoDictClass
 
 # first, define your record
-@dataclass
 class UserRecord(DynamoDictClass):
     pk: str
     email: str
@@ -156,7 +138,7 @@ Run unit tests and linting.
 Add false-positive unused entities to `vulture` whitelist
 
 ```bash
-vulture dynamo_query --make-whitelist > vulture_whitelist.py
+vulture dynamo_query --make-whitelist > vulture_whitelist.txt
 ```
 
 ### VSCode
@@ -182,14 +164,3 @@ Recommended `.vscode/settings.json`
 ## Versioning
 
 `dynamo_query` version follows [Semantic Versioning](https://semver.org/).
-
-## Future development
-The following features are not supported. We plan to add these features in the future, and welcome contributions from the open source community.
-- DAX
-- DynamoDB transactions
-
-## Feature requests and bug reports
-Before reporting a bug or submitting a feature request, 
-please check if the bug / request is already submitted in the Issues page.
-If not, please open a new Issue.
-

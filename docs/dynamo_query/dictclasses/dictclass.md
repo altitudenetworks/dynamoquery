@@ -8,14 +8,15 @@
         - [DictClass.compute_key](#dictclasscompute_key)
         - [DictClass().sanitize](#dictclasssanitize)
         - [DictClass.sanitize_key](#dictclasssanitize_key)
+        - [DictClass().update](#dictclassupdate)
 
 ## DictClass
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L14)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L13)
 
 ```python
-class DictClass(UserDict):
-    def __init__(*args: Dict[str, Any], **kwargs: Any) -> None:
+class DictClass(dict):
+    def __init__(*args: Dict[(str, Any)], **kwargs: Any) -> None:
 ```
 
 Dict-based dataclass.
@@ -55,7 +56,7 @@ dict(record) # {"name": "Jon", "company": "Amazon", "age": 30, "min_age": 18}
 
 ### DictClass().\_\_post\_init\_\_
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L92)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L90)
 
 ```python
 def __post_init__() -> None:
@@ -65,7 +66,7 @@ Override this method for post-init operations
 
 ### DictClass.compute_key
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L133)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L131)
 
 ```python
 @staticmethod
@@ -78,7 +79,7 @@ def compute_key(key: str) -> KeyComputer:
 
 ### DictClass().sanitize
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L348)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L351)
 
 ```python
 def sanitize(**kwargs: Any) -> None:
@@ -92,7 +93,7 @@ Sanitize all set fields.
 
 ### DictClass.sanitize_key
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L129)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L127)
 
 ```python
 @staticmethod
@@ -102,3 +103,13 @@ def sanitize_key(key: str) -> KeySanitizer:
 #### See also
 
 - [KeySanitizer](decorators.md#keysanitizer)
+
+### DictClass().update
+
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/dictclasses/dictclass.py#L362)
+
+```python
+def update(*args: Dict[(str, Any)], **kwargs: ignore) -> None:
+```
+
+Override of original `dict.update` method to apply `_set_item` rules.

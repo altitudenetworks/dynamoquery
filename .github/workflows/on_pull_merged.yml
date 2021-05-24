@@ -26,8 +26,8 @@ jobs:
         uses: actions/github-script@v3
         id: pull-request
         with:
-          github-actions-managed: true
           script: |
+            // github-actions-managed: true
             let pullRequest = null;
             if (context.payload.inputs && context.payload.inputs.number) {
               const number = context.payload.inputs.number;
@@ -83,10 +83,9 @@ jobs:
       - name: Get Unreleased notes
         id: unreleased
         if: steps.pull-request.outputs.result
-        uses: vemel/nextchange@main
+        uses: vemel/nextchange@0.1.0
         with:
           github-actions-managed: true
-          github-actions-comment: Get Unreleased section of CHANGELOG.md to set as notes of a newly created Release draft
           get: Unreleased
           sanitize: true
       - name: Get or create Release draft
@@ -94,8 +93,8 @@ jobs:
         id: release
         if: steps.pull-request.outputs.result
         with:
-          github-actions-managed: true
           script: |
+            // github-actions-managed: true
             let release = null;
             const baseBranch = ${{ toJSON(steps.pull-request.outputs.base) }};
 
@@ -135,31 +134,29 @@ jobs:
       - name: Build Release notes
         id: notes
         if: steps.pull-request.outputs.result
-        uses: vemel/nextchange@main
+        uses: vemel/nextchange@0.1.0
         with:
           github-actions-managed: true
-          github-actions-comment: Merge Pull Request notes to Release notes and add link to this PR
           set: ${{ steps.release.outputs.body }}
           append: ${{ steps.pull-request.outputs.body }}
           suffix: ${{ steps.pull-request.outputs.suffix }}
       - name: Get suggested version
         id: version
         if: steps.pull-request.outputs.result
-        uses: vemel/nextversion@main
+        uses: vemel/nextversion@0.1.1
         with:
           github-actions-managed: true
-          github-actions-comment: Release draft will be an RC, use 'stable' instead if needed
           path: ./package.json
           type: pep440
-          release: rc
+          release: ${{ env.RELEASE_TYPE }}
           result: ${{ steps.notes.outputs.label }}
       - name: Update release draft
         uses: actions/github-script@v3
         id: update-release
         if: steps.pull-request.outputs.result
         with:
-          github-actions-managed: true
           script: |
+            // github-actions-managed: true
             const releaseId = ${{ steps.release.outputs.id }};
             core.info(`Release ID: ${releaseId}`);
 
@@ -190,8 +187,8 @@ jobs:
         uses: actions/github-script@v3
         if: steps.pull-request.outputs.result
         with:
-          github-actions-managed: true
           script: |
+            // github-actions-managed: true
             const issueNumber = ${{ steps.pull-request.outputs.number }};
             const version = ${{ toJSON(steps.version.outputs.result) }};
             const response = await github.issues.createComment({

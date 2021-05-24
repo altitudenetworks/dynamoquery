@@ -4,15 +4,15 @@ Helper for building Boto3 DynamoDB queries.
 import logging
 from typing import Any, Callable, Dict, Iterable, List, Optional, Type, TypeVar, Union
 
-from dynamo_query.base_dynamo_query import BaseDynamoQuery, DynamoQueryError
+from dynamo_query.base_dynamo_query import BaseDynamoQuery, DynamoQueryError, ExpressionMap
 from dynamo_query.data_table import DataTable
 from dynamo_query.dynamo_query_types import (
     ExclusiveStartKey,
-    ExpressionMap,
     RecordsType,
-    ReturnConsumedCapacity,
-    ReturnItemCollectionMetrics,
-    ReturnValues,
+    RecordType,
+    ReturnConsumedCapacityType,
+    ReturnItemCollectionMetricsType,
+    ReturnValueType,
     Table,
     TableKeys,
 )
@@ -25,6 +25,7 @@ __all__ = (
 )
 
 
+_RecordType = TypeVar("_RecordType", bound="RecordType")
 _R = TypeVar("_R", bound="DynamoQuery")
 
 
@@ -129,7 +130,8 @@ class DynamoQuery(BaseDynamoQuery):
         Returns:
             `DynamoQuery` instance to execute.
         """
-        expressions: ExpressionMap = {cls.KEY_CONDITION_EXPRESSION: key_condition_expression}
+        expressions: ExpressionMap = {}
+        expressions[cls.KEY_CONDITION_EXPRESSION] = key_condition_expression
         if filter_expression:
             expressions[cls.FILTER_EXPRESSION] = filter_expression
         if projection_expression:
@@ -221,7 +223,7 @@ class DynamoQuery(BaseDynamoQuery):
         cls: Type[_R],
         projection_expression: Optional[ProjectionExpression] = None,
         consistent_read: bool = False,
-        return_consumed_capacity: ReturnConsumedCapacity = "NONE",
+        return_consumed_capacity: ReturnConsumedCapacityType = "NONE",
         logger: Optional[logging.Logger] = None,
     ) -> _R:
         """
@@ -275,9 +277,9 @@ class DynamoQuery(BaseDynamoQuery):
         cls: Type[_R],
         condition_expression: Optional[ConditionExpressionType] = None,
         update_expression: Optional[UpdateExpression] = None,
-        return_consumed_capacity: ReturnConsumedCapacity = "NONE",
-        return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
-        return_values: ReturnValues = "ALL_NEW",
+        return_consumed_capacity: ReturnConsumedCapacityType = "NONE",
+        return_item_collection_metrics: ReturnItemCollectionMetricsType = "NONE",
+        return_values: ReturnValueType = "ALL_NEW",
         logger: Optional[logging.Logger] = None,
     ) -> _R:
         """
@@ -343,9 +345,9 @@ class DynamoQuery(BaseDynamoQuery):
     def build_delete_item(
         cls: Type[_R],
         condition_expression: Optional[ConditionExpressionType] = None,
-        return_consumed_capacity: ReturnConsumedCapacity = "NONE",
-        return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
-        return_values: ReturnValues = "ALL_OLD",
+        return_consumed_capacity: ReturnConsumedCapacityType = "NONE",
+        return_item_collection_metrics: ReturnItemCollectionMetricsType = "NONE",
+        return_values: ReturnValueType = "ALL_OLD",
         logger: Optional[logging.Logger] = None,
     ) -> _R:
         """
@@ -401,7 +403,7 @@ class DynamoQuery(BaseDynamoQuery):
     @classmethod
     def build_batch_get_item(
         cls: Type[_R],
-        return_consumed_capacity: ReturnConsumedCapacity = "NONE",
+        return_consumed_capacity: ReturnConsumedCapacityType = "NONE",
         logger: Optional[logging.Logger] = None,
     ) -> _R:
         """
@@ -440,8 +442,8 @@ class DynamoQuery(BaseDynamoQuery):
     @classmethod
     def build_batch_update_item(
         cls: Type[_R],
-        return_consumed_capacity: ReturnConsumedCapacity = "NONE",
-        return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
+        return_consumed_capacity: ReturnConsumedCapacityType = "NONE",
+        return_item_collection_metrics: ReturnItemCollectionMetricsType = "NONE",
         logger: Optional[logging.Logger] = None,
     ) -> _R:
         """
@@ -486,8 +488,8 @@ class DynamoQuery(BaseDynamoQuery):
     @classmethod
     def build_batch_delete_item(
         cls: Type[_R],
-        return_consumed_capacity: ReturnConsumedCapacity = "NONE",
-        return_item_collection_metrics: ReturnItemCollectionMetrics = "NONE",
+        return_consumed_capacity: ReturnConsumedCapacityType = "NONE",
+        return_item_collection_metrics: ReturnItemCollectionMetricsType = "NONE",
         logger: Optional[logging.Logger] = None,
     ) -> _R:
         """
@@ -545,10 +547,10 @@ class DynamoQuery(BaseDynamoQuery):
 
     def execute(
         self,
-        data_table: Union[DataTable, RecordsType],
+        data_table: Union[DataTable[_RecordType], RecordsType],
         table: Optional[Table] = None,
         table_keys: Optional[TableKeys] = TABLE_KEYS,
-    ) -> DataTable:
+    ) -> DataTable[_RecordType]:
         """
         Execute a query and get results. To get raw AWS responses, use
         `query.get_raw_responses()` after this method. To get `LastEvaluatedKey`, use
@@ -603,7 +605,7 @@ class DynamoQuery(BaseDynamoQuery):
 
         self._raw_responses = []
 
-        method_map: Dict[QueryType, Callable[[DataTable], DataTable]] = {
+        method_map: Dict[QueryType, Callable[[DataTable[_RecordType]], DataTable[_RecordType]]] = {
             QueryType.QUERY: self._execute_method_query,
             QueryType.SCAN: self._execute_method_scan,
             QueryType.GET_ITEM: self._execute_method_get_item,
@@ -613,14 +615,14 @@ class DynamoQuery(BaseDynamoQuery):
             QueryType.BATCH_UPDATE_ITEM: self._execute_method_batch_update_item,
             QueryType.BATCH_DELETE_ITEM: self._execute_method_batch_delete_item,
         }
-        return method_map[self._query_type](data_table)
+        return method_map[self._query_type](data_table)  # type: ignore
 
     def execute_dict(
         self,
         data: Optional[Dict[str, Any]] = None,
         table: Optional[Table] = None,
         table_keys: Optional[TableKeys] = TABLE_KEYS,
-    ) -> DataTable:
+    ) -> DataTable[_RecordType]:
         """
         Execute a query for a single record and get results. See `DynamoQuery.execute` method.
 
@@ -649,7 +651,7 @@ class DynamoQuery(BaseDynamoQuery):
             table=table or self.table_resource,
             table_keys=table_keys or self._table_keys,
         )
-        return self.execute(data_table=[data or {"dummy": True}])
+        return self.execute(data_table=[data or {"dummy": True}])  # type: ignore
 
     def get_last_evaluated_key(self) -> Optional[ExclusiveStartKey]:
         """
@@ -687,7 +689,7 @@ class DynamoQuery(BaseDynamoQuery):
         self._last_evaluated_key = None
         return self
 
-    def get_raw_responses(self) -> List[Dict]:
+    def get_raw_responses(self) -> List[Dict[str, Any]]:
         """
         Get raw AWS responses from the last execution. Use flags `ReturnConsumedCapacity` and
         `ReturnItemCollectionMetrics` to get additional metrics. Also `Count` and `ScannedCount`

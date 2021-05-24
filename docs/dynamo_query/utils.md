@@ -11,7 +11,7 @@
 
 ## ascii_string_generator
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/utils.py#L37)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/utils.py#L39)
 
 ```python
 def ascii_string_generator(length: int = 3) -> Iterator[str]:
@@ -36,10 +36,10 @@ Lowercased ASCII string like "aaa"
 
 ## chunkify
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/utils.py#L5)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/utils.py#L7)
 
 ```python
-def chunkify(data: Iterable, size: int) -> Iterator[List[Any]]:
+def chunkify(data: Iterable[_T], size: int) -> Iterator[List[_T]]:
 ```
 
 Splits data to chunks of `size` length or less.
@@ -65,7 +65,7 @@ A generator of chunks.
 
 ## get_format_keys
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/utils.py#L67)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/utils.py#L69)
 
 ```python
 def get_format_keys(format_string: str) -> Set[str]:
@@ -88,11 +88,11 @@ A set of format keys.
 
 ## get_nested_item
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/utils.py#L112)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/utils.py#L114)
 
 ```python
 def get_nested_item(
-    dict_obj: Dict[str, Any],
+    dict_obj: Dict[(str, Any)],
     item_path: Iterable[str],
     raise_errors: bool = False,
 ) -> Any:
@@ -112,7 +112,7 @@ Get nested `item_path` from `dict_obj`.
 
 ## pluralize
 
-[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/utils.py#L91)
+[[find in source code]](https://github.com/altitudenetworks/dynamoquery/blob/master/dynamo_query/utils.py#L93)
 
 ```python
 def pluralize(count: int, singular: str, plural: Optional[str] = None) -> str:
