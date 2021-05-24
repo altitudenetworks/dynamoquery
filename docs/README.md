@@ -138,7 +138,7 @@ Run unit tests and linting.
 Add false-positive unused entities to `vulture` whitelist
 
 ```bash
-vulture dynamo_query --make-whitelist > vulture_whitelist.py
+vulture dynamo_query --make-whitelist > vulture_whitelist.txt
 ```
 
 ### VSCode
