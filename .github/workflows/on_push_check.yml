@@ -92,7 +92,7 @@ jobs:
         run: |
           # github-actions-managed: true
           command -v flake8 && flake8
-          command -v pylint && pylint $(git ls-files '*.py')
+          # command -v pylint && pylint $(git ls-files '*.py')
       - name: Check type correctness
         id: type
         run: |
