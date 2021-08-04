@@ -433,14 +433,12 @@ class DynamoQuery(BaseDynamoQuery):
         Returns:
             `DynamoQuery` instance to execute.
         """
-        extra_params: Dict[str, Any] = dict(
-            ConsistentRead=consistent_read,
-            ReturnConsumedCapacity=return_consumed_capacity,
-        )
+        extra_params = dict(ReturnConsumedCapacity=return_consumed_capacity)
         return cls(
             query_type=QueryType.BATCH_GET_ITEM,
             expressions={},
             extra_params=extra_params,
+            consistent_read=consistent_read,
             logger=logger,
         )
 
