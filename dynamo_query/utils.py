@@ -56,11 +56,11 @@ def ascii_string_generator(length: int = 3) -> Iterator[str]:
     counter = 0
     letters = string.ascii_lowercase
     letters_length = len(letters)
-    max_counter = letters_length ** length
+    max_counter = letters_length**length
     while counter < max_counter:
         result = []
         for pos in range(length - 1, -1, -1):
-            letter_index = counter // (letters_length ** pos) % letters_length
+            letter_index = counter // (letters_length**pos) % letters_length
             result.append(letters[letter_index])
         counter += 1
         yield "".join(result)

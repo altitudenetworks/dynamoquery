@@ -177,8 +177,10 @@ class ProjectionExpression(BaseExpression):
     """
     Renderer for a format-ready ProjectionExpression.
 
-    ```
-    projection_expression = DynamoQuery.build_projection_expression(
+    ```python
+    from dynamo_query.expressions import ProjectionExpression
+
+    projection_expression = ProjectionExpression(
         ['first_name', 'last_name']
     )
     projection_expression.render() # '{first_name}, {last_name}'
