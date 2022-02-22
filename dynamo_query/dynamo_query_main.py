@@ -403,6 +403,7 @@ class DynamoQuery(BaseDynamoQuery):
     @classmethod
     def build_batch_get_item(
         cls: Type[_R],
+        consistent_read: bool = False,
         return_consumed_capacity: ReturnConsumedCapacityType = "NONE",
         logger: Optional[logging.Logger] = None,
     ) -> _R:
@@ -425,6 +426,7 @@ class DynamoQuery(BaseDynamoQuery):
         ```
 
         Arguments:
+            consistent_read -- `ConsistentRead` boto3 parameter.
             return_consumed_capacity -- `ReturnConsumedCapacity` value.
             logger -- `logging.Logger` instance.
 
@@ -436,6 +438,7 @@ class DynamoQuery(BaseDynamoQuery):
             query_type=QueryType.BATCH_GET_ITEM,
             expressions={},
             extra_params=extra_params,
+            consistent_read=consistent_read,
             logger=logger,
         )
 

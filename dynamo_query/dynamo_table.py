@@ -501,7 +501,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
                 table=self.table,
             ).execute(existing_records)
 
-    def batch_get(self, data_table: DataTable[_RecordType]) -> DataTable[_RecordType]:
+    def batch_get(self, data_table: DataTable[_RecordType], consistent_read: bool = False) -> DataTable[_RecordType]:
         """
         Get multuple records as a DataTable from DB.
 
@@ -534,6 +534,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
 
         Arguments:
             data_table -- Request data table.
+            consistent_read -- `ConsistentRead` boto3 parameter.
 
         Returns:
             DataTable with existing records.
@@ -549,7 +550,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             get_data_table.add_record(record)
 
         results: DataTable[Any] = (
-            self.dynamo_query_class.build_batch_get_item(logger=self._logger)
+            self.dynamo_query_class.build_batch_get_item(consistent_read=consistent_read, logger=self._logger)
             .table(table_keys=self.table_keys, table=self.table)
             .execute(data_table=get_data_table)
         )
@@ -753,7 +754,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         results.record_class = self.record_class
         return results
 
-    def batch_get_records(self, records: Iterable[_RecordType]) -> Iterator[_RecordType]:
+    def batch_get_records(self, records: Iterable[_RecordType], consistent_read: bool = False) -> Iterator[_RecordType]:
         """
         Get records as an iterator from DB.
 
@@ -761,13 +762,14 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
 
         Arguments:
             records -- Full or partial records data.
+            consistent_read -- `ConsistentRead` boto3 parameter.
 
         Yields:
             Found or not found record data.
         """
         for records_chunk in chunkify(records, self.max_batch_size):
             get_data_table = DataTable(record_class=self.record_class).add_record(*records_chunk)
-            result_data_table = self.batch_get(get_data_table)
+            result_data_table = self.batch_get(get_data_table, consistent_read=consistent_read)
             for record in result_data_table.get_records():
                 yield self._convert_record(record)
 
@@ -1069,6 +1071,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         sort_key: Optional[Any] = None,
         sort_key_prefix: Optional[str] = None,
         filter_expression: Optional[ConditionExpressionType] = None,
+        consistent_read: bool = False,
         scan_index_forward: bool = True,
         projection: Iterable[str] = tuple(),
         data: Optional[Dict[str, Any]] = None,
@@ -1117,6 +1120,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             sort_key -- Sort key value.
             sort_key_prefix -- Sort key prefix value.
             filter_expression -- Query filter expression.
+            consistent_read -- `ConsistentRead` boto3 parameter.
             scan_index_forward -- Whether to scan index from the beginning.
             projection -- Record fields to return, by default returns all fields.
             limit -- Max number of results.
@@ -1147,6 +1151,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             index_name=index.name,
             key_condition_expression=key_condition_expression,
             filter_expression=filter_expression,
+            consistent_read=consistent_read,
             scan_index_forward=scan_index_forward,
             logger=self._logger,
         )
