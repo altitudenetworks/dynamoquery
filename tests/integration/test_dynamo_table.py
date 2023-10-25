@@ -3,6 +3,8 @@ from typing import Dict, Optional
 import boto3
 import pytest
 
+from botocore import exceptions
+
 from dynamo_query.data_table import DataTable
 from dynamo_query.dictclasses.dynamo_dictclass import DynamoDictClass
 from dynamo_query.dynamo_table import DynamoTable
@@ -157,3 +159,58 @@ class TestDataTable:
             )
             == 0
         )
+
+    def test_upsert_record_condition_accept(self):
+        record = UserRecord(
+            email="john_student@gmail.com",
+            company="IBM",
+            name="John",
+            age=34,
+        )
+        self.table.upsert_record(
+            record,
+            ConditionExpression("email", "attribute_not_exists"),
+        )
+        assert len(list(self.table.scan())) == 1
+
+    def test_upsert_record_condition_reject(self):
+        record = UserRecord(
+            email="john_student@gmail.com",
+            company="IBM",
+            name="John",
+            age=34,
+        )
+        with pytest.raises(exceptions.ClientError) as err:
+            self.table.upsert_record(
+                record,
+                ConditionExpression("email", "attribute_exists"),
+            )
+        assert err.value.response["Error"]["Code"] == "ConditionalCheckFailedException"
+        assert len(list(self.table.scan())) == 0
+
+    def test_upsert_record_condition_reject_2(self):
+        record = UserRecord(
+            email="john_student@gmail.com",
+            company="IBM",
+            name="John",
+            age=34,
+        )
+        self.table.upsert_record(record)
+
+        new_record = UserRecord(
+            email="john_student@gmail.com",
+            company="IBM",
+            name="Johnny",
+            age=48,
+        )
+        with pytest.raises(exceptions.ClientError) as err:
+            self.table.upsert_record(
+                new_record,
+                ConditionExpression("age", "<", "check_age"),
+                extra_data={"check_age": 30}
+            )
+        assert err.value.response["Error"]["Code"] == "ConditionalCheckFailedException"
+
+        for record in self.table.batch_get_records((i for i in [record])):
+            assert record.name == "John"
+            assert record.age == 34

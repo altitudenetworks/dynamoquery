@@ -92,7 +92,7 @@ class BaseDynamoQuery(LazyLogger):
         limit: int = MAX_LIMIT,
         exclusive_start_key: Optional[ExclusiveStartKey] = None,
         consistent_read: bool = False,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ):
         self._lazy_logger = logger
         self._query_type = query_type
@@ -393,7 +393,9 @@ class BaseDynamoQuery(LazyLogger):
             for record in record_chunk:
                 key_data = {k: v for k, v in record.items() if k in self.table_keys}
                 key_data_list.append(key_data)
-            request_items = {table_name: {"Keys": key_data_list, "ConsistentRead": self._consistent_read}}
+            request_items = {
+                table_name: {"Keys": key_data_list, "ConsistentRead": self._consistent_read}
+            }
             response = self._batch_get_item(
                 RequestItems=request_items,
                 **self._extra_params,

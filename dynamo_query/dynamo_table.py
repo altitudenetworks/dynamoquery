@@ -238,7 +238,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         except self.client.exceptions.ResourceNotFoundException:
             return None
 
-        return response["Table"].get("TableStatus")
+        return cast(Optional[str], response["Table"].get("TableStatus"))
 
     def delete_table(self) -> None:
         """
@@ -501,7 +501,9 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
                 table=self.table,
             ).execute(existing_records)
 
-    def batch_get(self, data_table: DataTable[_RecordType], consistent_read: bool = False) -> DataTable[_RecordType]:
+    def batch_get(
+        self, data_table: DataTable[_RecordType], consistent_read: bool = False
+    ) -> DataTable[_RecordType]:
         """
         Get multuple records as a DataTable from DB.
 
@@ -550,7 +552,9 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
             get_data_table.add_record(record)
 
         results: DataTable[Any] = (
-            self.dynamo_query_class.build_batch_get_item(consistent_read=consistent_read, logger=self._logger)
+            self.dynamo_query_class.build_batch_get_item(
+                consistent_read=consistent_read, logger=self._logger
+            )
             .table(table_keys=self.table_keys, table=self.table)
             .execute(data_table=get_data_table)
         )
@@ -754,7 +758,9 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         results.record_class = self.record_class
         return results
 
-    def batch_get_records(self, records: Iterable[_RecordType], consistent_read: bool = False) -> Iterator[_RecordType]:
+    def batch_get_records(
+        self, records: Iterable[_RecordType], consistent_read: bool = False
+    ) -> Iterator[_RecordType]:
         """
         Get records as an iterator from DB.
 
@@ -884,7 +890,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         record: _RecordType,
         condition_expression: Optional[ConditionExpression] = None,
         set_if_not_exists_keys: Iterable[str] = (),
-        extra_data: Dict[str, Any] = None,
+        extra_data: Optional[Dict[str, Any]] = None,
     ) -> _RecordType:
         """
         Upsert Record to DB.
@@ -933,7 +939,6 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
         new_record = self._convert_record(
             {
                 **record,
-                **(extra_data or {}),
                 "dt_modified": now_str,
                 "dt_created": now_str,
             }
@@ -953,7 +958,7 @@ class DynamoTable(Generic[_RecordType], LazyLogger, ABC):
                 table_keys=self.table_keys,
                 table=self.table,
             )
-            .execute_dict(cast(Dict[str, Any], new_record))
+            .execute_dict({**new_record, **(extra_data or {})})
         )
         return self._convert_record(result.get_record(0))
 
