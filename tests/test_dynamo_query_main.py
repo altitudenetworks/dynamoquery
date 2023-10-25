@@ -226,12 +226,16 @@ class TestDynamoQuery:
         assert list(result.get_records()) == []
 
         with pytest.raises(DynamoQueryError):
-            DynamoQuery.build_update_item(condition_expression=ConditionExpression("pk"),).table(
+            DynamoQuery.build_update_item(
+                condition_expression=ConditionExpression("pk"),
+            ).table(
                 table=table_resource_mock, table_keys=("pk", "sk")
             ).execute_dict({"pk": "value", "sk": "value", "test": "data"})
 
         with pytest.raises(DynamoQueryError):
-            DynamoQuery.build_update_item(condition_expression=ConditionExpression("pk"),).table(
+            DynamoQuery.build_update_item(
+                condition_expression=ConditionExpression("pk"),
+            ).table(
                 table=table_resource_mock, table_keys=("pk", "sk")
             ).update(add=["test"],).execute_dict({"pk": "value", "sk": "value", "test": "data"})
 
@@ -261,7 +265,12 @@ class TestDynamoQuery:
         )
         result = query.execute_dict({"pk": "value", "sk": "value"})
         table_resource_mock.meta.client.batch_get_item.assert_called_with(
-            RequestItems={table_resource_mock.name: {"Keys": [{"pk": "value", "sk": "value"}]}},
+            RequestItems={
+                table_resource_mock.name: {
+                    "Keys": [{"pk": "value", "sk": "value"}],
+                    "ConsistentRead": False,
+                }
+            },
             ReturnConsumedCapacity="NONE",
         )
         assert list(result.get_records()) == [{"pk": "value", "sk": "value"}]

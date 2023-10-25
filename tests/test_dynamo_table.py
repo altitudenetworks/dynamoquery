@@ -1,5 +1,5 @@
 import datetime
-from unittest.mock import MagicMock
+from unittest.mock import ANY, MagicMock
 
 import pytest
 
@@ -297,7 +297,9 @@ class TestDynamoTable:
             {"pk": "my_pk", "sk": "my_sk", "data": "value"}
         ]
         self.client_mock.batch_get_item.assert_called_with(
-            RequestItems={"my_table_name": {"Keys": [{"pk": "my_pk", "sk": "my_sk"}]}},
+            RequestItems={
+                "my_table_name": {"Keys": [{"pk": "my_pk", "sk": "my_sk"}], "ConsistentRead": False}
+            },
             ReturnConsumedCapacity="NONE",
         )
 
@@ -311,7 +313,9 @@ class TestDynamoTable:
         result = list(self.result.cached_batch_get(data_table).get_records())
         assert result == [{"pk": "my_pk", "sk": "my_sk", "data": "value"}]
         self.client_mock.batch_get_item.assert_called_with(
-            RequestItems={"my_table_name": {"Keys": [{"pk": "my_pk", "sk": "my_sk"}]}},
+            RequestItems={
+                "my_table_name": {"Keys": [{"pk": "my_pk", "sk": "my_sk"}], "ConsistentRead": False}
+            },
             ReturnConsumedCapacity="NONE",
         )
         self.client_mock.batch_get_item.reset_mock()
@@ -465,7 +469,7 @@ class TestDynamoTable:
             "sk": "my_sk",
         }
 
-    def test_upsert_record(self):
+    def test_upsert_record(self, _patch_datetime):
         self.table_mock.update_item.return_value = {
             "Attributes": {"pk": "my_pk", "pk_column": "my_pk"}
         }
@@ -473,6 +477,58 @@ class TestDynamoTable:
             "pk": "my_pk",
             "pk_column": "my_pk",
         }
+        self.table_mock.update_item.assert_called_once_with(
+            Key={"pk": "my_pk", "sk": "my_sk"},
+            UpdateExpression=ANY,  # statement order not consistent
+            ReturnConsumedCapacity="NONE",
+            ReturnItemCollectionMetrics="NONE",
+            ReturnValues="ALL_NEW",
+            ExpressionAttributeNames={
+                "#aaa": "dt_created",
+                "#aab": "dt_modified",
+                "#aac": "pk_column",
+                "#aad": "sk_column",
+            },
+            ExpressionAttributeValues={
+                ":aaa": "my_pk",
+                ":aab": "my_sk",
+                ":aac": "utcnow",
+                ":aad": "utcnow",
+            },
+        )
+
+    def test_upsert_record_conditional(self, _patch_datetime):
+        self.table_mock.update_item.return_value = {
+            "Attributes": {"pk": "my_pk", "pk_column": "my_pk"}
+        }
+        assert self.result.upsert_record(
+            {"pk_column": "my_pk", "sk_column": "my_sk"},
+            condition_expression=ConditionExpression("key", "attribute_not_exists"),
+        ) == {
+            "pk": "my_pk",
+            "pk_column": "my_pk",
+        }
+        self.table_mock.update_item.assert_called_once_with(
+            Key={"pk": "my_pk", "sk": "my_sk"},
+            ConditionExpression="attribute_not_exists(#aac)",
+            UpdateExpression=ANY,  # statement order not consistent
+            ReturnConsumedCapacity="NONE",
+            ReturnItemCollectionMetrics="NONE",
+            ReturnValues="ALL_NEW",
+            ExpressionAttributeNames={
+                "#aaa": "dt_created",
+                "#aab": "dt_modified",
+                "#aac": "key",
+                "#aad": "pk_column",
+                "#aae": "sk_column",
+            },
+            ExpressionAttributeValues={
+                ":aaa": "my_pk",
+                ":aab": "my_sk",
+                ":aac": "utcnow",
+                ":aad": "utcnow",
+            },
+        )
 
     def test_delete_record(self):
         self.table_mock.delete_item.return_value = {
@@ -558,7 +614,9 @@ class TestDynamoTable:
             {"pk": "my_pk", "sk": "my_sk", "data": "value"}
         ]
         self.client_mock.batch_get_item.assert_called_with(
-            RequestItems={"my_table_name": {"Keys": [{"pk": "my_pk", "sk": "my_sk"}]}},
+            RequestItems={
+                "my_table_name": {"Keys": [{"pk": "my_pk", "sk": "my_sk"}], "ConsistentRead": False}
+            },
             ReturnConsumedCapacity="NONE",
         )
 
