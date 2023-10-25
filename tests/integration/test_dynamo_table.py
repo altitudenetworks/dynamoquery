@@ -187,3 +187,30 @@ class TestDataTable:
             )
         assert err.value.response["Error"]["Code"] == "ConditionalCheckFailedException"
         assert len(list(self.table.scan())) == 0
+
+    def test_upsert_record_condition_reject_2(self):
+        record = UserRecord(
+            email="john_student@gmail.com",
+            company="IBM",
+            name="John",
+            age=34,
+        )
+        self.table.upsert_record(record)
+
+        new_record = UserRecord(
+            email="john_student@gmail.com",
+            company="IBM",
+            name="Johnny",
+            age=48,
+        )
+        with pytest.raises(exceptions.ClientError) as err:
+            self.table.upsert_record(
+                new_record,
+                ConditionExpression("age", "<", "check_age"),
+                extra_data={"check_age": 30}
+            )
+        assert err.value.response["Error"]["Code"] == "ConditionalCheckFailedException"
+
+        for record in self.table.batch_get_records((i for i in [record])):
+            assert record.name == "John"
+            assert record.age == 34
